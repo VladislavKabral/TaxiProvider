@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="add-tag-1.0.0" author="Vladislav Kabral">
+        <tagDatabase tag="v1.0.0"/>
+    </changeSet>
+
+    <include file="create-credit-card-schema.xml" relativeToChangelogFile="true"/>
+    <include file="create-passengers-schema.xml" relativeToChangelogFile="true"/>
+    <include file="insert-credit-cards-records.xml" relativeToChangelogFile="true"/>
+    <include file="insert-passengers-records.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>
