@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.passengerservice.model.passenger;
 
 import by.modsen.taxiprovider.passengerservice.model.card.CreditCard;
+import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
@@ -9,6 +10,8 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Table(name = "passengers")
@@ -57,4 +60,7 @@ public class Passenger {
 
     @Column(name = "status")
     private String status;
+
+    @OneToMany(mappedBy = "passenger")
+    private List<Rating> ratings;
 }

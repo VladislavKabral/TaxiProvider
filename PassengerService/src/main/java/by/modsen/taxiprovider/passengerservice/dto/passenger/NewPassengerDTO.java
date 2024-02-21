@@ -1,7 +1,6 @@
 package by.modsen.taxiprovider.passengerservice.dto.passenger;
 
 import by.modsen.taxiprovider.passengerservice.dto.card.CreditCardDTO;
-import by.modsen.taxiprovider.passengerservice.model.card.CreditCard;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

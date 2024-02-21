@@ -2,8 +2,10 @@ package by.modsen.taxiprovider.passengerservice.service.passenger;
 
 import by.modsen.taxiprovider.passengerservice.model.card.CreditCard;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
+import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRepository;
 import by.modsen.taxiprovider.passengerservice.service.card.CreditCardService;
+import by.modsen.taxiprovider.passengerservice.service.ratings.RatingsService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,10 +21,13 @@ public class PassengersService {
 
     private final CreditCardService creditCardService;
 
+    private final RatingsService ratingsService;
+
     @Autowired
-    public PassengersService(PassengersRepository passengersRepository, CreditCardService creditCardService) {
+    public PassengersService(PassengersRepository passengersRepository, CreditCardService creditCardService, RatingsService ratingsService) {
         this.passengersRepository = passengersRepository;
         this.creditCardService = creditCardService;
+        this.ratingsService = ratingsService;
     }
 
     public List<Passenger> findAll() throws EntityNotFoundException {
@@ -62,6 +67,13 @@ public class PassengersService {
         passenger.setCreditCard(creditCard);
 
         passengersRepository.save(passenger);
+
+        for (int i = 0; i < 30; i++) {
+            Rating rating = new Rating();
+            rating.setValue(5);
+            rating.setPassenger(passenger);
+            ratingsService.save(rating);
+        }
     }
 
     @Transactional
@@ -102,5 +114,19 @@ public class PassengersService {
         long maxValue = 10000L;
 
         return minValue + (long) (Math.random() * (maxValue - minValue));
+    }
+
+    public double getPassengerRating(long id) throws EntityNotFoundException {
+        Passenger passenger = findById(id);
+
+        return ratingsService.calculatePassengerRating(passenger);
+    }
+
+    @Transactional
+    public void ratePassenger(long id, Rating rating) throws EntityNotFoundException {
+        Passenger passenger = findById(id);
+        rating.setPassenger(passenger);
+
+        ratingsService.save(rating);
     }
 }
