@@ -39,7 +39,7 @@ public class PassengersController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<HttpStatus> editPassenger(@PathVariable("id") long id,
-                                                    @RequestBody @Valid PassengerDTO passengerDTO) {
+                                                    @RequestBody @Valid PassengerDTO passengerDTO) throws EntityNotFoundException {
 
         Passenger passenger = convertToPassenger(passengerDTO);
 

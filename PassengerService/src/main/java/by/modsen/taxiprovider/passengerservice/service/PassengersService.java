@@ -46,13 +46,32 @@ public class PassengersService {
 
     @Transactional
     public void save(Passenger passenger) {
+        passenger.setRole("Passenger");
         passengersRepository.save(passenger);
     }
 
     @Transactional
-    public void update(long id, Passenger passenger) {
-        passenger.setId(id);
-        passengersRepository.save(passenger);
+    public void update(long id, Passenger passenger) throws EntityNotFoundException {
+        Passenger passengerData = findById(id);
+        String firstname = passenger.getFirstname();
+        String lastname = passenger.getLastname();
+        String email = passenger.getEmail();
+        String phoneNumber = passenger.getPhoneNumber();
+
+        if (email != null) {
+            passengerData.setEmail(email);
+        }
+        if (firstname != null) {
+            passengerData.setFirstname(firstname);
+        }
+        if (lastname != null) {
+            passengerData.setLastname(lastname);
+        }
+        if (phoneNumber != null) {
+            passengerData.setPhoneNumber(phoneNumber);
+        }
+
+        passengersRepository.save(passengerData);
     }
 
     @Transactional
