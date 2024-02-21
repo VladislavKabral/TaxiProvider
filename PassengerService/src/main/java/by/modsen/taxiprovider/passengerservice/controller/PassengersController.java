@@ -1,8 +1,9 @@
 package by.modsen.taxiprovider.passengerservice.controller;
 
-import by.modsen.taxiprovider.passengerservice.dto.PassengerDTO;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
-import by.modsen.taxiprovider.passengerservice.service.PassengersService;
+import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
@@ -37,6 +38,27 @@ public class PassengersController {
                 HttpStatus.OK);
     }
 
+    @GetMapping(value = "/passenger", params = "id")
+    public ResponseEntity<PassengerDTO> getPassengerById(@RequestParam long id) throws EntityNotFoundException {
+        return new ResponseEntity<>(convertToPassengerDTO(passengersService.findById(id)),
+                HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/passenger", params = "email")
+    public ResponseEntity<PassengerDTO> getPassengerByEmail(@RequestParam String email) throws EntityNotFoundException {
+        return new ResponseEntity<>(convertToPassengerDTO(passengersService.findByEmail(email)),
+                HttpStatus.OK);
+    }
+
+    @PostMapping
+    public ResponseEntity<HttpStatus> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO) {
+        Passenger passenger = convertToPassenger(passengerDTO);
+
+        passengersService.save(passenger);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<HttpStatus> editPassenger(@PathVariable("id") long id,
                                                     @RequestBody @Valid PassengerDTO passengerDTO) throws EntityNotFoundException {
@@ -48,11 +70,22 @@ public class PassengersController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<HttpStatus> deactivatePassenger(@PathVariable("id") long id) throws EntityNotFoundException {
+        passengersService.deactivate(id);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     private PassengerDTO convertToPassengerDTO(Passenger passenger) {
         return modelMapper.map(passenger, PassengerDTO.class);
     }
 
     private Passenger convertToPassenger(PassengerDTO passengerDTO) {
+        return modelMapper.map(passengerDTO, Passenger.class);
+    }
+
+    private Passenger convertToPassenger(NewPassengerDTO passengerDTO) {
         return modelMapper.map(passengerDTO, Passenger.class);
     }
 }

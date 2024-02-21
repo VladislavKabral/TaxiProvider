@@ -12,5 +12,6 @@
     <include file="create-passengers-schema.xml" relativeToChangelogFile="true"/>
     <include file="insert-credit-cards-records.xml" relativeToChangelogFile="true"/>
     <include file="insert-passengers-records.xml" relativeToChangelogFile="true"/>
+    <include file="add-account-status-for-passengers-schema.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

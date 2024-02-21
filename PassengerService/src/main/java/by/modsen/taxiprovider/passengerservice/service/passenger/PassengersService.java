@@ -1,7 +1,9 @@
-package by.modsen.taxiprovider.passengerservice.service;
+package by.modsen.taxiprovider.passengerservice.service.passenger;
 
+import by.modsen.taxiprovider.passengerservice.model.card.CreditCard;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
 import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRepository;
+import by.modsen.taxiprovider.passengerservice.service.card.CreditCardService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,9 +17,12 @@ import java.util.Optional;
 public class PassengersService {
     private final PassengersRepository passengersRepository;
 
+    private final CreditCardService creditCardService;
+
     @Autowired
-    public PassengersService(PassengersRepository passengersRepository) {
+    public PassengersService(PassengersRepository passengersRepository, CreditCardService creditCardService) {
         this.passengersRepository = passengersRepository;
+        this.creditCardService = creditCardService;
     }
 
     public List<Passenger> findAll() throws EntityNotFoundException {
@@ -47,6 +52,15 @@ public class PassengersService {
     @Transactional
     public void save(Passenger passenger) {
         passenger.setRole("Passenger");
+        passenger.setStatus("Active");
+
+        CreditCard creditCard = passenger.getCreditCard();
+        creditCard.setPassenger(passenger);
+        creditCard.setValue(generateRandomCreditCardValue());
+        creditCardService.save(creditCard);
+
+        passenger.setCreditCard(creditCard);
+
         passengersRepository.save(passenger);
     }
 
@@ -75,7 +89,18 @@ public class PassengersService {
     }
 
     @Transactional
-    public void delete(long id) {
-        passengersRepository.deleteById(id);
+    public void deactivate(long id) throws EntityNotFoundException {
+        Passenger passenger = findById(id);
+
+        passenger.setStatus("Inactive");
+
+        passengersRepository.save(passenger);
+    }
+
+    private long generateRandomCreditCardValue() {
+        long minValue = 0L;
+        long maxValue = 10000L;
+
+        return minValue + (long) (Math.random() * (maxValue - minValue));
     }
 }

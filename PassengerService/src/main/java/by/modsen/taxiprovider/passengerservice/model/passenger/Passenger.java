@@ -54,4 +54,7 @@ public class Passenger {
     @OneToOne
     @JoinColumn(name = "credit_card_id", referencedColumnName = "id")
     private CreditCard creditCard;
+
+    @Column(name = "status")
+    private String status;
 }
