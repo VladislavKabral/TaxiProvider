@@ -25,8 +25,8 @@ public class Rating implements Comparable<Rating>{
 
     @Column(name = "value")
     @NotNull(message = "Rating's value must be not empty")
-    @Min(value = 1, message = "Minimal value of rating must be '1'")
-    @Max(value = 5, message = "Maximum value of rating must be '5'")
+    @Min(value = 1, message = "Minimal value of rating is '1'")
+    @Max(value = 5, message = "Maximum value of rating is '5'")
     private int value;
 
     @Column(name = "created_at")

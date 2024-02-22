@@ -55,6 +55,13 @@ public class PassengersService {
                 .entityNotFoundException("Passenger with email '" + email + "' wasn't found"));
     }
 
+    public Passenger findByPhoneNumber(String phoneNumber) throws EntityNotFoundException {
+        Optional<Passenger> passenger = passengersRepository.findByPhoneNumber(phoneNumber);
+
+        return passenger.orElseThrow(EntityNotFoundException
+                .entityNotFoundException("Passenger with phone number '" + phoneNumber + "' wasn't found"));
+    }
+
     @Transactional
     public void save(Passenger passenger) {
         passenger.setRole("Passenger");
