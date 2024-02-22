@@ -1,7 +1,9 @@
 package by.modsen.taxiprovider.passengerservice.service.passenger;
 
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.model.card.CreditCard;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
+import by.modsen.taxiprovider.passengerservice.model.passenger.PassengerProfile;
 import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRepository;
 import by.modsen.taxiprovider.passengerservice.service.card.CreditCardService;
@@ -128,5 +130,12 @@ public class PassengersService {
         rating.setPassenger(passenger);
 
         ratingsService.save(rating);
+    }
+
+    public PassengerProfile getPassengerProfile(long id) throws EntityNotFoundException {
+        return PassengerProfile.builder()
+                .passenger(findById(id))
+                .rating(getPassengerRating(id))
+                .build();
     }
 }

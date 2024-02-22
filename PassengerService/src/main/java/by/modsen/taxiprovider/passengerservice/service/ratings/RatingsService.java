@@ -7,7 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.DecimalFormat;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -30,21 +31,18 @@ public class RatingsService {
     }
 
     public double calculatePassengerRating(Passenger passenger) {
-        DecimalFormat df = new DecimalFormat("#.#");
-
         List<Rating> actualRatings = passenger.getRatings()
                 .stream()
                 .sorted(Collections.reverseOrder())
                 .limit(30)
                 .toList();
 
-        for (Rating rating: actualRatings) {
-            System.out.println(rating.getValue());
-        }
-
-        return Double.parseDouble(df.format((double) actualRatings.stream()
-                .mapToInt(Rating::getValue).sum()
-                / actualRatings.size()));
+        return new BigDecimal(Double.toString((double) actualRatings.stream()
+                .mapToInt(Rating::getValue)
+                .sum()
+                / actualRatings.size()))
+                .setScale(1, RoundingMode.HALF_UP)
+                .doubleValue();
     }
 
 }

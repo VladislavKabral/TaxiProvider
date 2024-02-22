@@ -2,8 +2,10 @@ package by.modsen.taxiprovider.passengerservice.controller;
 
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
+import by.modsen.taxiprovider.passengerservice.model.passenger.PassengerProfile;
 import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
@@ -57,6 +59,11 @@ public class PassengersController {
         return new ResponseEntity<>(passengersService.getPassengerRating(id), HttpStatus.OK);
     }
 
+    @GetMapping("/{id}/profile")
+    public ResponseEntity<PassengerProfileDTO> getPassengerProfile(@PathVariable long id) throws EntityNotFoundException {
+        return new ResponseEntity<>(convertToPassengerProfileDTO(passengersService.getPassengerProfile(id)), HttpStatus.OK);
+    }
+
     @PostMapping
     public ResponseEntity<HttpStatus> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO) {
         Passenger passenger = convertToPassenger(passengerDTO);
@@ -107,5 +114,9 @@ public class PassengersController {
 
     private Rating convertToRating(RatingDTO ratingDTO) {
         return modelMapper.map(ratingDTO, Rating.class);
+    }
+
+    private PassengerProfileDTO convertToPassengerProfileDTO(PassengerProfile passengerProfile) {
+        return modelMapper.map(passengerProfile, PassengerProfileDTO.class);
     }
 }
