@@ -4,53 +4,56 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
+import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerMapper;
+import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerProfileMapper;
+import by.modsen.taxiprovider.passengerservice.mapper.rating.RatingMapper;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
-import by.modsen.taxiprovider.passengerservice.model.passenger.PassengerProfile;
 import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import jakarta.validation.Valid;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/passengers")
 public class PassengersController {
 
-    private final ModelMapper modelMapper;
-
     private final PassengersService passengersService;
 
+    private final PassengerMapper passengerMapper;
+
+    private final RatingMapper ratingMapper;
+
+    private final PassengerProfileMapper passengerProfileMapper;
+
     @Autowired
-    public PassengersController(ModelMapper modelMapper, PassengersService passengersService) {
-        this.modelMapper = modelMapper;
+    public PassengersController(PassengersService passengersService, PassengerMapper passengerMapper, RatingMapper ratingMapper, PassengerProfileMapper passengerProfileMapper) {
         this.passengersService = passengersService;
+        this.passengerMapper = passengerMapper;
+        this.ratingMapper = ratingMapper;
+        this.passengerProfileMapper = passengerProfileMapper;
     }
 
     @GetMapping
     public ResponseEntity<List<PassengerDTO>> getPassengers() throws EntityNotFoundException {
-        return new ResponseEntity<>(passengersService.findAll()
-                .stream()
-                .map(this::convertToPassengerDTO)
-                .collect(Collectors.toList()),
+        return new ResponseEntity<>(passengerMapper.toListDTO(passengersService.findAll()),
                 HttpStatus.OK);
     }
 
     @GetMapping(value = "/passenger", params = "id")
     public ResponseEntity<PassengerDTO> getPassengerById(@RequestParam long id) throws EntityNotFoundException {
-        return new ResponseEntity<>(convertToPassengerDTO(passengersService.findById(id)),
+        return new ResponseEntity<>(passengerMapper.toDTO(passengersService.findById(id)),
                 HttpStatus.OK);
     }
 
     @GetMapping(value = "/passenger", params = "email")
     public ResponseEntity<PassengerDTO> getPassengerByEmail(@RequestParam String email) throws EntityNotFoundException {
-        return new ResponseEntity<>(convertToPassengerDTO(passengersService.findByEmail(email)),
+        return new ResponseEntity<>(passengerMapper.toDTO(passengersService.findByEmail(email)),
                 HttpStatus.OK);
     }
 
@@ -61,12 +64,12 @@ public class PassengersController {
 
     @GetMapping("/{id}/profile")
     public ResponseEntity<PassengerProfileDTO> getPassengerProfile(@PathVariable long id) throws EntityNotFoundException {
-        return new ResponseEntity<>(convertToPassengerProfileDTO(passengersService.getPassengerProfile(id)), HttpStatus.OK);
+        return new ResponseEntity<>(passengerProfileMapper.toDTO(passengersService.getPassengerProfile(id)), HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<HttpStatus> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO) {
-        Passenger passenger = convertToPassenger(passengerDTO);
+        Passenger passenger = passengerMapper.toEntity(passengerDTO);
 
         passengersService.save(passenger);
 
@@ -75,7 +78,7 @@ public class PassengersController {
 
     @PostMapping("/{id}/rating")
     public ResponseEntity<HttpStatus> ratePassenger(@PathVariable long id, @RequestBody RatingDTO ratingDTO) throws EntityNotFoundException {
-        Rating rating = convertToRating(ratingDTO);
+        Rating rating = ratingMapper.toEntity(ratingDTO);
 
         passengersService.ratePassenger(id, rating);
 
@@ -86,7 +89,7 @@ public class PassengersController {
     public ResponseEntity<HttpStatus> editPassenger(@PathVariable("id") long id,
                                                     @RequestBody @Valid PassengerDTO passengerDTO) throws EntityNotFoundException {
 
-        Passenger passenger = convertToPassenger(passengerDTO);
+        Passenger passenger = passengerMapper.toEntity(passengerDTO);
 
         passengersService.update(id, passenger);
 
@@ -98,25 +101,5 @@ public class PassengersController {
         passengersService.deactivate(id);
 
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    private PassengerDTO convertToPassengerDTO(Passenger passenger) {
-        return modelMapper.map(passenger, PassengerDTO.class);
-    }
-
-    private Passenger convertToPassenger(PassengerDTO passengerDTO) {
-        return modelMapper.map(passengerDTO, Passenger.class);
-    }
-
-    private Passenger convertToPassenger(NewPassengerDTO passengerDTO) {
-        return modelMapper.map(passengerDTO, Passenger.class);
-    }
-
-    private Rating convertToRating(RatingDTO ratingDTO) {
-        return modelMapper.map(ratingDTO, Rating.class);
-    }
-
-    private PassengerProfileDTO convertToPassengerProfileDTO(PassengerProfile passengerProfile) {
-        return modelMapper.map(passengerProfile, PassengerProfileDTO.class);
     }
 }

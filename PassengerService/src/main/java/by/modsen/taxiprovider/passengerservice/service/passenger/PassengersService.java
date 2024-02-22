@@ -1,6 +1,5 @@
 package by.modsen.taxiprovider.passengerservice.service.passenger;
 
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.model.card.CreditCard;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
 import by.modsen.taxiprovider.passengerservice.model.passenger.PassengerProfile;
