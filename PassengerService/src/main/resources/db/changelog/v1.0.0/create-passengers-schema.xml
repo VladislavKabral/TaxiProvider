@@ -37,6 +37,9 @@
                                  referencedTableName="credit_cards"
                                  referencedColumnNames="id"/>
 
+        <rollback>
+            <dropTable tableName="passengers"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

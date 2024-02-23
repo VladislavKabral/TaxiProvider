@@ -18,6 +18,22 @@
             <column name="number" value="7777-8888-9999-0000"/>
             <column name="value" value="100"/>
         </insert>
+
+        <rollback>
+            <delete tableName="credit_cards">
+                <where>number = '1111-2222-3333-4444'</where>
+            </delete>
+        </rollback>
+        <rollback>
+            <delete tableName="credit_cards">
+                <where>number = '4444-5555-6666-7777'</where>
+            </delete>
+        </rollback>
+        <rollback>
+            <delete tableName="credit_cards">
+                <where>number = '7777-8888-9999-0000'</where>
+            </delete>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

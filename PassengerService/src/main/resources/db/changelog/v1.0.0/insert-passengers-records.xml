@@ -33,6 +33,22 @@
             <column name="phone_number" value="+375296131124"/>
             <column name="credit_card_id" value="3"/>
         </insert>
+
+        <rollback>
+            <delete tableName="passengers">
+                <where>email = 'mr.ivanov@mail.ru'</where>
+            </delete>
+        </rollback>
+        <rollback>
+            <delete tableName="passengers">
+                <where>email = 'mr.petrov@mail.ru'</where>
+            </delete>
+        </rollback>
+        <rollback>
+            <delete tableName="passengers">
+                <where>email = 'mr.borisov@mail.ru'</where>
+            </delete>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

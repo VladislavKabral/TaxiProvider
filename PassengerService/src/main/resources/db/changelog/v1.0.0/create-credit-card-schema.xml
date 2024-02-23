@@ -17,6 +17,10 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <rollback>
+            <dropTable tableName="credit_cards"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

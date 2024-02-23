@@ -456,6 +456,12 @@
             <column name="created_at" value="2024-02-21"/>
             <column name="passenger_id" value="3"/>
         </insert>
+
+        <rollback>
+            <sql>
+                TRUNCATE TABLE ratings
+            </sql>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>
