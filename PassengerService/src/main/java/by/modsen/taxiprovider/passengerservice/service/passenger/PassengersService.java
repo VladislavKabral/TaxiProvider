@@ -7,6 +7,8 @@ import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRe
 import by.modsen.taxiprovider.passengerservice.service.ratings.RatingsService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,10 @@ public class PassengersService {
 
     private final RatingsService ratingsService;
 
+    private static final int COUNT_OF_RATINGS = 30;
+
+    private static final int DEFAULT_RATING_VALUE = 5;
+
     @Autowired
     public PassengersService(PassengersRepository passengersRepository, RatingsService ratingsService) {
         this.passengersRepository = passengersRepository;
@@ -27,10 +33,21 @@ public class PassengersService {
     }
 
     public List<Passenger> findAll() throws EntityNotFoundException {
-        List<Passenger> passengers = passengersRepository.findAll();
+        List<Passenger> passengers = passengersRepository.findAll(Sort.by("lastname"));
 
         if (passengers.isEmpty()) {
             throw new EntityNotFoundException("There aren't any passengers");
+        }
+
+        return passengers;
+    }
+
+    public List<Passenger> findPagePassengers(int index, int count) throws EntityNotFoundException {
+        List<Passenger> passengers = passengersRepository
+                .findAll(PageRequest.of(index, count, Sort.by("lastname"))).getContent();
+
+        if (passengers.isEmpty()) {
+            throw new EntityNotFoundException("There aren't any passengers on this page");
         }
 
         return passengers;
@@ -64,9 +81,9 @@ public class PassengersService {
 
         passengersRepository.save(passenger);
 
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < COUNT_OF_RATINGS; i++) {
             Rating rating = new Rating();
-            rating.setValue(5);
+            rating.setValue(DEFAULT_RATING_VALUE);
             rating.setPassenger(passenger);
             ratingsService.save(rating);
         }

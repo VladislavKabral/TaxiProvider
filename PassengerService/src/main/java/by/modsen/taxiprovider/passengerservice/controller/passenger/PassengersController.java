@@ -37,8 +37,14 @@ public class PassengersController {
 
     private final PassengersValidator passengersValidator;
 
+    private final static int ELEMENTS_ON_PAGE_COUNT = 5;
+
     @Autowired
-    public PassengersController(PassengersService passengersService, PassengerMapper passengerMapper, RatingMapper ratingMapper, PassengerProfileMapper passengerProfileMapper, PassengersValidator passengersValidator) {
+    public PassengersController(PassengersService passengersService,
+                                PassengerMapper passengerMapper,
+                                RatingMapper ratingMapper,
+                                PassengerProfileMapper passengerProfileMapper,
+                                PassengersValidator passengersValidator) {
         this.passengersService = passengersService;
         this.passengerMapper = passengerMapper;
         this.ratingMapper = ratingMapper;
@@ -49,6 +55,15 @@ public class PassengersController {
     @GetMapping
     public ResponseEntity<List<PassengerDTO>> getPassengers() throws EntityNotFoundException {
         return new ResponseEntity<>(passengerMapper.toListDTO(passengersService.findAll()),
+                HttpStatus.OK);
+    }
+
+    @GetMapping("/page/{pageIndex}")
+    public ResponseEntity<List<PassengerDTO>> getPassengersPage(@PathVariable("pageIndex") int pageIndex)
+            throws EntityNotFoundException {
+
+        return new ResponseEntity<>(passengerMapper.toListDTO(passengersService.findPagePassengers(pageIndex - 1,
+                ELEMENTS_ON_PAGE_COUNT)),
                 HttpStatus.OK);
     }
 
