@@ -1,11 +1,9 @@
 package by.modsen.taxiprovider.passengerservice.service.passenger;
 
-import by.modsen.taxiprovider.passengerservice.model.card.CreditCard;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
 import by.modsen.taxiprovider.passengerservice.model.passenger.PassengerProfile;
 import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRepository;
-import by.modsen.taxiprovider.passengerservice.service.card.CreditCardService;
 import by.modsen.taxiprovider.passengerservice.service.ratings.RatingsService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +18,11 @@ import java.util.Optional;
 public class PassengersService {
     private final PassengersRepository passengersRepository;
 
-    private final CreditCardService creditCardService;
-
     private final RatingsService ratingsService;
 
     @Autowired
-    public PassengersService(PassengersRepository passengersRepository, CreditCardService creditCardService, RatingsService ratingsService) {
+    public PassengersService(PassengersRepository passengersRepository, RatingsService ratingsService) {
         this.passengersRepository = passengersRepository;
-        this.creditCardService = creditCardService;
         this.ratingsService = ratingsService;
     }
 
@@ -66,13 +61,6 @@ public class PassengersService {
     public void save(Passenger passenger) {
         passenger.setRole("Passenger");
         passenger.setStatus("Active");
-
-        CreditCard creditCard = passenger.getCreditCard();
-        creditCard.setPassenger(passenger);
-        creditCard.setValue(generateRandomCreditCardValue());
-        creditCardService.save(creditCard);
-
-        passenger.setCreditCard(creditCard);
 
         passengersRepository.save(passenger);
 
@@ -115,13 +103,6 @@ public class PassengersService {
         passenger.setStatus("Inactive");
 
         passengersRepository.save(passenger);
-    }
-
-    private long generateRandomCreditCardValue() {
-        long minValue = 0L;
-        long maxValue = 10000L;
-
-        return minValue + (long) (Math.random() * (maxValue - minValue));
     }
 
     public double getPassengerRating(long id) throws EntityNotFoundException {

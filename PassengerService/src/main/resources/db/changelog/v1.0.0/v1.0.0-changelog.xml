@@ -15,5 +15,7 @@
     <include file="add-account-status-for-passengers-schema.xml" relativeToChangelogFile="true"/>
     <include file="create-rating-schema.xml" relativeToChangelogFile="true"/>
     <include file="insert-ratings-records.xml" relativeToChangelogFile="true"/>
+    <include file="delete-credit-card-id-from-passengers.xml" relativeToChangelogFile="true"/>
+    <include file="delete-credit-card-schema.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

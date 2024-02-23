@@ -1,6 +1,5 @@
 package by.modsen.taxiprovider.passengerservice.dto.passenger;
 
-import by.modsen.taxiprovider.passengerservice.dto.card.CreditCardDTO;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,7 +30,4 @@ public class NewPassengerDTO {
     @NotEmpty(message = "Phone number must be not empty")
     @Pattern(regexp = "^(\\+375|80)(29|25|44|33)(\\d{3})(\\d{2})(\\d{2})$", message = "Wrong phone number format")
     private String phoneNumber;
-
-    @NotNull
-    private CreditCardDTO creditCard;
 }
