@@ -14,6 +14,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "passengers")
+@NamedEntityGraph(name = "passenger_entity_graph", attributeNodes = @NamedAttributeNode("ratings"))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
