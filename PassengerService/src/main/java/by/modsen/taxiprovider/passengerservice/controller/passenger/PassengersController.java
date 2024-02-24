@@ -3,6 +3,7 @@ package by.modsen.taxiprovider.passengerservice.controller.passenger;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
+import by.modsen.taxiprovider.passengerservice.dto.rating.PassengerRatingDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
 import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerProfileMapper;
@@ -80,18 +81,23 @@ public class PassengersController {
     }
 
     @GetMapping("/{id}/rating")
-    public ResponseEntity<Double> getPassengerRating(@PathVariable long id) throws EntityNotFoundException {
-        return new ResponseEntity<>(passengersService.getPassengerRating(id), HttpStatus.OK);
+    public ResponseEntity<PassengerRatingDTO> getPassengerRating(@PathVariable long id) throws EntityNotFoundException {
+        return new ResponseEntity<>(ratingMapper.toDTO(passengersService.getPassengerRating(id)),
+                HttpStatus.OK);
     }
 
     @GetMapping("/{id}/profile")
-    public ResponseEntity<PassengerProfileDTO> getPassengerProfile(@PathVariable long id) throws EntityNotFoundException {
-        return new ResponseEntity<>(passengerProfileMapper.toDTO(passengersService.getPassengerProfile(id)), HttpStatus.OK);
+    public ResponseEntity<PassengerProfileDTO> getPassengerProfile(@PathVariable long id)
+            throws EntityNotFoundException {
+
+        return new ResponseEntity<>(passengerProfileMapper.toDTO(passengersService.getPassengerProfile(id)),
+                HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<HttpStatus> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO,
                                                     BindingResult bindingResult) throws EntityValidateException {
+
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
         passengersValidator.validate(passenger, bindingResult);
         handleBindingResult(bindingResult);
@@ -103,7 +109,9 @@ public class PassengersController {
     @PostMapping("/{id}/rating")
     public ResponseEntity<HttpStatus> ratePassenger(@PathVariable long id,
                                                     @RequestBody @Valid RatingDTO ratingDTO,
-                                                    BindingResult bindingResult) throws EntityNotFoundException, EntityValidateException {
+                                                    BindingResult bindingResult)
+            throws EntityNotFoundException, EntityValidateException {
+
         Rating rating = ratingMapper.toEntity(ratingDTO);
         handleBindingResult(bindingResult);
         passengersService.ratePassenger(id, rating);
@@ -114,7 +122,8 @@ public class PassengersController {
     @PatchMapping("/{id}")
     public ResponseEntity<HttpStatus> editPassenger(@PathVariable("id") long id,
                                                     @RequestBody @Valid PassengerDTO passengerDTO,
-                                                    BindingResult bindingResult) throws EntityNotFoundException, EntityValidateException {
+                                                    BindingResult bindingResult)
+            throws EntityNotFoundException, EntityValidateException {
 
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
         passenger.setId(id);

@@ -1,6 +1,8 @@
 package by.modsen.taxiprovider.passengerservice.mapper.rating;
 
+import by.modsen.taxiprovider.passengerservice.dto.rating.PassengerRatingDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
+import by.modsen.taxiprovider.passengerservice.model.rating.PassengerRating;
 import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +22,7 @@ public class RatingMapper {
         return modelMapper.map(ratingDTO, Rating.class);
     }
 
-    public RatingDTO toDTO(Rating rating) {
-        return modelMapper.map(rating, RatingDTO.class);
+    public PassengerRatingDTO toDTO(PassengerRating passengerRating) {
+        return modelMapper.map(passengerRating, PassengerRatingDTO.class);
     }
 }

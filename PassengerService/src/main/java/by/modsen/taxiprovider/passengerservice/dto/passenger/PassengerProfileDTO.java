@@ -1,5 +1,6 @@
 package by.modsen.taxiprovider.passengerservice.dto.passenger;
 
+import by.modsen.taxiprovider.passengerservice.dto.rating.PassengerRatingDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,5 +12,5 @@ public class PassengerProfileDTO {
 
     private PassengerDTO passenger;
 
-    private Double rating;
+    private PassengerRatingDTO rating;
 }

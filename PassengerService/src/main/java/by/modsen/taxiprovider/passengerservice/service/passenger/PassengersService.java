@@ -2,6 +2,7 @@ package by.modsen.taxiprovider.passengerservice.service.passenger;
 
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
 import by.modsen.taxiprovider.passengerservice.model.passenger.PassengerProfile;
+import by.modsen.taxiprovider.passengerservice.model.rating.PassengerRating;
 import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRepository;
 import by.modsen.taxiprovider.passengerservice.service.ratings.RatingsService;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -39,7 +41,9 @@ public class PassengersService {
             throw new EntityNotFoundException("There aren't any passengers");
         }
 
-        return passengers;
+        return passengers.stream()
+                .filter(passenger -> passenger.getStatus().equals("Active"))
+                .collect(Collectors.toList());
     }
 
     public List<Passenger> findPagePassengers(int index, int count) throws EntityNotFoundException {
@@ -50,7 +54,9 @@ public class PassengersService {
             throw new EntityNotFoundException("There aren't any passengers on this page");
         }
 
-        return passengers;
+        return passengers.stream()
+                .filter(passenger -> passenger.getStatus().equals("Active"))
+                .collect(Collectors.toList());
     }
 
     public Passenger findById(long id) throws EntityNotFoundException {
@@ -122,10 +128,12 @@ public class PassengersService {
         passengersRepository.save(passenger);
     }
 
-    public double getPassengerRating(long id) throws EntityNotFoundException {
+    public PassengerRating getPassengerRating(long id) throws EntityNotFoundException {
         Passenger passenger = findById(id);
 
-        return ratingsService.calculatePassengerRating(passenger);
+        return PassengerRating.builder()
+                .value(ratingsService.calculatePassengerRating(passenger))
+                .build();
     }
 
     @Transactional

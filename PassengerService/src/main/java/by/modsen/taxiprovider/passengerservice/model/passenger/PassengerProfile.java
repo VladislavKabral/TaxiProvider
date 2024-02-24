@@ -1,5 +1,6 @@
 package by.modsen.taxiprovider.passengerservice.model.passenger;
 
+import by.modsen.taxiprovider.passengerservice.model.rating.PassengerRating;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,5 +14,5 @@ public class PassengerProfile {
 
     private Passenger passenger;
 
-    private Double rating;
+    private PassengerRating rating;
 }
