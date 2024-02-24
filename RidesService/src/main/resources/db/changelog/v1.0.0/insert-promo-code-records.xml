@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="insert-promo-code-records" author="Vladislav Kabral">
+        <comment>Initialization promo codes' schema</comment>
+        <insert tableName="promo_codes">
+            <column name="value" value="MODSEN"/>
+            <column name="discount" value="0.5"/>
+        </insert>
+        <insert tableName="promo_codes">
+            <column name="value" value="4078"/>
+            <column name="discount" value="0.15"/>
+        </insert>
+        <insert tableName="promo_codes">
+            <column name="value" value="KABRAL"/>
+            <column name="discount" value="0.25"/>
+        </insert>
+        <insert tableName="promo_codes">
+            <column name="value" value="9889"/>
+            <column name="discount" value="0.1"/>
+        </insert>
+        <insert tableName="promo_codes">
+            <column name="value" value="JAVA"/>
+            <column name="discount" value="0.5"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="rides">
+                <where>value = 'MODSEN'</where>
+            </delete>
+        </rollback>
+        <rollback>
+            <delete tableName="rides">
+                <where>value = '4078'</where>
+            </delete>
+        </rollback>
+        <rollback>
+            <delete tableName="rides">
+                <where>value = 'KABRAL'</where>
+            </delete>
+        </rollback>
+        <rollback>
+            <delete tableName="rides">
+                <where>value = '9889'</where>
+            </delete>
+        </rollback>
+        <rollback>
+            <delete tableName="rides">
+                <where>value = 'JAVA'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+    
+    <changeSet id="create-promo-code-schema" author="Vladislav Kabral">
+        <comment>Creation promo codes' schema</comment>
+        <createTable tableName="promo_codes">
+            <column name="id" type="bigint" autoIncrement="true" startWith="1">
+                <constraints nullable="false" unique="true" primaryKey="true"/>
+            </column>
+            <column name="value" type="varchar(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="discount" type="float">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <rollback>
+            <dropTable tableName="rides"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
