@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.controller.exception;
 
 import by.modsen.taxiprovider.ridesservice.dto.error.ErrorResponseDTO;
+import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.ridesservice.util.exception.InvalidRequestDataException;
@@ -84,6 +85,16 @@ public class ExceptionAPIController {
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage() + " for this endpoint")
+                        .time(LocalDateTime.now())
+                        .build());
+    }
+
+    @ExceptionHandler(DistanceCalculationException.class)
+    public ResponseEntity<ErrorResponseDTO> distanceCalculationException(DistanceCalculationException exception) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDTO.builder()
+                        .message(exception.getMessage())
                         .time(LocalDateTime.now())
                         .build());
     }
