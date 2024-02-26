@@ -1,6 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.service.ride.distance;
 
-import by.modsen.taxiprovider.ridesservice.model.ride.Point;
+import by.modsen.taxiprovider.ridesservice.model.ride.address.Address;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -28,7 +28,7 @@ public class DistanceCalculator {
 
     private static final String STATUS_PARAM_NAME = "status";
 
-    public int calculate(Point source, Point target) throws IOException, InterruptedException, ParseException, DistanceCalculationException {
+    public int calculate(Address source, Address target) throws IOException, InterruptedException, ParseException, DistanceCalculationException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URI))
                 .POST(HttpRequest.BodyPublishers
@@ -50,7 +50,7 @@ public class DistanceCalculator {
         return Integer.parseInt(route.get(DISTANCE_PARAM_NAME).toString());
     }
 
-    private String getRequestBody(Point source, Point target) {
+    private String getRequestBody(Address source, Address target) {
         return "{\n" +
                 "    \"points\": [\n" +
                 "        {\n" +

@@ -8,7 +8,7 @@ import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundExceptio
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.ridesservice.util.validation.promocode.PromoCodeValidator;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -19,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/promoCodes")
+@AllArgsConstructor
 public class PromoCodesController {
 
     private final PromoCodesService promoCodesService;
@@ -26,15 +27,6 @@ public class PromoCodesController {
     private final PromoCodeMapper promoCodeMapper;
 
     private final PromoCodeValidator promoCodeValidator;
-
-    @Autowired
-    public PromoCodesController(PromoCodesService promoCodesService,
-                                PromoCodeMapper promoCodeMapper,
-                                PromoCodeValidator promoCodeValidator) {
-        this.promoCodesService = promoCodesService;
-        this.promoCodeMapper = promoCodeMapper;
-        this.promoCodeValidator = promoCodeValidator;
-    }
 
     @GetMapping
     public ResponseEntity<List<PromoCodeDTO>> getPromoCodes() throws EntityNotFoundException {

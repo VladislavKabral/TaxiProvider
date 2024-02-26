@@ -1,5 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.model.ride;
 
+import by.modsen.taxiprovider.ridesservice.model.ride.address.Address;
+import by.modsen.taxiprovider.ridesservice.model.ride.address.DestinationAddress;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,8 +34,9 @@ public class Ride {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
-    @Column(name = "source_address")
-    private String sourceAddress;
+    @OneToOne
+    @JoinColumn(name = "source_address_id", referencedColumnName = "id")
+    private Address sourceAddress;
 
     @OneToMany(mappedBy = "ride")
     private List<DestinationAddress> destinationAddresses;

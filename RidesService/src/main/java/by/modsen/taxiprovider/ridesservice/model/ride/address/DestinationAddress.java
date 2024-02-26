@@ -1,5 +1,6 @@
-package by.modsen.taxiprovider.ridesservice.model.ride;
+package by.modsen.taxiprovider.ridesservice.model.ride.address;
 
+import by.modsen.taxiprovider.ridesservice.model.ride.Ride;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,10 +16,11 @@ public class DestinationAddress {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private int id;
 
-    @Column(name = "address")
-    private String address;
+    @ManyToOne
+    @JoinColumn(name = "address_id", referencedColumnName = "id")
+    private Address address;
 
     @ManyToOne
     @JoinColumn(name = "ride_id", referencedColumnName = "id")

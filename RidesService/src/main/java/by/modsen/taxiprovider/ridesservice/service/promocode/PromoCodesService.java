@@ -3,7 +3,7 @@ package by.modsen.taxiprovider.ridesservice.service.promocode;
 import by.modsen.taxiprovider.ridesservice.model.promocode.PromoCode;
 import by.modsen.taxiprovider.ridesservice.repository.promocode.PromoCodesRepository;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,14 +12,10 @@ import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
+@AllArgsConstructor
 public class PromoCodesService {
 
     private final PromoCodesRepository promoCodesRepository;
-
-    @Autowired
-    public PromoCodesService(PromoCodesRepository promoCodesRepository) {
-        this.promoCodesRepository = promoCodesRepository;
-    }
 
     public List<PromoCode> findAll() throws EntityNotFoundException {
         List<PromoCode> promoCodes = promoCodesRepository.findAll();

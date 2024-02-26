@@ -12,5 +12,11 @@
     <include file="create-rides-schema.xml" relativeToChangelogFile="true"/>
     <include file="create-destination-addresses-schema.xml" relativeToChangelogFile="true"/>
     <include file="insert-promo-code-records.xml" relativeToChangelogFile="true"/>
+    <include file="update-destination-addresses-schema-to-addresses-schema.xml" relativeToChangelogFile="true"/>
+    <include file="delete-ride-id-column-from-addresses-schema.xml" relativeToChangelogFile="true"/>
+    <include file="create-new-destination-addresses-schema.xml" relativeToChangelogFile="true"/>
+    <include file="create-source-addresses-schema.xml" relativeToChangelogFile="true"/>
+    <include file="update-rides-schema-according-new-addresses-schema.xml" relativeToChangelogFile="true"/>
+    <include file="drop-source-addresses-schema.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

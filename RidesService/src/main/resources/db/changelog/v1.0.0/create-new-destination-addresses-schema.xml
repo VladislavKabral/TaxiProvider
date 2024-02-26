@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+    
+    <changeSet id="create-new-destination-addresses-schema" author="Vladislav Kabral">
+        <comment>Creation new destination addresses' schema</comment>
+        <createTable tableName="destination_addresses">
+            <column name="id" type="bigint" autoIncrement="true" startWith="1">
+                <constraints nullable="false" unique="true" primaryKey="true"/>
+            </column>
+            <column name="address_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ride_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="destination_addresses" baseColumnNames="ride_id" constraintName="ride_id_des_fk"
+                                 referencedTableName="rides"
+                                 referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="destination_addresses" baseColumnNames="address_id" constraintName="address_id_des_fk"
+                                 referencedTableName="addresses"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+    
+</databaseChangeLog>

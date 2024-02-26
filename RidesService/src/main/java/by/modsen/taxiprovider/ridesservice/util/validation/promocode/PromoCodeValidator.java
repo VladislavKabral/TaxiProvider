@@ -3,12 +3,13 @@ package by.modsen.taxiprovider.ridesservice.util.validation.promocode;
 import by.modsen.taxiprovider.ridesservice.model.promocode.PromoCode;
 import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
 @Component
+@AllArgsConstructor
 public class PromoCodeValidator implements Validator {
 
     private final PromoCodesService promoCodesService;
@@ -16,11 +17,6 @@ public class PromoCodeValidator implements Validator {
     private static final double MINIMAL_DISCOUNT = 0.01;
 
     private static final double MAXIMUM_DISCOUNT = 1.0;
-
-    @Autowired
-    public PromoCodeValidator(PromoCodesService promoCodesService) {
-        this.promoCodesService = promoCodesService;
-    }
 
     @Override
     public boolean supports(Class<?> clazz) {
