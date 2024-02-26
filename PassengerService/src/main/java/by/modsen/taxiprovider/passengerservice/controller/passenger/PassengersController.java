@@ -15,7 +15,7 @@ import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundExce
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -26,6 +26,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/passengers")
+@AllArgsConstructor
 public class PassengersController {
 
     private final PassengersService passengersService;
@@ -38,45 +39,25 @@ public class PassengersController {
 
     private final PassengersValidator passengersValidator;
 
-    private final static int ELEMENTS_ON_PAGE_COUNT = 5;
-
-    @Autowired
-    public PassengersController(PassengersService passengersService,
-                                PassengerMapper passengerMapper,
-                                RatingMapper ratingMapper,
-                                PassengerProfileMapper passengerProfileMapper,
-                                PassengersValidator passengersValidator) {
-        this.passengersService = passengersService;
-        this.passengerMapper = passengerMapper;
-        this.ratingMapper = ratingMapper;
-        this.passengerProfileMapper = passengerProfileMapper;
-        this.passengersValidator = passengersValidator;
-    }
-
     @GetMapping
     public ResponseEntity<List<PassengerDTO>> getPassengers() throws EntityNotFoundException {
         return new ResponseEntity<>(passengerMapper.toListDTO(passengersService.findAll()),
                 HttpStatus.OK);
     }
 
-    @GetMapping("/page/{pageIndex}")
-    public ResponseEntity<List<PassengerDTO>> getPassengersPage(@PathVariable("pageIndex") int pageIndex)
+    @GetMapping(params = {"page", "size"})
+    public ResponseEntity<List<PassengerDTO>> getPassengersPage(@RequestParam("page") int page,
+                                                                @RequestParam("size") int size)
             throws EntityNotFoundException {
 
-        return new ResponseEntity<>(passengerMapper.toListDTO(passengersService.findPagePassengers(pageIndex - 1,
-                ELEMENTS_ON_PAGE_COUNT)),
+        return new ResponseEntity<>(passengerMapper.toListDTO(passengersService.findPagePassengers(page - 1,
+                size)),
                 HttpStatus.OK);
     }
 
-    @GetMapping(value = "/passenger", params = "id")
-    public ResponseEntity<PassengerDTO> getPassengerById(@RequestParam long id) throws EntityNotFoundException {
+    @GetMapping("/{id}")
+    public ResponseEntity<PassengerDTO> getPassengerById(@PathVariable("id") long id) throws EntityNotFoundException {
         return new ResponseEntity<>(passengerMapper.toDTO(passengersService.findById(id)),
-                HttpStatus.OK);
-    }
-
-    @GetMapping(value = "/passenger", params = "email")
-    public ResponseEntity<PassengerDTO> getPassengerByEmail(@RequestParam String email) throws EntityNotFoundException {
-        return new ResponseEntity<>(passengerMapper.toDTO(passengersService.findByEmail(email)),
                 HttpStatus.OK);
     }
 
