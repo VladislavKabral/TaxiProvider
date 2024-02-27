@@ -31,4 +31,6 @@ public class RideDTO {
     private List<DestinationAddressDTO> destinationAddresses;
 
     private PromoCodeDTO promoCode;
+
+    private double cost;
 }

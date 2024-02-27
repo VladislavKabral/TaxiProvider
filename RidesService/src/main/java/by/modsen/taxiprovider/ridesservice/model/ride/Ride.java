@@ -43,4 +43,7 @@ public class Ride {
 
     @Column(name = "cost")
     private double cost;
+
+    @Column(name = "status")
+    private String status;
 }

@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AddressesRepository extends JpaRepository<Address, Long> {
+    Address findByLatAndLon(String lat, String lon);
 }

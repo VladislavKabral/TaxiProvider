@@ -18,5 +18,6 @@
     <include file="create-source-addresses-schema.xml" relativeToChangelogFile="true"/>
     <include file="update-rides-schema-according-new-addresses-schema.xml" relativeToChangelogFile="true"/>
     <include file="drop-source-addresses-schema.xml" relativeToChangelogFile="true"/>
+    <include file="add-status-column-to-rides-schema.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
