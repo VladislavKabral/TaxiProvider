@@ -2,6 +2,7 @@ package by.modsen.taxiprovider.ridesservice.model.ride.address;
 
 import by.modsen.taxiprovider.ridesservice.model.ride.Ride;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,7 @@ public class DestinationAddress {
 
     @ManyToOne
     @JoinColumn(name = "address_id", referencedColumnName = "id")
+    @NotNull(message = "Address must be not empty")
     private Address address;
 
     @ManyToOne
