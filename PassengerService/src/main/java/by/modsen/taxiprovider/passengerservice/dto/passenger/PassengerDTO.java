@@ -23,8 +23,6 @@ public class PassengerDTO {
     @Email(message = "Wrong email format")
     private String email;
 
-    private String role;
-
     @Pattern(regexp = "^(\\+375|80)(29|25|44|33)(\\d{3})(\\d{2})(\\d{2})$", message = "Wrong phone number format")
     private String phoneNumber;
 }

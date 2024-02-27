@@ -3,20 +3,16 @@ package by.modsen.taxiprovider.passengerservice.util.validation;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
 import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
 @Component
+@AllArgsConstructor
 public class PassengersValidator implements Validator {
 
     private final PassengersService passengersService;
-
-    @Autowired
-    public PassengersValidator(PassengersService passengersService) {
-        this.passengersService = passengersService;
-    }
 
     @Override
     public boolean supports(Class<?> clazz) {

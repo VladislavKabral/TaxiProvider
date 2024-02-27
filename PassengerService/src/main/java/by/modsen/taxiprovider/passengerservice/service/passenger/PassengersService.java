@@ -7,7 +7,7 @@ import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRepository;
 import by.modsen.taxiprovider.passengerservice.service.ratings.RatingsService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
+@AllArgsConstructor
 public class PassengersService {
     private final PassengersRepository passengersRepository;
 
@@ -27,12 +28,6 @@ public class PassengersService {
     private static final int COUNT_OF_RATINGS = 30;
 
     private static final int DEFAULT_RATING_VALUE = 5;
-
-    @Autowired
-    public PassengersService(PassengersRepository passengersRepository, RatingsService ratingsService) {
-        this.passengersRepository = passengersRepository;
-        this.ratingsService = ratingsService;
-    }
 
     public List<Passenger> findAll() throws EntityNotFoundException {
         List<Passenger> passengers = passengersRepository.findAll(Sort.by("lastname"));

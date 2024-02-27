@@ -3,7 +3,7 @@ package by.modsen.taxiprovider.passengerservice.service.ratings;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
 import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import by.modsen.taxiprovider.passengerservice.repository.rating.RatingsRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,14 +15,10 @@ import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
+@AllArgsConstructor
 public class RatingsService {
 
     private final RatingsRepository ratingsRepository;
-
-    @Autowired
-    public RatingsService(RatingsRepository ratingsRepository) {
-        this.ratingsRepository = ratingsRepository;
-    }
 
     @Transactional
     public void save(Rating rating) {

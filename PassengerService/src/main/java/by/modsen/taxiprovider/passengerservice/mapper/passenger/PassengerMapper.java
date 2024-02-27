@@ -3,22 +3,18 @@ package by.modsen.taxiprovider.passengerservice.mapper.passenger;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
+import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@AllArgsConstructor
 public class PassengerMapper {
 
     private final ModelMapper modelMapper;
-
-    @Autowired
-    public PassengerMapper(ModelMapper modelMapper) {
-        this.modelMapper = modelMapper;
-    }
 
     public Passenger toEntity(PassengerDTO passengerDTO) {
         return modelMapper.map(passengerDTO, Passenger.class);
