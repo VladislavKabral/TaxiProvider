@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="create-rides-schema" author="Vladislav Kabral">
+        <comment>Creation rides' schema</comment>
+        <createTable tableName="rides">
+            <column name="id" type="bigint" autoIncrement="true" startWith="1">
+                <constraints nullable="false" unique="true" primaryKey="true"/>
+            </column>
+            <column name="passenger_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="driver_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="started_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ended_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_address" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cost" type="float">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <rollback>
+            <dropTable tableName="rides"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
