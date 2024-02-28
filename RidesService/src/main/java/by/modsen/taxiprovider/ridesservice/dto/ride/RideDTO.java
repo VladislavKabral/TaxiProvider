@@ -4,8 +4,10 @@ import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.address.AddressDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.address.DestinationAddressDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,12 +32,16 @@ public class RideDTO {
     @JsonFormat(pattern = "yyyy-MM-dd, HH-mm-ss")
     private LocalDateTime endedAt;
 
+    @Valid
     @NotNull(message = "Source address must be not empty")
     private AddressDTO sourceAddress;
 
+    @Valid
     @NotNull(message = "Target address-(es) must be not empty")
+    @Size(min = 1, message = "Must be at least one destination address")
     private List<DestinationAddressDTO> destinationAddresses;
 
+    @Valid
     private PromoCodeDTO promoCode;
 
     private double cost;

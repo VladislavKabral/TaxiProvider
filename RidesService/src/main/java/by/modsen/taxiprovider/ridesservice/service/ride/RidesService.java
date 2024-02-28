@@ -87,7 +87,8 @@ public class RidesService {
     }
 
     @Transactional
-    public void save(Ride ride, PromoCode promoCode) throws IOException, ParseException, DistanceCalculationException, EntityNotFoundException, InterruptedException {
+    public void save(Ride ride, PromoCode promoCode) throws IOException, ParseException, DistanceCalculationException,
+            EntityNotFoundException, InterruptedException {
         Address sourceAddress = ride.getSourceAddress();
 
         Address existingAddress = addressesService
@@ -141,7 +142,7 @@ public class RidesService {
 
         int distance = getRideDistance(potentialRide);
         PromoCode promoCode = potentialRide.getPromoCode();
-        double discount = 1.0;
+        double discount = 0.0;
         if (promoCode != null) {
             discount = promoCodesService.findByValue(promoCode.getValue()).getDiscount();
         }

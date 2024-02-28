@@ -7,11 +7,13 @@ import by.modsen.taxiprovider.ridesservice.mapper.ride.PotentialRideMapper;
 import by.modsen.taxiprovider.ridesservice.mapper.ride.RideMapper;
 import by.modsen.taxiprovider.ridesservice.model.promocode.PromoCode;
 import by.modsen.taxiprovider.ridesservice.model.ride.PotentialRide;
+import by.modsen.taxiprovider.ridesservice.model.ride.Ride;
 import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.service.ride.RidesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.ridesservice.util.validation.ride.RideValidator;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.json.simple.parser.ParseException;
@@ -35,6 +37,8 @@ public class RidesController {
 
     private final PromoCodesService promoCodesService;
 
+    private final RideValidator rideValidator;
+
     private final RideMapper rideMapper;
 
     @GetMapping
@@ -53,13 +57,19 @@ public class RidesController {
     }
 
     @PostMapping
-    public ResponseEntity<HttpStatus> saveRide(@RequestBody @Valid RideDTO rideDTO, BindingResult bindingResult) throws EntityNotFoundException, IOException, ParseException, DistanceCalculationException, InterruptedException {
+    public ResponseEntity<HttpStatus> saveRide(@RequestBody @Valid RideDTO rideDTO, BindingResult bindingResult)
+            throws EntityNotFoundException, IOException, ParseException, DistanceCalculationException,
+            InterruptedException, EntityValidateException {
+
         PromoCode promoCode = null;
         if (rideDTO.getPromoCode() != null) {
             promoCode = promoCodesService.findByValue(rideDTO.getPromoCode().getValue());
         }
 
-        ridesService.save(rideMapper.toEntity(rideDTO), promoCode);
+        Ride ride = rideMapper.toEntity(rideDTO);
+        rideValidator.validate(ride, bindingResult);
+        handleBindingResult(bindingResult);
+        ridesService.save(ride, promoCode);
 
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
@@ -74,9 +84,11 @@ public class RidesController {
     @PostMapping("/potentialCost")
     public ResponseEntity<PotentialCostDTO> getPotentialCost(@RequestBody @Valid PotentialRideDTO potentialRideDTO,
                                                              BindingResult bindingResult)
-            throws ParseException, InterruptedException, IOException, DistanceCalculationException, EntityNotFoundException {
+            throws ParseException, InterruptedException, IOException, DistanceCalculationException,
+            EntityNotFoundException, EntityValidateException {
 
         PotentialRide potentialRide = potentialRideMapper.toEntity(potentialRideDTO);
+        handleBindingResult(bindingResult);
         return new ResponseEntity<>(new PotentialCostDTO(ridesService.calculatePotentialRideCost(potentialRide)),
                 HttpStatus.OK);
     }

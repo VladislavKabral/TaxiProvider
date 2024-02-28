@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "rides")
+@NamedEntityGraph(name = "ride_entity_graph", attributeNodes = {@NamedAttributeNode("passengerId"),
+        @NamedAttributeNode("driverId")})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,13 +44,14 @@ public class Ride {
     @JsonFormat(pattern = "yyyy-MM-dd, HH-mm-ss")
     private LocalDateTime endedAt;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "source_address_id", referencedColumnName = "id")
     @NotNull(message = "Source address must be not empty")
     private Address sourceAddress;
 
     @OneToMany(mappedBy = "ride")
     @NotNull(message = "Target address-(es) must be not empty")
+    @Size(min = 1, message = "Must be at least one destination address")
     private List<DestinationAddress> destinationAddresses;
 
     @Column(name = "cost")

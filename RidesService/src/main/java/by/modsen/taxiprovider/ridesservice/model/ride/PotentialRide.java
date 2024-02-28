@@ -3,6 +3,7 @@ package by.modsen.taxiprovider.ridesservice.model.ride;
 import by.modsen.taxiprovider.ridesservice.model.promocode.PromoCode;
 import by.modsen.taxiprovider.ridesservice.model.ride.address.Address;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class PotentialRide {
     private Address sourceAddress;
 
     @NotNull(message = "Target address-(es) must be not empty")
+    @Size(min = 1, message = "Must be at least one target address")
     private List<Address> targetAddresses;
 
     private PromoCode promoCode;

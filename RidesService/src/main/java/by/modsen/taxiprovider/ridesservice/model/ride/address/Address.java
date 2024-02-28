@@ -12,6 +12,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "addresses")
+@NamedEntityGraph(name = "address_entity_graph", attributeNodes = {@NamedAttributeNode("lat"),
+        @NamedAttributeNode("lon")})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,8 +34,8 @@ public class Address {
     @Pattern(regexp = "^-?\\d{1,3}\\.\\d{6,14}$", message = "Wrong longitude format")
     private String lon;
 
-    @OneToOne(mappedBy = "sourceAddress")
-    private Ride ride;
+    @OneToMany(mappedBy = "sourceAddress")
+    private List<Ride> ride;
 
     @OneToMany(mappedBy = "address")
     private List<DestinationAddress> destinationAddresses;

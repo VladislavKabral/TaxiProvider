@@ -18,5 +18,10 @@ public class RideValidator implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         Ride ride = (Ride) target;
+
+        if (ride.getStartedAt().isAfter(ride.getEndedAt())) {
+            errors.rejectValue("startedAt", "", "Ride can't start after ending." +
+                    " Check startedAt field");
+        }
     }
 }

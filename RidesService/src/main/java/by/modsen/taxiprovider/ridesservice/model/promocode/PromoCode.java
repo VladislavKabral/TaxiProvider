@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "promo_codes")
+@NamedEntityGraph(name = "promoCode_entity_graph", attributeNodes = @NamedAttributeNode("value"))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

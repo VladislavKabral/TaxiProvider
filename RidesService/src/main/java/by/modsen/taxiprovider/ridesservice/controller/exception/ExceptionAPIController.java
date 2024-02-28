@@ -5,6 +5,7 @@ import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationExc
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.ridesservice.util.exception.InvalidRequestDataException;
+import java.time.format.DateTimeParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -95,6 +96,16 @@ public class ExceptionAPIController {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage())
+                        .time(LocalDateTime.now())
+                        .build());
+    }
+
+    @ExceptionHandler(DateTimeParseException.class)
+    public ResponseEntity<ErrorResponseDTO> dateTimeParseException() {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDTO.builder()
+                        .message("Wrong ride's time format. Correct format is 'yyyy-MM-dd, HH-mm-ss'")
                         .time(LocalDateTime.now())
                         .build());
     }
