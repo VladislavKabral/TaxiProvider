@@ -1,7 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.model.ride;
 
 import by.modsen.taxiprovider.ridesservice.model.promocode.PromoCode;
-import by.modsen.taxiprovider.ridesservice.model.ride.address.Address;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;

@@ -1,6 +1,5 @@
-package by.modsen.taxiprovider.ridesservice.model.ride.address;
+package by.modsen.taxiprovider.ridesservice.model.ride;
 
-import by.modsen.taxiprovider.ridesservice.model.ride.Ride;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -12,8 +11,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "addresses")
-@NamedEntityGraph(name = "address_entity_graph", attributeNodes = {@NamedAttributeNode("lat"),
-        @NamedAttributeNode("lon")})
+@NamedEntityGraph(name = "address_entity_graph", attributeNodes = {@NamedAttributeNode("latitude"),
+        @NamedAttributeNode("longitude")})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,19 +23,19 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "lat")
+    @Column(name = "latitude")
     @NotNull(message = "Latitude must be not empty")
     @Pattern(regexp = "^-?\\d{1,3}\\.\\d{6,14}$", message = "Wrong latitude format")
-    private String lat;
+    private String latitude;
 
-    @Column(name = "lon")
+    @Column(name = "longitude")
     @NotNull(message = "Longitude must be not empty")
     @Pattern(regexp = "^-?\\d{1,3}\\.\\d{6,14}$", message = "Wrong longitude format")
-    private String lon;
+    private String longitude;
 
     @OneToMany(mappedBy = "sourceAddress")
     private List<Ride> ride;
 
-    @OneToMany(mappedBy = "address")
-    private List<DestinationAddress> destinationAddresses;
+    @ManyToMany(mappedBy = "destinationAddresses")
+    private List<Ride> rides;
 }

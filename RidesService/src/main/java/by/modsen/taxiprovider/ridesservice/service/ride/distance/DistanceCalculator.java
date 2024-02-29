@@ -1,6 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.service.ride.distance;
 
-import by.modsen.taxiprovider.ridesservice.model.ride.address.Address;
+import by.modsen.taxiprovider.ridesservice.model.ride.Address;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -54,12 +54,12 @@ public class DistanceCalculator {
         return "{\n" +
                 "    \"points\": [\n" +
                 "        {\n" +
-                "            \"lat\":" + source.getLat() + ",\n" +
-                "            \"lon\":" + source.getLon() + "\n" +
+                "            \"lat\":" + source.getLatitude() + ",\n" +
+                "            \"lon\":" + source.getLongitude() + "\n" +
                 "        },\n" +
                 "        {\n" +
-                "            \"lat\":" + target.getLat() + ",\n" +
-                "            \"lon\":" + target.getLon() + "\n" +
+                "            \"lat\":" + target.getLatitude() + ",\n" +
+                "            \"lon\":" + target.getLongitude() + "\n" +
                 "        }\n" +
                 "    ],\n" +
                 "    \"sources\": [0],\n" +

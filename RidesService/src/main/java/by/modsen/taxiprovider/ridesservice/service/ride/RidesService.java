@@ -2,13 +2,10 @@ package by.modsen.taxiprovider.ridesservice.service.ride;
 
 import by.modsen.taxiprovider.ridesservice.model.promocode.PromoCode;
 import by.modsen.taxiprovider.ridesservice.model.ride.Ride;
-import by.modsen.taxiprovider.ridesservice.model.ride.address.Address;
+import by.modsen.taxiprovider.ridesservice.model.ride.Address;
 import by.modsen.taxiprovider.ridesservice.model.ride.PotentialRide;
-import by.modsen.taxiprovider.ridesservice.model.ride.address.DestinationAddress;
 import by.modsen.taxiprovider.ridesservice.repository.ride.RidesRepository;
 import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
-import by.modsen.taxiprovider.ridesservice.service.ride.address.AddressesService;
-import by.modsen.taxiprovider.ridesservice.service.ride.address.DestinationAddressesService;
 import by.modsen.taxiprovider.ridesservice.service.ride.distance.DistanceCalculator;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
@@ -18,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,8 +31,6 @@ public class RidesService {
     private final DistanceCalculator distanceCalculator;
 
     private final AddressesService addressesService;
-
-    private final DestinationAddressesService destinationAddressesService;
 
     private static final int MINIMAL_COUNT_OF_TARGET_ADDRESSES = 1;
 
@@ -92,40 +86,36 @@ public class RidesService {
         Address sourceAddress = ride.getSourceAddress();
 
         Address existingAddress = addressesService
-                .findByLatitudeAndLongitude(sourceAddress.getLat(), sourceAddress.getLon());
+                .findByLatitudeAndLongitude(sourceAddress.getLatitude(), sourceAddress.getLongitude());
         if (existingAddress == null) {
             addressesService.save(sourceAddress);
         } else {
             ride.setSourceAddress(existingAddress);
         }
 
-        List<DestinationAddress> destinationAddresses = ride.getDestinationAddresses();
-        List<Address> targetAddresses = new ArrayList<>();
-        for (DestinationAddress destinationAddress: destinationAddresses) {
+        List<Address> destinationAddresses = ride.getDestinationAddresses();
+        for (int i = 0; i < destinationAddresses.size(); i++) {
             Address address = addressesService
-                    .findByLatitudeAndLongitude(destinationAddress.getAddress().getLat(),
-                            destinationAddress.getAddress().getLon());
+                    .findByLatitudeAndLongitude(destinationAddresses.get(i).getLatitude(),
+                            destinationAddresses.get(i).getLongitude());
             if (address == null) {
-                addressesService.save(destinationAddress.getAddress());
+                addressesService.save(destinationAddresses.get(i));
             } else {
-                destinationAddress.setAddress(address);
+                destinationAddresses.set(i, address);
             }
 
-            destinationAddress.setRide(ride);
-            targetAddresses.add(destinationAddress.getAddress());
+            ride.setDestinationAddresses(destinationAddresses);
         }
 
         double rideCost = calculatePotentialRideCost(PotentialRide.builder()
                 .sourceAddress(sourceAddress)
-                .targetAddresses(targetAddresses)
+                .targetAddresses(destinationAddresses)
                 .promoCode(promoCode)
                 .build());
 
         ride.setCost(rideCost);
         ride.setStatus("Active");
         ridesRepository.save(ride);
-
-        destinationAddressesService.save(destinationAddresses);
     }
 
     @Transactional

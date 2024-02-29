@@ -1,7 +1,5 @@
 package by.modsen.taxiprovider.ridesservice.model.ride;
 
-import by.modsen.taxiprovider.ridesservice.model.ride.address.Address;
-import by.modsen.taxiprovider.ridesservice.model.ride.address.DestinationAddress;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
@@ -49,10 +47,15 @@ public class Ride {
     @NotNull(message = "Source address must be not empty")
     private Address sourceAddress;
 
-    @OneToMany(mappedBy = "ride")
+    @ManyToMany
+    @JoinTable(
+            name = "ride_to_address",
+            joinColumns = @JoinColumn(name = "ride_id"),
+            inverseJoinColumns = @JoinColumn(name = "address_id")
+    )
     @NotNull(message = "Target address-(es) must be not empty")
     @Size(min = 1, message = "Must be at least one destination address")
-    private List<DestinationAddress> destinationAddresses;
+    private List<Address> destinationAddresses;
 
     @Column(name = "cost")
     private double cost;

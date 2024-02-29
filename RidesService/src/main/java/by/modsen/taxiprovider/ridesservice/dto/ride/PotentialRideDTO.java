@@ -1,7 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.dto.ride;
 
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.address.AddressDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
