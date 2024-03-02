@@ -5,6 +5,9 @@ import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationExc
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.ridesservice.util.exception.InvalidRequestDataException;
+
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,58 +18,22 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.time.LocalDateTime;
-
 @RestControllerAdvice
 public class ExceptionAPIController {
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> entityNotFoundException(EntityNotFoundException exception) {
+    @ExceptionHandler(value = {EntityNotFoundException.class,
+            InvalidRequestDataException.class,
+            EntityValidateException.class,
+            DistanceCalculationException.class,
+            HttpMessageNotReadableException.class,
+            UnsatisfiedServletRequestParameterException.class
+    })
+    public ResponseEntity<ErrorResponseDTO> defaultMessageExceptionHandler(Exception exception) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage())
-                        .time(LocalDateTime.now())
-                        .build());
-    }
-
-    @ExceptionHandler(InvalidRequestDataException.class)
-    public ResponseEntity<ErrorResponseDTO> invalidRequestDataException(InvalidRequestDataException exception) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponseDTO.builder()
-                        .message(exception.getMessage())
-                        .time(LocalDateTime.now())
-                        .build());
-    }
-
-    @ExceptionHandler(EntityValidateException.class)
-    public ResponseEntity<ErrorResponseDTO> entityValidateException(EntityValidateException exception) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponseDTO.builder()
-                        .message(exception.getMessage())
-                        .time(LocalDateTime.now())
-                        .build());
-    }
-
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponseDTO> messageNotReadableException(HttpMessageNotReadableException exception) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponseDTO.builder()
-                        .message(exception.getMessage())
-                        .time(LocalDateTime.now())
-                        .build());
-    }
-
-    @ExceptionHandler(UnsatisfiedServletRequestParameterException.class)
-    public ResponseEntity<ErrorResponseDTO> unsatisfiedParameterException(UnsatisfiedServletRequestParameterException exception) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponseDTO.builder()
-                        .message(exception.getMessage())
-                        .time(LocalDateTime.now())
+                        .time(ZonedDateTime.now(ZoneOffset.UTC))
                         .build());
     }
 
@@ -76,7 +43,7 @@ public class ExceptionAPIController {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
                         .message("Failed to convert value in request parameter")
-                        .time(LocalDateTime.now())
+                        .time(ZonedDateTime.now(ZoneOffset.UTC))
                         .build());
     }
 
@@ -86,17 +53,7 @@ public class ExceptionAPIController {
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage() + " for this endpoint")
-                        .time(LocalDateTime.now())
-                        .build());
-    }
-
-    @ExceptionHandler(DistanceCalculationException.class)
-    public ResponseEntity<ErrorResponseDTO> distanceCalculationException(DistanceCalculationException exception) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponseDTO.builder()
-                        .message(exception.getMessage())
-                        .time(LocalDateTime.now())
+                        .time(ZonedDateTime.now(ZoneOffset.UTC))
                         .build());
     }
 
@@ -106,7 +63,7 @@ public class ExceptionAPIController {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
                         .message("Wrong ride's time format. Correct format is 'yyyy-MM-dd, HH-mm-ss'")
-                        .time(LocalDateTime.now())
+                        .time(ZonedDateTime.now(ZoneOffset.UTC))
                         .build());
     }
 }

@@ -15,4 +15,8 @@ public class PotentialRideMapper {
     public PotentialRide toEntity(PotentialRideDTO potentialRideDTO) {
         return modelMapper.map(potentialRideDTO, PotentialRide.class);
     }
+
+    public PotentialRideDTO toDTO(PotentialRide potentialRide) {
+        return modelMapper.map(potentialRide, PotentialRideDTO.class);
+    }
 }

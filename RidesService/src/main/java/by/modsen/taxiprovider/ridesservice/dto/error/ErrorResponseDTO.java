@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Data
 @NoArgsConstructor
@@ -17,5 +17,5 @@ public class ErrorResponseDTO {
     private String message;
 
     @JsonFormat(pattern = "yy-MM-dd, HH-mm-ss")
-    private LocalDateTime time;
+    private ZonedDateTime time;
 }

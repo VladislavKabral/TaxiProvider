@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -42,5 +43,5 @@ public class RideDTO {
     @Valid
     private PromoCodeDTO promoCode;
 
-    private double cost;
+    private BigDecimal cost;
 }

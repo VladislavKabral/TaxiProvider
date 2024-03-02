@@ -1,5 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.util.validation.ride;
 
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
+import by.modsen.taxiprovider.ridesservice.mapper.ride.RideMapper;
 import by.modsen.taxiprovider.ridesservice.model.ride.Ride;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -10,14 +12,16 @@ import org.springframework.validation.Validator;
 @AllArgsConstructor
 public class RideValidator implements Validator {
 
+    private final RideMapper rideMapper;
+
     @Override
     public boolean supports(Class<?> clazz) {
-        return Ride.class.equals(clazz);
+        return RideDTO.class.equals(clazz);
     }
 
     @Override
     public void validate(Object target, Errors errors) {
-        Ride ride = (Ride) target;
+        Ride ride = rideMapper.toEntity((RideDTO) target);
 
         if (ride.getStartedAt().isAfter(ride.getEndedAt())) {
             errors.rejectValue("startedAt", "", "Ride can't start after ending." +

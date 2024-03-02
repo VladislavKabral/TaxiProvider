@@ -7,12 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(readOnly = true)
 @AllArgsConstructor
 public class AddressesService {
 
     private final AddressesRepository addressesRepository;
 
+    @Transactional(readOnly = true)
     public Address findByLatitudeAndLongitude(String latitude, String longitude) {
         return addressesRepository.findByLatitudeAndLongitude(latitude, longitude);
     }
