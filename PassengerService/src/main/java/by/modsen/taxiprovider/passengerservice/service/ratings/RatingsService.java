@@ -9,20 +9,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 
 @Service
-@Transactional(readOnly = true)
 @AllArgsConstructor
 public class RatingsService {
 
     private final RatingsRepository ratingsRepository;
 
+    private static final int COUNT_OF_GRADES = 30;
+
     @Transactional
     public void save(Rating rating) {
-        rating.setCreatedAt(LocalDate.now());
+        rating.setCreatedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         ratingsRepository.save(rating);
     }
 
@@ -30,7 +32,7 @@ public class RatingsService {
         List<Rating> actualRatings = passenger.getRatings()
                 .stream()
                 .sorted(Collections.reverseOrder())
-                .limit(30)
+                .limit(COUNT_OF_GRADES)
                 .toList();
 
         return new BigDecimal(Double.toString((double) actualRatings.stream()

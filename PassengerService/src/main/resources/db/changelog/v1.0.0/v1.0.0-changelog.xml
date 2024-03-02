@@ -4,18 +4,9 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <changeSet id="add-tag-1.0.0" author="Vladislav Kabral">
-        <tagDatabase tag="v1.0.0"/>
-    </changeSet>
-
-    <include file="create-credit-card-schema.xml" relativeToChangelogFile="true"/>
-    <include file="create-passengers-schema.xml" relativeToChangelogFile="true"/>
-    <include file="insert-credit-cards-records.xml" relativeToChangelogFile="true"/>
-    <include file="insert-passengers-records.xml" relativeToChangelogFile="true"/>
-    <include file="add-account-status-for-passengers-schema.xml" relativeToChangelogFile="true"/>
-    <include file="create-rating-schema.xml" relativeToChangelogFile="true"/>
-    <include file="insert-ratings-records.xml" relativeToChangelogFile="true"/>
-    <include file="delete-credit-card-id-from-passengers.xml" relativeToChangelogFile="true"/>
-    <include file="delete-credit-card-schema.xml" relativeToChangelogFile="true"/>
+    <include file="01-changeset-passengers-schema.xml" relativeToChangelogFile="true"/>
+    <include file="10-changeset-ratings-schema.xml" relativeToChangelogFile="true"/>
+    <include file="02-init-passengers-schema.xml" relativeToChangelogFile="true"/>
+    <include file="11-init-ratings-schema.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

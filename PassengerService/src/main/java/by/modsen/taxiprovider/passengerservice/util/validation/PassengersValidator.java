@@ -1,5 +1,7 @@
 package by.modsen.taxiprovider.passengerservice.util.validation;
 
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
+import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
 import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
@@ -14,14 +16,16 @@ public class PassengersValidator implements Validator {
 
     private final PassengersService passengersService;
 
+    private final PassengerMapper passengerMapper;
+
     @Override
     public boolean supports(Class<?> clazz) {
-        return Passenger.class.equals(clazz);
+        return PassengerDTO.class.equals(clazz);
     }
 
     @Override
     public void validate(Object target, Errors errors) {
-        Passenger passenger = (Passenger) target;
+        Passenger passenger = passengerMapper.toEntity((PassengerDTO) target);
 
         try {
             Passenger existingPassenger = passengersService.findByEmail(passenger.getEmail());
