@@ -4,20 +4,20 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <changeSet id="6" author="Vladislav Kabral">
+    <changeSet id="5" author="Vladislav Kabral">
         <sqlFile dbms="postgresql"
                  encoding="utf8"
                  relativeToChangelogFile="true"
                  splitStatements="true"
                  stripComments="true"
-                 path="init-rating-schema.sql"/>
+                 path="11-init-rating-schema.sql"/>
         <rollback>
             <sqlFile dbms="postgresql"
                      encoding="utf8"
                      relativeToChangelogFile="true"
                      splitStatements="true"
                      stripComments="true"
-                     path="clear-rating-schema.sql"/>
+                     path="11-clear-rating-schema.sql"/>
         </rollback>
     </changeSet>
 

@@ -4,20 +4,20 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
     
-    <changeSet id="5" author="Vladislav Kabral">
+    <changeSet id="4" author="Vladislav Kabral">
         <sqlFile dbms="postgresql"
                  encoding="utf8"
                  relativeToChangelogFile="true"
                  splitStatements="true"
                  stripComments="true"
-                 path="init-drivers-schema.sql"/>
+                 path="02-init-drivers-schema.sql"/>
         <rollback>
             <sqlFile dbms="postgresql"
                      encoding="utf8"
                      relativeToChangelogFile="true"
                      splitStatements="true"
                      stripComments="true"
-                     path="clear-drivers-schema.sql"/>
+                     path="02-clear-drivers-schema.sql"/>
         </rollback>
     </changeSet>
     
