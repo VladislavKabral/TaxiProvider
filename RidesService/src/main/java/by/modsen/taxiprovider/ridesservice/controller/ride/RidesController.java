@@ -9,14 +9,12 @@ import by.modsen.taxiprovider.ridesservice.service.ride.RidesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
-import by.modsen.taxiprovider.ridesservice.util.validation.ride.RideValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,11 +35,14 @@ public class RidesController {
 
     private final PromoCodesService promoCodesService;
 
-    private final RideValidator rideValidator;
-
     @GetMapping
     public ResponseEntity<List<RideDTO>> getRides() throws EntityNotFoundException {
         return new ResponseEntity<>(ridesService.findAll(), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RideDTO> getRideById(@PathVariable("id") long id) throws EntityNotFoundException {
+        return new ResponseEntity<>(ridesService.findById(id), HttpStatus.OK);
     }
 
     @GetMapping("/passenger/{id}")
@@ -64,9 +65,7 @@ public class RidesController {
             promoCodeDTO = promoCodesService.findByValue(rideDTO.getPromoCode().getValue());
         }
 
-        rideValidator.validate(rideDTO, bindingResult);
-        handleBindingResult(bindingResult);
-        ridesService.save(rideDTO, promoCodeDTO);
+        ridesService.save(rideDTO, promoCodeDTO, bindingResult);
 
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
@@ -84,20 +83,9 @@ public class RidesController {
             throws ParseException, InterruptedException, IOException, DistanceCalculationException,
             EntityNotFoundException, EntityValidateException {
 
-        handleBindingResult(bindingResult);
-        return new ResponseEntity<>(new PotentialCostDTO(ridesService.calculatePotentialRideCost(potentialRideDTO)),
+        return new ResponseEntity<>(new PotentialCostDTO(ridesService
+                .getPotentialRideCost(potentialRideDTO, bindingResult)),
                 HttpStatus.OK);
     }
 
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
-    }
 }

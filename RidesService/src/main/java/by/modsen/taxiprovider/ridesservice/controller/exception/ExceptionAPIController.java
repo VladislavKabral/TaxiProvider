@@ -30,7 +30,7 @@ public class ExceptionAPIController {
     })
     public ResponseEntity<ErrorResponseDTO> defaultMessageExceptionHandler(Exception exception) {
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
+                .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage())
                         .time(ZonedDateTime.now(ZoneOffset.UTC))

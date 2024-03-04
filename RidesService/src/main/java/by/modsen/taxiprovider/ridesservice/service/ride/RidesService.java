@@ -15,19 +15,21 @@ import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.service.ride.distance.DistanceCalculator;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
-import lombok.AllArgsConstructor;
+import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.ridesservice.util.validation.ride.RideValidator;
+import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class RidesService {
 
     private final RidesRepository ridesRepository;
@@ -51,6 +53,8 @@ public class RidesService {
     private static final double COST_OF_KILOMETER = 0.5;
 
     private static final int METERS_IN_KILOMETER = 1000;
+
+    private final RideValidator rideValidator;
 
     @Transactional(readOnly = true)
     public List<RideDTO> findAll() throws EntityNotFoundException {
@@ -92,9 +96,13 @@ public class RidesService {
     }
 
     @Transactional
-    public void save(RideDTO rideDTO, PromoCodeDTO promoCodeDTO) throws IOException, ParseException, DistanceCalculationException,
-            EntityNotFoundException, InterruptedException {
+    public void save(RideDTO rideDTO, PromoCodeDTO promoCodeDTO, BindingResult bindingResult) throws IOException,
+            ParseException, DistanceCalculationException, EntityNotFoundException, InterruptedException,
+            EntityValidateException {
+
         Ride ride = rideMapper.toEntity(rideDTO);
+        rideValidator.validate(ride, bindingResult);
+        handleBindingResult(bindingResult);
 
         PromoCode promoCode = null;
         if (promoCodeDTO != null) {
@@ -125,11 +133,11 @@ public class RidesService {
             ride.setDestinationAddresses(destinationAddresses);
         }
 
-        BigDecimal rideCost = calculatePotentialRideCost(potentialRideMapper.toDTO(PotentialRide.builder()
+        BigDecimal rideCost = calculatePotentialRideCost(PotentialRide.builder()
                 .sourceAddress(sourceAddress)
                 .targetAddresses(destinationAddresses)
                 .promoCode(promoCode)
-                .build()));
+                .build());
 
         ride.setCost(rideCost);
         ride.setStatus("Active");
@@ -146,10 +154,17 @@ public class RidesService {
         ridesRepository.save(ride);
     }
 
-    public BigDecimal calculatePotentialRideCost(PotentialRideDTO potentialRideDTO) throws IOException,
-            ParseException, DistanceCalculationException, InterruptedException, EntityNotFoundException {
+    public BigDecimal getPotentialRideCost(PotentialRideDTO potentialRideDTO, BindingResult bindingResult)
+            throws IOException, ParseException, DistanceCalculationException, InterruptedException,
+            EntityNotFoundException, EntityValidateException {
 
         PotentialRide potentialRide = potentialRideMapper.toEntity(potentialRideDTO);
+        handleBindingResult(bindingResult);
+
+        return calculatePotentialRideCost(potentialRide);
+    }
+
+    private BigDecimal calculatePotentialRideCost(PotentialRide potentialRide) throws IOException, ParseException, DistanceCalculationException, InterruptedException, EntityNotFoundException {
         int distance = getRideDistance(potentialRide);
         PromoCode promoCode = potentialRide.getPromoCode();
         double discount = 0.0;
@@ -158,6 +173,7 @@ public class RidesService {
         }
 
         BigDecimal cost = BigDecimal.valueOf(STARTING_COST +  (double) (distance / METERS_IN_KILOMETER) * COST_OF_KILOMETER);
+
         return cost.subtract(cost.multiply(BigDecimal.valueOf(discount)));
     }
 
@@ -178,6 +194,18 @@ public class RidesService {
         }
 
         return rideDistance;
+    }
+
+    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
+        if (bindingResult.hasErrors()) {
+            StringBuilder message = new StringBuilder();
+
+            for (FieldError error: bindingResult.getFieldErrors()) {
+                message.append(error.getDefaultMessage()).append(". ");
+            }
+
+            throw new EntityValidateException(message.toString());
+        }
     }
 
 }

@@ -5,19 +5,25 @@ import by.modsen.taxiprovider.ridesservice.mapper.promocode.PromoCodeMapper;
 import by.modsen.taxiprovider.ridesservice.model.promocode.PromoCode;
 import by.modsen.taxiprovider.ridesservice.repository.promocode.PromoCodesRepository;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
-import lombok.AllArgsConstructor;
+import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.ridesservice.util.validation.promocode.PromoCodeValidator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class PromoCodesService {
 
     private final PromoCodesRepository promoCodesRepository;
 
     private final PromoCodeMapper promoCodeMapper;
+
+    private final PromoCodeValidator promoCodeValidator;
 
     @Transactional(readOnly = true)
     public List<PromoCodeDTO> findAll() throws EntityNotFoundException {
@@ -37,13 +43,19 @@ public class PromoCodesService {
     }
 
     @Transactional
-    public void save(PromoCodeDTO promoCodeDTO) {
-        promoCodesRepository.save(promoCodeMapper.toEntity(promoCodeDTO));
+    public void save(PromoCodeDTO promoCodeDTO, BindingResult bindingResult) throws EntityValidateException {
+        PromoCode promoCode = promoCodeMapper.toEntity(promoCodeDTO);
+        promoCodeValidator.validate(promoCode, bindingResult);
+        handleBindingResult(bindingResult);
+
+        promoCodesRepository.save(promoCode);
     }
 
     @Transactional
-    public void update(long id, PromoCodeDTO promoCodeDTO) {
+    public void update(long id, PromoCodeDTO promoCodeDTO, BindingResult bindingResult) throws EntityValidateException {
         PromoCode promoCode = promoCodeMapper.toEntity(promoCodeDTO);
+        promoCodeValidator.validate(promoCode, bindingResult);
+        handleBindingResult(bindingResult);
         promoCode.setId(id);
         promoCodesRepository.save(promoCode);
     }
@@ -54,5 +66,17 @@ public class PromoCodesService {
                 .orElseThrow(EntityNotFoundException.entityNotFoundException("Promo code with id '" + id + "' wasn't found"));
 
         promoCodesRepository.delete(promoCode);
+    }
+
+    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
+        if (bindingResult.hasErrors()) {
+            StringBuilder message = new StringBuilder();
+
+            for (FieldError error: bindingResult.getFieldErrors()) {
+                message.append(error.getDefaultMessage()).append(". ");
+            }
+
+            throw new EntityValidateException(message.toString());
+        }
     }
 }
