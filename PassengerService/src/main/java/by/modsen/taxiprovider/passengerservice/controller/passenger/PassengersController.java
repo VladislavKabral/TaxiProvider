@@ -8,13 +8,11 @@ import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
 import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
-import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,8 +23,6 @@ import java.util.List;
 public class PassengersController {
 
     private final PassengersService passengersService;
-
-    private final PassengersValidator passengersValidator;
 
     @GetMapping
     public ResponseEntity<List<PassengerDTO>> getPassengers() throws EntityNotFoundException {
@@ -63,9 +59,7 @@ public class PassengersController {
     public ResponseEntity<HttpStatus> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO,
                                                     BindingResult bindingResult) throws EntityValidateException {
 
-        passengersValidator.validate(passengerDTO, bindingResult);
-        handleBindingResult(bindingResult);
-        passengersService.save(passengerDTO);
+        passengersService.save(passengerDTO, bindingResult);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -76,8 +70,7 @@ public class PassengersController {
                                                     BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
 
-        handleBindingResult(bindingResult);
-        passengersService.ratePassenger(id, ratingDTO);
+        passengersService.ratePassenger(id, ratingDTO, bindingResult);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -88,9 +81,7 @@ public class PassengersController {
                                                     BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
 
-        passengersValidator.validate(passengerDTO, bindingResult);
-        handleBindingResult(bindingResult);
-        passengersService.update(id, passengerDTO);
+        passengersService.update(id, passengerDTO, bindingResult);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -100,17 +91,5 @@ public class PassengersController {
         passengersService.deactivate(id);
 
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
     }
 }

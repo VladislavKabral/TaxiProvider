@@ -15,17 +15,21 @@ import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRepository;
 import by.modsen.taxiprovider.passengerservice.service.ratings.RatingsService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
-import lombok.AllArgsConstructor;
+import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class PassengersService {
 
     private final PassengersRepository passengersRepository;
@@ -37,6 +41,8 @@ public class PassengersService {
     private final RatingMapper ratingMapper;
 
     private final RatingsService ratingsService;
+
+    private final PassengersValidator passengersValidator;
 
     private static final int COUNT_OF_RATINGS = 30;
 
@@ -70,19 +76,11 @@ public class PassengersService {
                 .entityNotFoundException("Passenger with id '" + id + "' wasn't found")));
     }
 
-    public Passenger findByEmail(String email) throws EntityNotFoundException {
-        return passengersRepository.findByEmail(email).orElseThrow(EntityNotFoundException
-                .entityNotFoundException("Passenger with email '" + email + "' wasn't found"));
-    }
-
-    public Passenger findByPhoneNumber(String phoneNumber) throws EntityNotFoundException {
-        return passengersRepository.findByPhoneNumber(phoneNumber).orElseThrow(EntityNotFoundException
-                .entityNotFoundException("Passenger with phone number '" + phoneNumber + "' wasn't found"));
-    }
-
     @Transactional
-    public void save(NewPassengerDTO passengerDTO) {
+    public void save(NewPassengerDTO passengerDTO, BindingResult bindingResult) throws EntityValidateException {
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
+        passengersValidator.validate(passenger, bindingResult);
+        handleBindingResult(bindingResult);
 
         passenger.setRole("Passenger");
         passenger.setStatus("Active");
@@ -98,12 +96,17 @@ public class PassengersService {
     }
 
     @Transactional
-    public void update(long id, PassengerDTO passengerDTO) throws EntityNotFoundException {
+    public void update(long id, PassengerDTO passengerDTO, BindingResult bindingResult) throws EntityNotFoundException,
+            EntityValidateException {
+
         Passenger passengerData = passengersRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException("Passenger with id '" + id + "' wasn't found"));
 
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
+        passenger.setId(id);
+        passengersValidator.validate(passenger, bindingResult);
+        handleBindingResult(bindingResult);
 
         String firstname = passenger.getFirstname();
         String lastname = passenger.getLastname();
@@ -148,12 +151,16 @@ public class PassengersService {
     }
 
     @Transactional
-    public void ratePassenger(long id, RatingDTO ratingDTO) throws EntityNotFoundException {
+    public void ratePassenger(long id, RatingDTO ratingDTO, BindingResult bindingResult) throws EntityNotFoundException,
+            EntityValidateException {
+
         Passenger passenger = passengersRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException("Passenger with id '" + id + "' wasn't found"));
 
         Rating rating = ratingMapper.toEntity(ratingDTO);
+        handleBindingResult(bindingResult);
+
         rating.setPassenger(passenger);
 
         ratingsService.save(rating);
@@ -166,5 +173,17 @@ public class PassengersService {
                             .entityNotFoundException("Passenger with id '" + id + "' wasn't found")))
                 .rating(ratingMapper.toEntity(getPassengerRating(id)))
                 .build());
+    }
+
+    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
+        if (bindingResult.hasErrors()) {
+            StringBuilder message = new StringBuilder();
+
+            for (FieldError error: bindingResult.getFieldErrors()) {
+                message.append(error.getDefaultMessage()).append(". ");
+            }
+
+            throw new EntityValidateException(message.toString());
+        }
     }
 }
