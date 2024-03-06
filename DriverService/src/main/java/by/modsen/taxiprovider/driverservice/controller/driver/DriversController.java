@@ -8,13 +8,11 @@ import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
 import by.modsen.taxiprovider.driverservice.service.driver.DriversService;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
-import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,8 +31,6 @@ import java.util.List;
 public class DriversController {
 
     private final DriversService driversService;
-
-    private final DriversValidator driversValidator;
 
     @GetMapping
     public ResponseEntity<List<DriverDTO>> getDrivers() throws EntityNotFoundException {
@@ -68,9 +64,7 @@ public class DriversController {
     public ResponseEntity<HttpStatus> saveDriver(@RequestBody @Valid NewDriverDTO driverDTO,
                                                  BindingResult bindingResult) throws EntityValidateException {
 
-        driversValidator.validate(driverDTO, bindingResult);
-        handleBindingResult(bindingResult);
-        driversService.save(driverDTO);
+        driversService.save(driverDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -80,8 +74,7 @@ public class DriversController {
                                                  BindingResult bindingResult)
             throws EntityValidateException, EntityNotFoundException {
 
-        handleBindingResult(bindingResult);
-        driversService.rateDriver(id, ratingDTO);
+        driversService.rateDriver(id, ratingDTO, bindingResult);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -92,9 +85,7 @@ public class DriversController {
                                                  BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
 
-        driversValidator.validate(driverDTO, bindingResult);
-        handleBindingResult(bindingResult);
-        driversService.update(id, driverDTO);
+        driversService.update(id, driverDTO, bindingResult);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -104,17 +95,5 @@ public class DriversController {
         driversService.deactivate(id);
 
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
     }
 }

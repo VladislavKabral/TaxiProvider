@@ -13,11 +13,15 @@ import by.modsen.taxiprovider.driverservice.model.rating.Rating;
 import by.modsen.taxiprovider.driverservice.repository.driver.DriversRepository;
 import by.modsen.taxiprovider.driverservice.service.rating.RatingsService;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
+import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,6 +33,8 @@ public class DriversService {
     private final DriversRepository driversRepository;
 
     private final DriverMapper driverMapper;
+
+    private final DriversValidator driversValidator;
 
     private final RatingsService ratingsService;
 
@@ -65,21 +71,12 @@ public class DriversService {
                         .entityNotFoundException("Driver with id '" + id + "' wasn't found")));
     }
 
-    public Driver findByEmail(String email) throws EntityNotFoundException {
-        return driversRepository.findByEmail(email)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException("Driver with email '" + email + "' wasn't found"));
-    }
-
-    public Driver findByPhoneNumber(String phoneNumber) throws EntityNotFoundException {
-        return driversRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException("Driver with phone number '" + phoneNumber + "' wasn't found"));
-    }
-
     @Transactional
-    public void save(NewDriverDTO driverDTO) {
+    public void save(NewDriverDTO driverDTO, BindingResult bindingResult) throws EntityValidateException {
         Driver driver = driverMapper.toEntity(driverDTO);
+        driversValidator.validate(driver, bindingResult);
+        handleBindingResult(bindingResult);
+
         driver.setRole("Driver");
         driver.setStatus("Active");
         driver.setBalance(BigDecimal.ZERO);
@@ -94,10 +91,16 @@ public class DriversService {
     }
 
     @Transactional
-    public void update(long id, DriverDTO driverDTO) throws EntityNotFoundException {
+    public void update(long id, DriverDTO driverDTO, BindingResult bindingResult) throws EntityNotFoundException,
+            EntityValidateException {
+
         Driver driver = driversRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException("Driver with id '" + id + "' wasn't found"));
+
+        driversValidator.validate(driver, bindingResult);
+        handleBindingResult(bindingResult);
+
         String firstname = driverDTO.getFirstname();
         String lastname = driverDTO.getLastname();
         String email = driverDTO.getEmail();
@@ -139,11 +142,14 @@ public class DriversService {
     }
 
     @Transactional
-    public void rateDriver(long id, RatingDTO ratingDTO) throws EntityNotFoundException {
+    public void rateDriver(long id, RatingDTO ratingDTO, BindingResult bindingResult) throws EntityNotFoundException,
+            EntityValidateException {
+
         Driver driver = driversRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException("Driver with id '" + id + "' wasn't found"));
 
+        handleBindingResult(bindingResult);
         Rating rating = ratingMapper.toEntity(ratingDTO);
         rating.setDriver(driver);
 
@@ -158,5 +164,17 @@ public class DriversService {
                 .driver(driver)
                 .rating(driverRating)
                 .build();
+    }
+
+    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
+        if (bindingResult.hasErrors()) {
+            StringBuilder message = new StringBuilder();
+
+            for (FieldError error: bindingResult.getFieldErrors()) {
+                message.append(error.getDefaultMessage()).append(". ");
+            }
+
+            throw new EntityValidateException(message.toString());
+        }
     }
 }
