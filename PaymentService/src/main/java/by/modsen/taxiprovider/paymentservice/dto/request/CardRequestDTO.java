@@ -1,4 +1,4 @@
-package by.modsen.taxiprovider.paymentservice.dto;
+package by.modsen.taxiprovider.paymentservice.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

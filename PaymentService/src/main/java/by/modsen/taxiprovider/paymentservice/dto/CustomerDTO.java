@@ -17,7 +17,7 @@ public class CustomerDTO {
 
     private String phone;
 
-    private long passengerId;
+    private long taxiUserId;
 
     private BigDecimal balance;
 }

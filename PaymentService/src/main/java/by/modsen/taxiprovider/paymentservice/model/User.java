@@ -24,8 +24,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "passenger_id")
-    private long passengerId;
+    @Column(name = "taxi_user_id")
+    private long taxiUserId;
 
     @Column(name = "customer_id")
     private String customerId;
