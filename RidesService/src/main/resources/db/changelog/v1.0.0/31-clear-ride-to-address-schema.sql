@@ -1,0 +1,1 @@
+truncate table ride_to_address;
