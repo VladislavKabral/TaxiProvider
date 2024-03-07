@@ -36,7 +36,7 @@ public class RideDTO {
     private AddressDTO sourceAddress;
 
     @Valid
-    @NotNull(message = "Target address-(es) must be not empty")
+    @NotNull(message = "Destination address-(es) must be not empty")
     @Size(min = 1, message = "Must be at least one destination address")
     private List<AddressDTO> destinationAddresses;
 

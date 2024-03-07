@@ -1,12 +1,14 @@
 package by.modsen.taxiprovider.ridesservice.model.ride;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.BatchSize;
-
-import java.util.List;
 
 @Entity
 @Table(name = "addresses")
@@ -25,12 +27,4 @@ public class Address {
 
     @Column(name = "longitude")
     private String longitude;
-
-    @OneToMany(mappedBy = "sourceAddress", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    @BatchSize(size = 150)
-    private List<Ride> ride;
-
-    @ManyToMany(mappedBy = "destinationAddresses", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @BatchSize(size = 150)
-    private List<Ride> rides;
 }
