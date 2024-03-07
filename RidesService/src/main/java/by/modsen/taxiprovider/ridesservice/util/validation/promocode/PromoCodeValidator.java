@@ -1,18 +1,19 @@
 package by.modsen.taxiprovider.ridesservice.util.validation.promocode;
 
 import by.modsen.taxiprovider.ridesservice.model.promocode.PromoCode;
-import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
-import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
+import by.modsen.taxiprovider.ridesservice.repository.promocode.PromoCodesRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import java.util.Optional;
+
 @Component
 @AllArgsConstructor
 public class PromoCodeValidator implements Validator {
 
-    private final PromoCodesService promoCodesService;
+    private final PromoCodesRepository promoCodesRepository;
 
     private static final double MINIMAL_DISCOUNT = 0.01;
 
@@ -27,14 +28,10 @@ public class PromoCodeValidator implements Validator {
     public void validate(Object target, Errors errors) {
         PromoCode promoCode = (PromoCode) target;
 
-        try {
-            PromoCode existingPromoCode = promoCodesService.findByValue(promoCode.getValue());
-            if ((existingPromoCode != null) && (existingPromoCode.getId() != promoCode.getId())) {
-                errors.rejectValue("value", "", "Promo code '" + promoCode.getValue() +
-                        "' already exists");
-            }
-        } catch (EntityNotFoundException e) {
-            //TODO: add log
+        Optional<PromoCode> existingPromoCode = promoCodesRepository.findByValue(promoCode.getValue());
+        if ((existingPromoCode.isPresent()) && (existingPromoCode.get().getId() != promoCode.getId())) {
+            errors.rejectValue("value", "", "Promo code '" + promoCode.getValue() +
+                    "' already exists");
         }
 
         if ((Double.compare(promoCode.getDiscount(), MINIMAL_DISCOUNT) == -1)

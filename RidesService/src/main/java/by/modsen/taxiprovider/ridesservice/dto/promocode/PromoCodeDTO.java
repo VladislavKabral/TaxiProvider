@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PromoCodeDTO {
 
-    @Size(min = 4, max = 50, message = "Promo code must be between 4 and 50 symbols")
+    @Size(min = 2, max = 50, message = "Promo code must be between 2 and 50 symbols")
     @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Promo code must contains only letters and numbers")
     private String value;
 

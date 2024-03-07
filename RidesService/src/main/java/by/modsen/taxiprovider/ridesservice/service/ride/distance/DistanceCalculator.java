@@ -1,7 +1,13 @@
 package by.modsen.taxiprovider.ridesservice.service.ride.distance;
 
-import by.modsen.taxiprovider.ridesservice.model.ride.address.Address;
+import by.modsen.taxiprovider.ridesservice.dto.ride.DistanceRequestDTO;
+import by.modsen.taxiprovider.ridesservice.mapper.ride.AddressMapper;
+import by.modsen.taxiprovider.ridesservice.model.ride.Address;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -15,12 +21,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Iterator;
+import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class DistanceCalculator {
 
     @Value("${api_uri}")
     private String API_URI;
+
+    private final AddressMapper addressMapper;
 
     private static final String ROTES_NODE_NAME = "routes";
 
@@ -31,8 +41,7 @@ public class DistanceCalculator {
     public int calculate(Address source, Address target) throws IOException, InterruptedException, ParseException, DistanceCalculationException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URI))
-                .POST(HttpRequest.BodyPublishers
-                        .ofString(getRequestBody(source, target)))
+                .POST(HttpRequest.BodyPublishers.ofString(getRequestBody(source, target)))
                 .build();
 
         HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
@@ -50,21 +59,13 @@ public class DistanceCalculator {
         return Integer.parseInt(route.get(DISTANCE_PARAM_NAME).toString());
     }
 
-    private String getRequestBody(Address source, Address target) {
-        return "{\n" +
-                "    \"points\": [\n" +
-                "        {\n" +
-                "            \"lat\":" + source.getLat() + ",\n" +
-                "            \"lon\":" + source.getLon() + "\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"lat\":" + target.getLat() + ",\n" +
-                "            \"lon\":" + target.getLon() + "\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"sources\": [0],\n" +
-                "    \"targets\": [1]\n" +
-                "}";
+    private String getRequestBody(Address source, Address target) throws JsonProcessingException {
+        ObjectWriter objectWriter = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        return objectWriter.writeValueAsString(DistanceRequestDTO.builder()
+                .points(addressMapper.toListDTO(List.of(source, target)))
+                .sources(new int[]{0})
+                .targets(new int[]{1})
+                .build());
     }
 
 }

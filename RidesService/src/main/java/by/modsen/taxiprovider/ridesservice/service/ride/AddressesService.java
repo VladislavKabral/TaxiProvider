@@ -1,20 +1,20 @@
-package by.modsen.taxiprovider.ridesservice.service.ride.address;
+package by.modsen.taxiprovider.ridesservice.service.ride;
 
-import by.modsen.taxiprovider.ridesservice.model.ride.address.Address;
-import by.modsen.taxiprovider.ridesservice.repository.ride.address.AddressesRepository;
-import lombok.AllArgsConstructor;
+import by.modsen.taxiprovider.ridesservice.model.ride.Address;
+import by.modsen.taxiprovider.ridesservice.repository.ride.AddressesRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(readOnly = true)
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AddressesService {
 
     private final AddressesRepository addressesRepository;
 
+    @Transactional(readOnly = true)
     public Address findByLatitudeAndLongitude(String latitude, String longitude) {
-        return addressesRepository.findByLatAndLon(latitude, longitude);
+        return addressesRepository.findByLatitudeAndLongitude(latitude, longitude);
     }
 
     @Transactional

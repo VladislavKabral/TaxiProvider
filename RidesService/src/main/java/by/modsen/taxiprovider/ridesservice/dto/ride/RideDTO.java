@@ -1,8 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.dto.ride;
 
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.address.AddressDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.address.DestinationAddressDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -12,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,12 +36,12 @@ public class RideDTO {
     private AddressDTO sourceAddress;
 
     @Valid
-    @NotNull(message = "Target address-(es) must be not empty")
+    @NotNull(message = "Destination address-(es) must be not empty")
     @Size(min = 1, message = "Must be at least one destination address")
-    private List<DestinationAddressDTO> destinationAddresses;
+    private List<AddressDTO> destinationAddresses;
 
     @Valid
     private PromoCodeDTO promoCode;
 
-    private double cost;
+    private BigDecimal cost;
 }

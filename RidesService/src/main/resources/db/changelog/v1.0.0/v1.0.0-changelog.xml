@@ -4,20 +4,13 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <changeSet id="add-tag-1.0.0" author="Vladislav Kabral">
-        <tagDatabase tag="v1.0.0"/>
-    </changeSet>
-
-    <include file="create-promo-codes-schema.xml" relativeToChangelogFile="true"/>
-    <include file="create-rides-schema.xml" relativeToChangelogFile="true"/>
-    <include file="create-destination-addresses-schema.xml" relativeToChangelogFile="true"/>
-    <include file="insert-promo-code-records.xml" relativeToChangelogFile="true"/>
-    <include file="update-destination-addresses-schema-to-addresses-schema.xml" relativeToChangelogFile="true"/>
-    <include file="delete-ride-id-column-from-addresses-schema.xml" relativeToChangelogFile="true"/>
-    <include file="create-new-destination-addresses-schema.xml" relativeToChangelogFile="true"/>
-    <include file="create-source-addresses-schema.xml" relativeToChangelogFile="true"/>
-    <include file="update-rides-schema-according-new-addresses-schema.xml" relativeToChangelogFile="true"/>
-    <include file="drop-source-addresses-schema.xml" relativeToChangelogFile="true"/>
-    <include file="add-status-column-to-rides-schema.xml" relativeToChangelogFile="true"/>
+    <include file="01-changeset-promo-codes-schema.xml" relativeToChangelogFile="true"/>
+    <include file="10-changeset-addresses-schema.xml" relativeToChangelogFile="true"/>
+    <include file="20-changeset-rides-schema.xml" relativeToChangelogFile="true"/>
+    <include file="30-changeset-ride-to-address-schema.xml" relativeToChangelogFile="true"/>
+    <include file="02-changeset-promo-codes-schema.xml" relativeToChangelogFile="true"/>
+    <include file="11-changeset-addresses-schema.xml" relativeToChangelogFile="true"/>
+    <include file="21-changeset-rides-schema.xml" relativeToChangelogFile="true"/>
+    <include file="31-changeset-ride-to-address-schema.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
