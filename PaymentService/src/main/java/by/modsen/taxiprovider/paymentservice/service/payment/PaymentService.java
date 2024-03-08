@@ -9,8 +9,11 @@ import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDTO;
 import by.modsen.taxiprovider.paymentservice.model.User;
 import by.modsen.taxiprovider.paymentservice.service.user.UsersService;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityNotFoundException;
+import by.modsen.taxiprovider.paymentservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.paymentservice.util.exception.NotEnoughMoneyException;
 import by.modsen.taxiprovider.paymentservice.util.exception.PaymentException;
+import by.modsen.taxiprovider.paymentservice.util.validation.CardRequestValidator;
+import by.modsen.taxiprovider.paymentservice.util.validation.CustomerValidator;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Token;
@@ -27,6 +30,8 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -44,13 +49,19 @@ public class PaymentService {
 
     private final UsersService usersService;
 
+    private final CardRequestValidator cardRequestValidator;
+
+    private final CustomerValidator customerValidator;
+
     @PostConstruct
     public void init(){
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
     }
 
-    public ChargeResponseDTO charge(ChargeRequestDTO chargeRequestDTO)
-            throws PaymentException {
+    public ChargeResponseDTO charge(ChargeRequestDTO chargeRequestDTO, BindingResult bindingResult)
+            throws PaymentException, EntityValidateException {
+
+        handleBindingResult(bindingResult);
 
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
@@ -74,7 +85,12 @@ public class PaymentService {
                 .build();
     }
 
-    public TokenResponseDTO createStripeToken(CardRequestDTO cardRequestDTO) throws PaymentException {
+    public TokenResponseDTO createStripeToken(CardRequestDTO cardRequestDTO, BindingResult bindingResult)
+            throws PaymentException, EntityValidateException {
+
+        cardRequestValidator.validate(cardRequestDTO, bindingResult);
+        handleBindingResult(bindingResult);
+
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PUBLIC_KEY)
                 .build();
@@ -98,7 +114,12 @@ public class PaymentService {
                 .build();
     }
 
-    public void createCustomer(CustomerDTO customerDTO) throws PaymentException {
+    public void createCustomer(CustomerDTO customerDTO, BindingResult bindingResult) throws PaymentException,
+            EntityValidateException {
+
+        customerValidator.validate(customerDTO, bindingResult);
+        handleBindingResult(bindingResult);
+
         Stripe.apiKey = STRIPE_API_PUBLIC_KEY;
 
         CustomerCreateParams params =
@@ -113,7 +134,12 @@ public class PaymentService {
         createUser(params, customerDTO.getTaxiUserId());
     }
 
-    public void updateCustomer(long id, CustomerDTO customerDTO) throws PaymentException, EntityNotFoundException {
+    public void updateCustomer(long id, CustomerDTO customerDTO, BindingResult bindingResult) throws PaymentException,
+            EntityNotFoundException, EntityValidateException {
+
+        cardRequestValidator.validate(customerDTO, bindingResult);
+        handleBindingResult(bindingResult);
+
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
@@ -152,8 +178,11 @@ public class PaymentService {
 
     }
 
-    public ChargeResponseDTO chargeFromCustomer(CustomerChargeRequestDTO customerChargeRequestDTO)
-            throws EntityNotFoundException, NotEnoughMoneyException, PaymentException {
+    public ChargeResponseDTO chargeFromCustomer(CustomerChargeRequestDTO customerChargeRequestDTO,
+                                                BindingResult bindingResult)
+            throws EntityNotFoundException, NotEnoughMoneyException, PaymentException, EntityValidateException {
+
+        handleBindingResult(bindingResult);
 
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
         User user = usersService.findById(customerChargeRequestDTO.getTaxiUserId());
@@ -274,4 +303,15 @@ public class PaymentService {
         }
     }
 
+    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
+        if (bindingResult.hasErrors()) {
+            StringBuilder message = new StringBuilder();
+
+            for (FieldError error: bindingResult.getFieldErrors()) {
+                message.append(error.getDefaultMessage()).append(". ");
+            }
+
+            throw new EntityValidateException(message.toString());
+        }
+    }
 }

@@ -1,6 +1,11 @@
 package by.modsen.taxiprovider.paymentservice.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +26,7 @@ public class CustomerDTO {
     private String email;
 
     @NotBlank(message = "Customer's phone number must be not empty")
+    @Pattern(regexp = "^(\\+375|80)(29|25|44|33)(\\d{3})(\\d{2})(\\d{2})$", message = "Wrong format of phone number")
     private String phone;
 
     @NotNull(message = "Taxi user's id must be not null")

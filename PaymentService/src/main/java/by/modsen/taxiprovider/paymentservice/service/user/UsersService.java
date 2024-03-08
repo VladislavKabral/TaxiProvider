@@ -18,6 +18,10 @@ public class UsersService {
                 .entityNotFoundException("User with id '" + id + "' wasn't found"));
     }
 
+    public Boolean isUserExists(long taxiUserId) {
+        return usersRepository.findByTaxiUserId(taxiUserId).isPresent();
+    }
+
     @Transactional
     public void save(User user) {
         usersRepository.save(user);

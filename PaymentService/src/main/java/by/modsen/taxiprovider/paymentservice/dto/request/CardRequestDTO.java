@@ -1,6 +1,10 @@
 package by.modsen.taxiprovider.paymentservice.dto.request;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +28,8 @@ public class CardRequestDTO {
     @NotNull(message = "Expiration year can't be null")
     private int year;
 
-    @Pattern(regexp = "^[0-9]{3}$", message = "Wrong CVC code format")
     @NotNull(message = "CVC code can't be null")
+    @Min(value = 0, message = "Minimal value of CVC code is '000'")
+    @Max(value = 999, message = "Maximum value of CVC code is '999'")
     private int cvc;
 }
