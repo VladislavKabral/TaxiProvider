@@ -6,6 +6,7 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO
 import by.modsen.taxiprovider.passengerservice.dto.rating.PassengerRatingDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
 import by.modsen.taxiprovider.passengerservice.dto.request.RideRequestDTO;
+import by.modsen.taxiprovider.passengerservice.dto.response.RideDTO;
 import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerProfileMapper;
 import by.modsen.taxiprovider.passengerservice.mapper.rating.RatingMapper;
@@ -193,7 +194,7 @@ public class PassengersService {
         handleBindingResult(bindingResult);
 
         long passengerId = rideRequestDTO.getPassengerId();
-        if (!isPassengerExists(passengerId)) {
+        if (isPassengerExists(passengerId)) {
             throw new EntityNotFoundException("Passenger with id '" + passengerId + "' wasn't found");
         }
 
@@ -207,6 +208,22 @@ public class PassengersService {
                 .body(Mono.just(rideRequestDTO), RideRequestDTO.class)
                 .retrieve()
                 .bodyToMono(RideRequestDTO.class);
+    }
+
+    public List<RideDTO> getRidesHistory(long id) throws EntityNotFoundException {
+        if (!isPassengerExists(id)) {
+            throw new EntityNotFoundException("Passenger with id '" + id + "' wasn't found");
+        }
+
+        WebClient webClient = WebClient.builder()
+                .baseUrl(RIDES_SERVICE_HOST_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        return webClient.get()
+                .uri("/passenger/" + id)
+                .retrieve()
+                .bodyToFlux(RideDTO.class).collect(Collectors.toList()).block();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {

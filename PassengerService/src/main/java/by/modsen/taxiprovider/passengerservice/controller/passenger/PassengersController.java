@@ -6,6 +6,7 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO
 import by.modsen.taxiprovider.passengerservice.dto.rating.PassengerRatingDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
 import by.modsen.taxiprovider.passengerservice.dto.request.RideRequestDTO;
+import by.modsen.taxiprovider.passengerservice.dto.response.RideDTO;
 import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
@@ -43,7 +44,6 @@ public class PassengersController {
     public ResponseEntity<List<PassengerDTO>> getPassengersPage(@RequestParam("page") int page,
                                                                 @RequestParam("size") int size)
             throws EntityNotFoundException {
-
         return new ResponseEntity<>(passengersService.findPagePassengers(page - 1,
                 size), HttpStatus.OK);
     }
@@ -61,16 +61,19 @@ public class PassengersController {
     @GetMapping("/{id}/profile")
     public ResponseEntity<PassengerProfileDTO> getPassengerProfile(@PathVariable long id)
             throws EntityNotFoundException {
-
         return new ResponseEntity<>(passengersService.getPassengerProfile(id), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/rides")
+    public ResponseEntity<List<RideDTO>> getRidesHistory(@PathVariable("id") long id)
+            throws EntityNotFoundException {
+        return new ResponseEntity<>(passengersService.getRidesHistory(id), HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<HttpStatus> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO,
                                                     BindingResult bindingResult) throws EntityValidateException {
-
         passengersService.save(passengerDTO, bindingResult);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -79,9 +82,7 @@ public class PassengersController {
                                                     @RequestBody @Valid RatingDTO ratingDTO,
                                                     BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
-
         passengersService.ratePassenger(id, ratingDTO, bindingResult);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -99,16 +100,13 @@ public class PassengersController {
                                                     @RequestBody @Valid PassengerDTO passengerDTO,
                                                     BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
-
         passengersService.update(id, passengerDTO, bindingResult);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deactivatePassenger(@PathVariable("id") long id) throws EntityNotFoundException {
         passengersService.deactivate(id);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
