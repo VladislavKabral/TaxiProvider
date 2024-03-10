@@ -4,6 +4,7 @@ import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
+import by.modsen.taxiprovider.paymentservice.dto.request.DriverBalanceRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDTO;
 import by.modsen.taxiprovider.paymentservice.service.payment.PaymentService;
@@ -50,6 +51,15 @@ public class PaymentController {
                                                    BindingResult bindingResult)
             throws PaymentException, EntityNotFoundException, EntityValidateException {
         paymentService.updateCustomer(id, customerDTO, bindingResult);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PatchMapping("/customers/drivers/{id}")
+    public ResponseEntity<HttpStatus> updateDriverBalance(@PathVariable("id") long id,
+                                                          @RequestBody @Valid DriverBalanceRequestDTO balanceRequestDTO,
+                                                          BindingResult bindingResult)
+            throws PaymentException, EntityValidateException, EntityNotFoundException {
+        paymentService.updateDriverBalance(id, balanceRequestDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

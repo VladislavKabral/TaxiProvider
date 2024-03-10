@@ -4,6 +4,7 @@ import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
+import by.modsen.taxiprovider.paymentservice.dto.request.DriverBalanceRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDTO;
 import by.modsen.taxiprovider.paymentservice.model.User;
@@ -236,6 +237,37 @@ public class PaymentService {
 
         CustomerUpdateParams params = CustomerUpdateParams.builder()
                 .setBalance(customer.getBalance() - amount)
+                .build();
+
+        RequestOptions requestOptions = RequestOptions.builder()
+                .setApiKey(STRIPE_API_PRIVATE_KEY)
+                .build();
+
+        try {
+            customer.update(params, requestOptions);
+        } catch (StripeException stripeException) {
+            throw new PaymentException(stripeException.getMessage());
+        }
+    }
+
+    public void updateDriverBalance(long driverId, DriverBalanceRequestDTO driverBalanceRequestDTO,
+                                    BindingResult bindingResult) throws PaymentException, EntityNotFoundException,
+            EntityValidateException {
+
+        handleBindingResult(bindingResult);
+
+        User driver = usersService.findByTaxiUserId(driverId);
+        BigDecimal amount = driverBalanceRequestDTO.getAmount();
+
+        Customer customer;
+        try {
+            customer = Customer.retrieve(driver.getCustomerId());
+        } catch (StripeException stripeException) {
+            throw new PaymentException(stripeException.getMessage());
+        }
+
+        CustomerUpdateParams params = CustomerUpdateParams.builder()
+                .setBalance(customer.getBalance() + (long)(amount.floatValue() * 100))
                 .build();
 
         RequestOptions requestOptions = RequestOptions.builder()

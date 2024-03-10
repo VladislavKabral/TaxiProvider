@@ -22,6 +22,11 @@ public class UsersService {
         return usersRepository.findByTaxiUserId(taxiUserId).isPresent();
     }
 
+    public User findByTaxiUserId(long id) throws EntityNotFoundException {
+        return usersRepository.findByTaxiUserId(id).orElseThrow(EntityNotFoundException
+                .entityNotFoundException("User with id '" + id + "' wasn't found"));
+    }
+
     @Transactional
     public void save(User user) {
         usersRepository.save(user);
