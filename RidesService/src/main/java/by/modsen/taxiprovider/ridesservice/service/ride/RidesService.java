@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.service.ride;
 
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
+import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
 import by.modsen.taxiprovider.ridesservice.mapper.promocode.PromoCodeMapper;
@@ -26,6 +27,8 @@ import org.springframework.validation.FieldError;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
@@ -96,12 +99,11 @@ public class RidesService {
     }
 
     @Transactional
-    public void save(RideDTO rideDTO, PromoCodeDTO promoCodeDTO, BindingResult bindingResult) throws IOException,
+    public void save(NewRideDTO rideDTO, PromoCodeDTO promoCodeDTO, BindingResult bindingResult) throws IOException,
             ParseException, DistanceCalculationException, EntityNotFoundException, InterruptedException,
             EntityValidateException {
 
         Ride ride = rideMapper.toEntity(rideDTO);
-        rideValidator.validate(ride, bindingResult);
         handleBindingResult(bindingResult);
 
         PromoCode promoCode = null;
@@ -140,18 +142,37 @@ public class RidesService {
                 .build());
 
         ride.setCost(rideCost);
-        ride.setStatus("Active");
+        ride.setStatus("Waiting");
         ridesRepository.save(ride);
     }
 
     @Transactional
-    public void deactivate(long id) throws EntityNotFoundException {
+    public void update(long id, RideDTO rideDTO, BindingResult bindingResult) throws EntityValidateException,
+            EntityNotFoundException {
+
+        Ride ride = rideMapper.toEntity(rideDTO);
+        rideValidator.validate(ride, bindingResult);
+        handleBindingResult(bindingResult);
+
+        Ride updatingRide = ridesRepository.findById(id).orElseThrow(EntityNotFoundException
+                .entityNotFoundException("Ride with id '" + id + "' wasn't found"));
+        updatingRide.setDriverId(ride.getDriverId());
+        updatingRide.setStatus(ride.getStatus());
+
+        switch (ride.getStatus()) {
+            case "In process" -> updatingRide.setStartedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+            case "Completed" -> updatingRide.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+        }
+
+        ridesRepository.save(updatingRide);
+    }
+
+    @Transactional
+    public void delete(long id) throws EntityNotFoundException {
         Ride ride = ridesRepository.findById(id)
                 .orElseThrow(EntityNotFoundException.entityNotFoundException("Ride with id '" + id + "' wasn't found"));
 
-        ride.setStatus("Deleted");
-
-        ridesRepository.save(ride);
+        ridesRepository.delete(ride);
     }
 
     public BigDecimal getPotentialRideCost(PotentialRideDTO potentialRideDTO, BindingResult bindingResult)

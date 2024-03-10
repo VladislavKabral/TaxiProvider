@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.controller.ride;
 
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
+import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialCostDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
@@ -15,6 +16,7 @@ import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,7 +58,7 @@ public class RidesController {
     }
 
     @PostMapping
-    public ResponseEntity<HttpStatus> saveRide(@RequestBody @Valid RideDTO rideDTO, BindingResult bindingResult)
+    public ResponseEntity<HttpStatus> saveRide(@RequestBody @Valid NewRideDTO rideDTO, BindingResult bindingResult)
             throws EntityNotFoundException, IOException, ParseException, DistanceCalculationException,
             InterruptedException, EntityValidateException {
 
@@ -70,12 +72,23 @@ public class RidesController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<HttpStatus> updateRide(@PathVariable("id") long id, @RequestBody @Valid RideDTO rideDTO,
+                                                 BindingResult bindingResult) throws EntityValidateException,
+            EntityNotFoundException {
+
+        ridesService.update(id, rideDTO, bindingResult);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deactivateRide(@PathVariable("id") long id) throws EntityNotFoundException {
-        ridesService.deactivate(id);
+        ridesService.delete(id);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+
 
     @PostMapping("/potentialCost")
     public ResponseEntity<PotentialCostDTO> getPotentialCost(@RequestBody @Valid PotentialRideDTO potentialRideDTO,

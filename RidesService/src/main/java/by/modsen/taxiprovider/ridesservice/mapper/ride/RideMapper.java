@@ -1,12 +1,12 @@
 package by.modsen.taxiprovider.ridesservice.mapper.ride;
 
+import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
 import by.modsen.taxiprovider.ridesservice.model.ride.Ride;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
-import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,18 +17,11 @@ public class RideMapper {
     private final ModelMapper modelMapper;
 
     public Ride toEntity(RideDTO rideDTO) {
-        Ride ride = modelMapper.map(rideDTO, Ride.class);
+        return modelMapper.map(rideDTO, Ride.class);
+    }
 
-        ride.setStartedAt(rideDTO.getStartedAt()
-                .atZone(ZoneId.systemDefault())
-                .withZoneSameInstant(ZoneId.of("UTC"))
-                .toLocalDateTime());
-        ride.setEndedAt(rideDTO.getEndedAt()
-                .atZone(ZoneId.systemDefault())
-                .withZoneSameInstant(ZoneId.of("UTC"))
-                .toLocalDateTime());
-
-        return ride;
+    public Ride toEntity(NewRideDTO rideDTO) {
+        return modelMapper.map(rideDTO, Ride.class);
     }
 
     public RideDTO toDTO(Ride ride) {
