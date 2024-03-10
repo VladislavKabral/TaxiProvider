@@ -5,22 +5,25 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.PassengerRatingDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerMapper;
-import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerProfileMapper;
-import by.modsen.taxiprovider.passengerservice.mapper.rating.RatingMapper;
-import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
-import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
+import by.modsen.taxiprovider.passengerservice.dto.request.RideRequestDTO;
 import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
-import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -31,18 +34,9 @@ public class PassengersController {
 
     private final PassengersService passengersService;
 
-    private final PassengerMapper passengerMapper;
-
-    private final RatingMapper ratingMapper;
-
-    private final PassengerProfileMapper passengerProfileMapper;
-
-    private final PassengersValidator passengersValidator;
-
     @GetMapping
     public ResponseEntity<List<PassengerDTO>> getPassengers() throws EntityNotFoundException {
-        return new ResponseEntity<>(passengerMapper.toListDTO(passengersService.findAll()),
-                HttpStatus.OK);
+        return new ResponseEntity<>(passengersService.findAll(), HttpStatus.OK);
     }
 
     @GetMapping(params = {"page", "size"})
@@ -50,39 +44,32 @@ public class PassengersController {
                                                                 @RequestParam("size") int size)
             throws EntityNotFoundException {
 
-        return new ResponseEntity<>(passengerMapper.toListDTO(passengersService.findPagePassengers(page - 1,
-                size)),
-                HttpStatus.OK);
+        return new ResponseEntity<>(passengersService.findPagePassengers(page - 1,
+                size), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<PassengerDTO> getPassengerById(@PathVariable("id") long id) throws EntityNotFoundException {
-        return new ResponseEntity<>(passengerMapper.toDTO(passengersService.findById(id)),
-                HttpStatus.OK);
+        return new ResponseEntity<>(passengersService.findById(id), HttpStatus.OK);
     }
 
     @GetMapping("/{id}/rating")
     public ResponseEntity<PassengerRatingDTO> getPassengerRating(@PathVariable long id) throws EntityNotFoundException {
-        return new ResponseEntity<>(ratingMapper.toDTO(passengersService.getPassengerRating(id)),
-                HttpStatus.OK);
+        return new ResponseEntity<>(passengersService.getPassengerRating(id), HttpStatus.OK);
     }
 
     @GetMapping("/{id}/profile")
     public ResponseEntity<PassengerProfileDTO> getPassengerProfile(@PathVariable long id)
             throws EntityNotFoundException {
 
-        return new ResponseEntity<>(passengerProfileMapper.toDTO(passengersService.getPassengerProfile(id)),
-                HttpStatus.OK);
+        return new ResponseEntity<>(passengersService.getPassengerProfile(id), HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<HttpStatus> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO,
                                                     BindingResult bindingResult) throws EntityValidateException {
 
-        Passenger passenger = passengerMapper.toEntity(passengerDTO);
-        passengersValidator.validate(passenger, bindingResult);
-        handleBindingResult(bindingResult);
-        passengersService.save(passenger);
+        passengersService.save(passengerDTO, bindingResult);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -93,11 +80,18 @@ public class PassengersController {
                                                     BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
 
-        Rating rating = ratingMapper.toEntity(ratingDTO);
-        handleBindingResult(bindingResult);
-        passengersService.ratePassenger(id, rating);
+        passengersService.ratePassenger(id, ratingDTO, bindingResult);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/{id}/newRide")
+    public ResponseEntity<Mono<RideRequestDTO>> postNewRideRequest(@PathVariable("id") long id,
+                                                                   @RequestBody @Valid RideRequestDTO rideRequestDTO,
+                                                                   BindingResult bindingResult)
+            throws EntityValidateException, EntityNotFoundException {
+        rideRequestDTO.setPassengerId(id);
+        return new ResponseEntity<>(passengersService.postRideRequest(rideRequestDTO, bindingResult), HttpStatus.OK);
     }
 
     @PatchMapping("/{id}")
@@ -106,11 +100,7 @@ public class PassengersController {
                                                     BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
 
-        Passenger passenger = passengerMapper.toEntity(passengerDTO);
-        passenger.setId(id);
-        passengersValidator.validate(passenger, bindingResult);
-        handleBindingResult(bindingResult);
-        passengersService.update(id, passenger);
+        passengersService.update(id, passengerDTO, bindingResult);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -120,17 +110,5 @@ public class PassengersController {
         passengersService.deactivate(id);
 
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
     }
 }

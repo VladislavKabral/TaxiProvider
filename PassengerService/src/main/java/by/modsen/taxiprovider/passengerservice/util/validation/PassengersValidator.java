@@ -1,18 +1,19 @@
 package by.modsen.taxiprovider.passengerservice.util.validation;
 
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
-import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
-import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
+import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import java.util.Optional;
+
 @Component
 @AllArgsConstructor
 public class PassengersValidator implements Validator {
 
-    private final PassengersService passengersService;
+    private final PassengersRepository passengersRepository;
 
     @Override
     public boolean supports(Class<?> clazz) {
@@ -23,24 +24,16 @@ public class PassengersValidator implements Validator {
     public void validate(Object target, Errors errors) {
         Passenger passenger = (Passenger) target;
 
-        try {
-            Passenger existingPassenger = passengersService.findByEmail(passenger.getEmail());
-            if ((existingPassenger != null) && (existingPassenger.getId() != passenger.getId())) {
-                errors.rejectValue("email", "", "A passenger with email '" +
-                        passenger.getEmail() + "' already exists");
-            }
-        } catch (EntityNotFoundException e) {
-            //TODO: add log
+        Optional<Passenger> existingPassenger = passengersRepository.findByEmail(passenger.getEmail());
+        if ((existingPassenger.isPresent()) && (existingPassenger.get().getId() != passenger.getId())) {
+            errors.rejectValue("email", "", "A passenger with email '" +
+                    passenger.getEmail() + "' already exists");
         }
 
-        try {
-            Passenger existingPassenger = passengersService.findByPhoneNumber(passenger.getPhoneNumber());
-            if ((existingPassenger != null) && (existingPassenger.getId() != passenger.getId())) {
-                errors.rejectValue("phoneNumber", "", "A passenger with phone number '" +
-                        passenger.getPhoneNumber() + "' already exists");
-            }
-        } catch (EntityNotFoundException e) {
-            //TODO: add log
+        existingPassenger = passengersRepository.findByPhoneNumber(passenger.getPhoneNumber());
+        if ((existingPassenger.isPresent()) && (existingPassenger.get().getId() != passenger.getId())) {
+            errors.rejectValue("phoneNumber", "", "A passenger with phone number '" +
+                    passenger.getPhoneNumber() + "' already exists");
         }
     }
 }

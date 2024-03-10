@@ -1,15 +1,19 @@
 package by.modsen.taxiprovider.passengerservice.model.rating;
 
 import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ratings")
@@ -24,13 +28,10 @@ public class Rating implements Comparable<Rating>{
     private long id;
 
     @Column(name = "value")
-    @NotNull(message = "Rating's value must be not empty")
-    @Min(value = 1, message = "Minimal value of rating is '1'")
-    @Max(value = 5, message = "Maximum value of rating is '5'")
     private int value;
 
     @Column(name = "created_at")
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "passenger_id", referencedColumnName = "id")

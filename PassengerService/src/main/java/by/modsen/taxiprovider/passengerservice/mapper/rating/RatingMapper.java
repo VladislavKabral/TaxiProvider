@@ -21,4 +21,8 @@ public class RatingMapper {
     public PassengerRatingDTO toDTO(PassengerRating passengerRating) {
         return modelMapper.map(passengerRating, PassengerRatingDTO.class);
     }
+
+    public PassengerRating toEntity(PassengerRatingDTO passengerRatingDTO) {
+        return modelMapper.map(passengerRatingDTO, PassengerRating.class);
+    }
 }
