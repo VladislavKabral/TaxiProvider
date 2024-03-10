@@ -19,9 +19,9 @@ public class RideValidator implements Validator {
     public void validate(Object target, Errors errors) {
         Ride ride = (Ride) target;
 
-        if (ride.getStartedAt().isAfter(ride.getEndedAt())) {
-            errors.rejectValue("startedAt", "", "Ride can't start after ending." +
-                    " Check startedAt field");
+        String status = ride.getStatus();
+        if ((!status.equals("In process")) && (!status.equals("Completed")) && (!status.equals("Deleted"))) {
+            errors.rejectValue("status", "", "Wrong ride's status");
         }
     }
 }
