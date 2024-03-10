@@ -5,6 +5,7 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.PassengerRatingDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
+import by.modsen.taxiprovider.passengerservice.dto.request.RideRequestDTO;
 import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.mapper.passenger.PassengerProfileMapper;
 import by.modsen.taxiprovider.passengerservice.mapper.rating.RatingMapper;
@@ -18,12 +19,16 @@ import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundExce
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,6 +48,9 @@ public class PassengersService {
     private final RatingsService ratingsService;
 
     private final PassengersValidator passengersValidator;
+
+    @Value("${rides-service-host-url}")
+    private String RIDES_SERVICE_HOST_URL;
 
     private static final int COUNT_OF_RATINGS = 30;
 
@@ -74,6 +82,10 @@ public class PassengersService {
     public PassengerDTO findById(long id) throws EntityNotFoundException {
         return passengerMapper.toDTO(passengersRepository.findById(id).orElseThrow(EntityNotFoundException
                 .entityNotFoundException("Passenger with id '" + id + "' wasn't found")));
+    }
+
+    public boolean isPassengerExists(long id) {
+        return passengersRepository.existsById(id);
     }
 
     @Transactional
@@ -173,6 +185,28 @@ public class PassengersService {
                             .entityNotFoundException("Passenger with id '" + id + "' wasn't found")))
                 .rating(ratingMapper.toEntity(getPassengerRating(id)))
                 .build());
+    }
+
+    public Mono<RideRequestDTO> postRideRequest(RideRequestDTO rideRequestDTO, BindingResult bindingResult)
+            throws EntityValidateException, EntityNotFoundException {
+
+        handleBindingResult(bindingResult);
+
+        long passengerId = rideRequestDTO.getPassengerId();
+        if (!isPassengerExists(passengerId)) {
+            throw new EntityNotFoundException("Passenger with id '" + passengerId + "' wasn't found");
+        }
+
+        WebClient webClient = WebClient.builder()
+                .baseUrl(RIDES_SERVICE_HOST_URL)
+                .defaultHeader("Accept", MediaType.APPLICATION_JSON_VALUE,
+                        "Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        return webClient.post()
+                .body(Mono.just(rideRequestDTO), RideRequestDTO.class)
+                .retrieve()
+                .bodyToMono(RideRequestDTO.class);
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
