@@ -7,5 +7,6 @@ create table drivers (
     role varchar(20) not null,
     phone_number varchar(20) not null unique,
     status varchar(20) not null,
-    balance numeric(8,4) not null
+    balance numeric(8,4) not null,
+    ride_status varchar(20) not null
 )

@@ -2,6 +2,7 @@ package by.modsen.taxiprovider.driverservice.controller.driver;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
+import by.modsen.taxiprovider.driverservice.dto.driver.FreeDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.DriverRatingDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
@@ -60,6 +61,11 @@ public class DriversController {
         return new ResponseEntity<>(driversService.getDriverProfile(id), HttpStatus.OK);
     }
 
+    @GetMapping("/free")
+    public ResponseEntity<List<FreeDriverDTO>> getFreeDrivers() throws EntityNotFoundException {
+        return new ResponseEntity<>(driversService.findFreeDrivers(), HttpStatus.OK);
+    }
+
     @PostMapping
     public ResponseEntity<HttpStatus> saveDriver(@RequestBody @Valid NewDriverDTO driverDTO,
                                                  BindingResult bindingResult) throws EntityValidateException {
@@ -79,13 +85,18 @@ public class DriversController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping(value = "/{id}", params = "rideStatus")
     public ResponseEntity<HttpStatus> editDriver(@PathVariable("id") long id,
                                                  @RequestBody @Valid DriverDTO driverDTO,
+                                                 @RequestParam("rideStatus") String rideStatus,
                                                  BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
 
-        driversService.update(id, driverDTO, bindingResult);
+        if (rideStatus == null) {
+            driversService.update(id, driverDTO, bindingResult);
+        } else {
+            driversService.changeDriverRideStatus(id, rideStatus);
+        }
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

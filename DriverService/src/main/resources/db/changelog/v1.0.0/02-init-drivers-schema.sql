@@ -1,4 +1,4 @@
-insert into drivers(lastname, firstname, email, password, role, phone_number, status, balance)
+insert into drivers(lastname, firstname, email, password, role, phone_number, status, balance, ride_status)
     values ('Vasiliev',
             'Platon',
             'mr.vasiliev@mail.ru',
@@ -6,9 +6,10 @@ insert into drivers(lastname, firstname, email, password, role, phone_number, st
             'Driver',
             '+375293660893',
             'Active',
-            '0.0');
+            '0.0',
+            'Free');
 
-insert into drivers(lastname, firstname, email, password, role, phone_number, status, balance)
+insert into drivers(lastname, firstname, email, password, role, phone_number, status, balance, ride_status)
     values ('Dybrovin',
             'Ilia',
             'mr.dybrovin@mail.ru',
@@ -16,9 +17,10 @@ insert into drivers(lastname, firstname, email, password, role, phone_number, st
             'Driver',
             '+375296499224',
             'Active',
-            '0.0');
+            '0.0',
+            'Free');
 
-insert into drivers(lastname, firstname, email, password, role, phone_number, status, balance)
+insert into drivers(lastname, firstname, email, password, role, phone_number, status, balance, ride_status)
     values ('Smirnov',
             'Sergei',
             'mr.smirnov@mail.ru',
@@ -26,4 +28,5 @@ insert into drivers(lastname, firstname, email, password, role, phone_number, st
             'Driver',
             '+375298415692',
             'Active',
-            '0.0');
+            '0.0',
+            'Free');

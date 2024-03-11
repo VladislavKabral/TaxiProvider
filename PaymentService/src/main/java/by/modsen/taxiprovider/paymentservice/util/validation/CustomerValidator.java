@@ -22,9 +22,10 @@ public class CustomerValidator implements Validator {
     public void validate(Object target, Errors errors) {
         CustomerDTO customerDTO = (CustomerDTO) target;
 
-        if (usersService.isUserExists(customerDTO.getTaxiUserId())) {
+        if (usersService.isUserExists(customerDTO.getTaxiUserId(), customerDTO.getRole())) {
             errors.rejectValue("taxiUserId", "",
-                    "Taxi user with id '" + customerDTO.getTaxiUserId() + "' already exists");
+                    "Taxi user with id '" + customerDTO.getTaxiUserId() +
+                            "'and role '" + customerDTO.getRole() + "' already exists");
         }
     }
 }

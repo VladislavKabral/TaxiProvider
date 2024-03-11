@@ -54,6 +54,9 @@ public class Driver {
     @Column(name = "balance")
     private BigDecimal balance;
 
+    @Column(name = "ride_status")
+    private String rideStatus;
+
     @OneToMany(mappedBy = "driver")
     private List<Rating> ratings;
 }
