@@ -1,5 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.service.ride;
 
+import by.modsen.taxiprovider.ridesservice.dto.driver.FreeDriverDTO;
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDTO;
@@ -17,19 +18,26 @@ import by.modsen.taxiprovider.ridesservice.service.ride.distance.DistanceCalcula
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.ridesservice.util.exception.NotEnoughFreeDriversException;
 import by.modsen.taxiprovider.ridesservice.util.validation.ride.RideValidator;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +56,9 @@ public class RidesService {
     private final PromoCodeMapper promoCodeMapper;
 
     private final PotentialRideMapper potentialRideMapper;
+
+    @Value("${drivers-service-host-url}")
+    private String DRIVERS_SERVICE_HOST_URL;
 
     private static final int MINIMAL_COUNT_OF_TARGET_ADDRESSES = 1;
 
@@ -143,6 +154,7 @@ public class RidesService {
 
         ride.setCost(rideCost);
         ride.setStatus("Waiting");
+        ride.setDriverId(getFreeDrivers().get(0).getId());
         ridesRepository.save(ride);
     }
 
@@ -215,6 +227,22 @@ public class RidesService {
         }
 
         return rideDistance;
+    }
+
+    private List<FreeDriverDTO> getFreeDrivers() {
+        WebClient webClient = WebClient.builder()
+                .baseUrl(DRIVERS_SERVICE_HOST_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        return webClient.get()
+                .uri("/free")
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                                Mono.error(new NotEnoughFreeDriversException()))
+                .bodyToFlux(FreeDriverDTO.class)
+                .collect(Collectors.toList())
+                .block();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {

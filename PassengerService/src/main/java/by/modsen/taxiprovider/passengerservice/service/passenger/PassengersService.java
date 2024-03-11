@@ -18,11 +18,13 @@ import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRe
 import by.modsen.taxiprovider.passengerservice.service.ratings.RatingsService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.passengerservice.util.exception.NotEnoughFreeDriversException;
 import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -194,7 +196,7 @@ public class PassengersService {
         handleBindingResult(bindingResult);
 
         long passengerId = rideRequestDTO.getPassengerId();
-        if (isPassengerExists(passengerId)) {
+        if (!isPassengerExists(passengerId)) {
             throw new EntityNotFoundException("Passenger with id '" + passengerId + "' wasn't found");
         }
 
@@ -207,6 +209,8 @@ public class PassengersService {
         return webClient.post()
                 .body(Mono.just(rideRequestDTO), RideRequestDTO.class)
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                        Mono.error(new NotEnoughFreeDriversException()))
                 .bodyToMono(RideRequestDTO.class);
     }
 
@@ -223,7 +227,9 @@ public class PassengersService {
         return webClient.get()
                 .uri("/passenger/" + id)
                 .retrieve()
-                .bodyToFlux(RideDTO.class).collect(Collectors.toList()).block();
+                .bodyToFlux(RideDTO.class)
+                .collect(Collectors.toList())
+                .block();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {

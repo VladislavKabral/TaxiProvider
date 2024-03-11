@@ -2,6 +2,7 @@ package by.modsen.taxiprovider.driverservice.service.driver;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
+import by.modsen.taxiprovider.driverservice.dto.driver.FreeDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.DriverRatingDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
@@ -71,6 +72,16 @@ public class DriversService {
                         .entityNotFoundException("Driver with id '" + id + "' wasn't found")));
     }
 
+    public List<FreeDriverDTO> findFreeDrivers() throws EntityNotFoundException {
+        List<Driver> drivers = driversRepository.findByRideStatus("Free");
+
+        if (drivers.isEmpty()) {
+            throw new EntityNotFoundException("There aren't any free drivers");
+        }
+
+        return driverMapper.toListFreeDriverDTO(drivers);
+    }
+
     @Transactional
     public void save(NewDriverDTO driverDTO, BindingResult bindingResult) throws EntityValidateException {
         Driver driver = driverMapper.toEntity(driverDTO);
@@ -79,6 +90,7 @@ public class DriversService {
 
         driver.setRole("Driver");
         driver.setStatus("Active");
+        driver.setRideStatus("Free");
         driver.setBalance(BigDecimal.ZERO);
         driversRepository.save(driver);
 
@@ -121,6 +133,19 @@ public class DriversService {
 
         driver.setId(id);
         driversRepository.save(driver);
+    }
+
+    @Transactional
+    public void changeDriverRideStatus(long id, String status) throws EntityNotFoundException, EntityValidateException {
+        Driver driver = driversRepository.findById(id)
+                .orElseThrow(EntityNotFoundException
+                        .entityNotFoundException("Driver with id '" + id + "' wasn't found"));
+
+        if ((!status.equals("Free")) && (!status.equals("Taken"))) {
+            throw new EntityValidateException("Invalid ride status for driver");
+        } else {
+            driver.setRideStatus(status);
+        }
     }
 
     @Transactional
