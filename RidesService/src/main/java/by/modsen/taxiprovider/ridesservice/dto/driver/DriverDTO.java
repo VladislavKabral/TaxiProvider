@@ -1,9 +1,9 @@
-package by.modsen.taxiprovider.driverservice.dto.driver;
+package by.modsen.taxiprovider.ridesservice.dto.driver;
 
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

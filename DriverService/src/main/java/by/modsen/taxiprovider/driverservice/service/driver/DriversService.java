@@ -2,7 +2,7 @@ package by.modsen.taxiprovider.driverservice.service.driver;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.FreeDriverDTO;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverRequestDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.DriverRatingDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
@@ -17,12 +17,16 @@ import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundExcepti
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -45,8 +49,11 @@ public class DriversService {
 
     private static final int DEFAULT_RATING_VALUE = 5;
 
+    @Value("${rides-service-host-url}")
+    private String RIDES_SERVICE_HOST_URL;
+
     public List<DriverDTO> findAll() throws EntityNotFoundException {
-        List<Driver> drivers = driversRepository.findByStatus("Active");
+        List<Driver> drivers = driversRepository.findByAccountStatus("Active");
 
         if (drivers.isEmpty()) {
             throw new EntityNotFoundException("There aren't any drivers");
@@ -72,14 +79,14 @@ public class DriversService {
                         .entityNotFoundException("Driver with id '" + id + "' wasn't found")));
     }
 
-    public List<FreeDriverDTO> findFreeDrivers() throws EntityNotFoundException {
-        List<Driver> drivers = driversRepository.findByRideStatus("Free");
+    public List<DriverDTO> findFreeDrivers() throws EntityNotFoundException {
+        List<Driver> drivers = driversRepository.findByStatus("Free");
 
         if (drivers.isEmpty()) {
             throw new EntityNotFoundException("There aren't any free drivers");
         }
 
-        return driverMapper.toListFreeDriverDTO(drivers);
+        return driverMapper.toListDTO(drivers);
     }
 
     @Transactional
@@ -89,8 +96,8 @@ public class DriversService {
         handleBindingResult(bindingResult);
 
         driver.setRole("Driver");
-        driver.setStatus("Active");
-        driver.setRideStatus("Free");
+        driver.setAccountStatus("Active");
+        driver.setStatus("Free");
         driver.setBalance(BigDecimal.ZERO);
         driversRepository.save(driver);
 
@@ -117,6 +124,8 @@ public class DriversService {
         String lastname = driverDTO.getLastname();
         String email = driverDTO.getEmail();
         String phoneNumber = driverDTO.getPhoneNumber();
+        String status = driverDTO.getStatus();
+        BigDecimal balance = driverDTO.getBalance();
 
         if (email != null) {
             driver.setEmail(email);
@@ -130,22 +139,19 @@ public class DriversService {
         if (phoneNumber != null) {
             driver.setPhoneNumber(phoneNumber);
         }
+        if (status != null) {
+            if ((!status.equals("Free")) && (!status.equals("Taken"))) {
+                throw new EntityValidateException("Invalid ride status for driver");
+            } else {
+                driver.setStatus(status);
+            }
+        }
+        if (balance != null) {
+            driver.setBalance(balance);
+        }
 
         driver.setId(id);
         driversRepository.save(driver);
-    }
-
-    @Transactional
-    public void changeDriverRideStatus(long id, String status) throws EntityNotFoundException, EntityValidateException {
-        Driver driver = driversRepository.findById(id)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException("Driver with id '" + id + "' wasn't found"));
-
-        if ((!status.equals("Free")) && (!status.equals("Taken"))) {
-            throw new EntityValidateException("Invalid ride status for driver");
-        } else {
-            driver.setRideStatus(status);
-        }
     }
 
     @Transactional
@@ -154,7 +160,7 @@ public class DriversService {
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException("Driver with id '" + id + "' wasn't found"));
 
-        driver.setStatus("Inactive");
+        driver.setAccountStatus("Inactive");
         driversRepository.save(driver);
     }
 
@@ -189,6 +195,23 @@ public class DriversService {
                 .driver(driver)
                 .rating(driverRating)
                 .build();
+    }
+
+    public void changeRideStatus(DriverRequestDTO driverRequestDTO, BindingResult bindingResult)
+            throws EntityValidateException {
+
+        handleBindingResult(bindingResult);
+
+        WebClient webClient = WebClient.builder()
+                .baseUrl(RIDES_SERVICE_HOST_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        webClient.patch()
+                .bodyValue(driverRequestDTO)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {

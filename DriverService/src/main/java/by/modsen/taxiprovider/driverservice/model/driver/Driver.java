@@ -49,13 +49,13 @@ public class Driver {
     private String phoneNumber;
 
     @Column(name = "status")
-    private String status;
+    private String accountStatus;
 
     @Column(name = "balance")
     private BigDecimal balance;
 
     @Column(name = "ride_status")
-    private String rideStatus;
+    private String status;
 
     @OneToMany(mappedBy = "driver")
     private List<Rating> ratings;

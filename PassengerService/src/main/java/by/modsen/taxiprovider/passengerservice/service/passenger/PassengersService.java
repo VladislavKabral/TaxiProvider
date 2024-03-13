@@ -19,6 +19,7 @@ import by.modsen.taxiprovider.passengerservice.service.ratings.RatingsService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.passengerservice.util.exception.NotEnoughFreeDriversException;
+import by.modsen.taxiprovider.passengerservice.util.exception.RidesHistoryNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -227,6 +228,8 @@ public class PassengersService {
         return webClient.get()
                 .uri("/passenger/" + id)
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                        Mono.error(new RidesHistoryNotFoundException()))
                 .bodyToFlux(RideDTO.class)
                 .collect(Collectors.toList())
                 .block();
