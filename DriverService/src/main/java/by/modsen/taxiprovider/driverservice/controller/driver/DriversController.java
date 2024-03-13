@@ -2,7 +2,7 @@ package by.modsen.taxiprovider.driverservice.controller.driver;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.FreeDriverDTO;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverRequestDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.DriverRatingDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
@@ -62,7 +62,7 @@ public class DriversController {
     }
 
     @GetMapping("/free")
-    public ResponseEntity<List<FreeDriverDTO>> getFreeDrivers() throws EntityNotFoundException {
+    public ResponseEntity<List<DriverDTO>> getFreeDrivers() throws EntityNotFoundException {
         return new ResponseEntity<>(driversService.findFreeDrivers(), HttpStatus.OK);
     }
 
@@ -81,30 +81,29 @@ public class DriversController {
             throws EntityValidateException, EntityNotFoundException {
 
         driversService.rateDriver(id, ratingDTO, bindingResult);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PatchMapping(value = "/{id}", params = "rideStatus")
+    @PostMapping("/rideStatus")
+    public ResponseEntity<HttpStatus> updateRideStatus(@RequestBody @Valid DriverRequestDTO driverRequestDTO,
+                                                       BindingResult bindingResult) throws EntityValidateException {
+        driversService.changeRideStatus(driverRequestDTO, bindingResult);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PatchMapping(value = "/{id}")
     public ResponseEntity<HttpStatus> editDriver(@PathVariable("id") long id,
                                                  @RequestBody @Valid DriverDTO driverDTO,
-                                                 @RequestParam("rideStatus") String rideStatus,
                                                  BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
-
-        if (rideStatus == null) {
-            driversService.update(id, driverDTO, bindingResult);
-        } else {
-            driversService.changeDriverRideStatus(id, rideStatus);
-        }
-
+        System.out.println("I'm here");
+        driversService.update(id, driverDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deactivateDriver(@PathVariable("id") long id) throws EntityNotFoundException {
         driversService.deactivate(id);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

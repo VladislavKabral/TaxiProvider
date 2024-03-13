@@ -1,5 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.controller.ride;
 
+import by.modsen.taxiprovider.ridesservice.dto.driver.DriverRequestDTO;
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialCostDTO;
@@ -72,12 +73,12 @@ public class RidesController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<HttpStatus> updateRide(@PathVariable("id") long id, @RequestBody @Valid RideDTO rideDTO,
+    @PatchMapping
+    public ResponseEntity<HttpStatus> updateRide(@RequestBody @Valid DriverRequestDTO driverRequestDTO,
                                                  BindingResult bindingResult) throws EntityValidateException,
             EntityNotFoundException {
 
-        ridesService.update(id, rideDTO, bindingResult);
+        ridesService.update(driverRequestDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -87,8 +88,6 @@ public class RidesController {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
-
-
 
     @PostMapping("/potentialCost")
     public ResponseEntity<PotentialCostDTO> getPotentialCost(@RequestBody @Valid PotentialRideDTO potentialRideDTO,
