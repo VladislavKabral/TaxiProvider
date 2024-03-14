@@ -5,8 +5,6 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.PassengerRatingDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.passengerservice.dto.request.RideRequestDTO;
-import by.modsen.taxiprovider.passengerservice.dto.response.RideDTO;
 import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
@@ -24,7 +22,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -64,12 +61,6 @@ public class PassengersController {
         return new ResponseEntity<>(passengersService.getPassengerProfile(id), HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/rides")
-    public ResponseEntity<List<RideDTO>> getRidesHistory(@PathVariable("id") long id)
-            throws EntityNotFoundException {
-        return new ResponseEntity<>(passengersService.getRidesHistory(id), HttpStatus.OK);
-    }
-
     @PostMapping
     public ResponseEntity<HttpStatus> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO,
                                                     BindingResult bindingResult) throws EntityValidateException {
@@ -84,15 +75,6 @@ public class PassengersController {
             throws EntityNotFoundException, EntityValidateException {
         passengersService.ratePassenger(id, ratingDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("/{id}/newRide")
-    public ResponseEntity<Mono<RideRequestDTO>> postNewRideRequest(@PathVariable("id") long id,
-                                                                   @RequestBody @Valid RideRequestDTO rideRequestDTO,
-                                                                   BindingResult bindingResult)
-            throws EntityValidateException, EntityNotFoundException {
-        rideRequestDTO.setPassengerId(id);
-        return new ResponseEntity<>(passengersService.postRideRequest(rideRequestDTO, bindingResult), HttpStatus.OK);
     }
 
     @PatchMapping("/{id}")

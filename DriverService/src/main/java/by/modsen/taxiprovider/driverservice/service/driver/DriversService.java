@@ -2,7 +2,6 @@ package by.modsen.taxiprovider.driverservice.service.driver;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.DriverRequestDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.DriverRatingDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
@@ -17,16 +16,12 @@ import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundExcepti
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -49,11 +44,8 @@ public class DriversService {
 
     private static final int DEFAULT_RATING_VALUE = 5;
 
-    @Value("${rides-service-host-url}")
-    private String RIDES_SERVICE_HOST_URL;
-
     public List<DriverDTO> findAll() throws EntityNotFoundException {
-        List<Driver> drivers = driversRepository.findByAccountStatus("Active");
+        List<Driver> drivers = driversRepository.findByAccountStatus("ACTIVE");
 
         if (drivers.isEmpty()) {
             throw new EntityNotFoundException("There aren't any drivers");
@@ -80,7 +72,7 @@ public class DriversService {
     }
 
     public List<DriverDTO> findFreeDrivers() throws EntityNotFoundException {
-        List<Driver> drivers = driversRepository.findByStatus("Free");
+        List<Driver> drivers = driversRepository.findByStatus("FREE");
 
         if (drivers.isEmpty()) {
             throw new EntityNotFoundException("There aren't any free drivers");
@@ -95,9 +87,9 @@ public class DriversService {
         driversValidator.validate(driver, bindingResult);
         handleBindingResult(bindingResult);
 
-        driver.setRole("Driver");
-        driver.setAccountStatus("Active");
-        driver.setStatus("Free");
+        driver.setRole("DRIVER");
+        driver.setAccountStatus("ACTIVE");
+        driver.setStatus("FREE");
         driver.setBalance(BigDecimal.ZERO);
         driversRepository.save(driver);
 
@@ -140,7 +132,7 @@ public class DriversService {
             driver.setPhoneNumber(phoneNumber);
         }
         if (status != null) {
-            if ((!status.equals("Free")) && (!status.equals("Taken"))) {
+            if ((!status.equals("FREE")) && (!status.equals("TAKEN"))) {
                 throw new EntityValidateException("Invalid ride status for driver");
             } else {
                 driver.setStatus(status);
@@ -160,7 +152,7 @@ public class DriversService {
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException("Driver with id '" + id + "' wasn't found"));
 
-        driver.setAccountStatus("Inactive");
+        driver.setAccountStatus("INACTIVE");
         driversRepository.save(driver);
     }
 
@@ -195,23 +187,6 @@ public class DriversService {
                 .driver(driver)
                 .rating(driverRating)
                 .build();
-    }
-
-    public void changeRideStatus(DriverRequestDTO driverRequestDTO, BindingResult bindingResult)
-            throws EntityValidateException {
-
-        handleBindingResult(bindingResult);
-
-        WebClient webClient = WebClient.builder()
-                .baseUrl(RIDES_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        webClient.patch()
-                .bodyValue(driverRequestDTO)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
