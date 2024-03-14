@@ -2,7 +2,6 @@ package by.modsen.taxiprovider.driverservice.controller.driver;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.DriverRequestDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.DriverRatingDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
@@ -42,7 +41,6 @@ public class DriversController {
     public ResponseEntity<List<DriverDTO>> getDriversPage(@RequestParam("page") int page,
                                                           @RequestParam("size") int size)
             throws EntityNotFoundException {
-
         return new ResponseEntity<>(driversService.findPageDrivers(page, size), HttpStatus.OK);
     }
 
@@ -69,7 +67,6 @@ public class DriversController {
     @PostMapping
     public ResponseEntity<HttpStatus> saveDriver(@RequestBody @Valid NewDriverDTO driverDTO,
                                                  BindingResult bindingResult) throws EntityValidateException {
-
         driversService.save(driverDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
@@ -79,15 +76,7 @@ public class DriversController {
                                                  @RequestBody @Valid RatingDTO ratingDTO,
                                                  BindingResult bindingResult)
             throws EntityValidateException, EntityNotFoundException {
-
         driversService.rateDriver(id, ratingDTO, bindingResult);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("/rideStatus")
-    public ResponseEntity<HttpStatus> updateRideStatus(@RequestBody @Valid DriverRequestDTO driverRequestDTO,
-                                                       BindingResult bindingResult) throws EntityValidateException {
-        driversService.changeRideStatus(driverRequestDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -96,7 +85,6 @@ public class DriversController {
                                                  @RequestBody @Valid DriverDTO driverDTO,
                                                  BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
-        System.out.println("I'm here");
         driversService.update(id, driverDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.OK);
     }

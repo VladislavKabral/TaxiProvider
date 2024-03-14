@@ -1,5 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.util.validation.ride;
 
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
 import by.modsen.taxiprovider.ridesservice.model.ride.Ride;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,10 +18,10 @@ public class RideValidator implements Validator {
 
     @Override
     public void validate(Object target, Errors errors) {
-        Ride ride = (Ride) target;
+        RideDTO ride = (RideDTO) target;
 
         String status = ride.getStatus();
-        if ((!status.equals("In process")) && (!status.equals("Completed")) && (!status.equals("Deleted"))) {
+        if ((!status.equals("IN_PROGRESS")) && (!status.equals("COMPLETED")) && (!status.equals("CANCELLED"))) {
             errors.rejectValue("status", "", "Wrong ride's status");
         }
     }

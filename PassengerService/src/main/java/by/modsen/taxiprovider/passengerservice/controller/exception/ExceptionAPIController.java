@@ -4,8 +4,6 @@ import by.modsen.taxiprovider.passengerservice.dto.error.ErrorResponseDTO;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.passengerservice.util.exception.InvalidRequestDataException;
-import by.modsen.taxiprovider.passengerservice.util.exception.NotEnoughFreeDriversException;
-import by.modsen.taxiprovider.passengerservice.util.exception.RidesHistoryNotFoundException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -53,26 +51,6 @@ public class ExceptionAPIController {
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage() + " for this endpoint")
-                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
-                        .build());
-    }
-
-    @ExceptionHandler(NotEnoughFreeDriversException.class)
-    public ResponseEntity<ErrorResponseDTO> notEnoughFreeDriversException() {
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponseDTO.builder()
-                        .message("There aren't any free drivers now. Try again")
-                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
-                        .build());
-    }
-
-    @ExceptionHandler(RidesHistoryNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> ridesHistoryNotFoundException() {
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponseDTO.builder()
-                        .message("Ride's history is clear")
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }

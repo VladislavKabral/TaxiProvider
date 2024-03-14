@@ -32,11 +32,9 @@ public class RideDTO {
     private LocalDateTime endedAt;
 
     @Valid
-    @NotNull(message = "Source address must be not empty")
     private AddressDTO sourceAddress;
 
     @Valid
-    @NotNull(message = "Destination address-(es) must be not empty")
     @Size(min = 1, message = "Must be at least one destination address")
     private List<AddressDTO> destinationAddresses;
 
