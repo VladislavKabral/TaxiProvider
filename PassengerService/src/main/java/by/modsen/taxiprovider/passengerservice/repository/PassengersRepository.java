@@ -1,6 +1,6 @@
-package by.modsen.taxiprovider.passengerservice.repository.passenger;
+package by.modsen.taxiprovider.passengerservice.repository;
 
-import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
+import by.modsen.taxiprovider.passengerservice.model.Passenger;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
