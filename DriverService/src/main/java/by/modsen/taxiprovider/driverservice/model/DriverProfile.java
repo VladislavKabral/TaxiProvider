@@ -1,6 +1,5 @@
-package by.modsen.taxiprovider.driverservice.model.driver;
+package by.modsen.taxiprovider.driverservice.model;
 
-import by.modsen.taxiprovider.driverservice.model.rating.DriverRating;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,5 +13,5 @@ public class DriverProfile {
 
     private Driver driver;
 
-    private DriverRating rating;
+    private Double rating;
 }
