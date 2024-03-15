@@ -3,9 +3,7 @@ package by.modsen.taxiprovider.driverservice.controller.driver;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
-import by.modsen.taxiprovider.driverservice.dto.rating.DriverRatingDTO;
-import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.driverservice.service.driver.DriversService;
+import by.modsen.taxiprovider.driverservice.service.DriversService;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
 import jakarta.validation.Valid;
@@ -49,11 +47,6 @@ public class DriversController {
         return new ResponseEntity<>(driversService.findById(id), HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/rating")
-    public ResponseEntity<DriverRatingDTO> getDriverRating(@PathVariable("id") long id) throws EntityNotFoundException {
-        return new ResponseEntity<>(driversService.getDriverRating(id), HttpStatus.OK);
-    }
-
     @GetMapping("/{id}/profile")
     public ResponseEntity<DriverProfileDTO> getDriverProfile(@PathVariable("id") long id) throws EntityNotFoundException {
         return new ResponseEntity<>(driversService.getDriverProfile(id), HttpStatus.OK);
@@ -69,15 +62,6 @@ public class DriversController {
                                                  BindingResult bindingResult) throws EntityValidateException {
         driversService.save(driverDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.CREATED);
-    }
-
-    @PostMapping("/{id}/rating")
-    public ResponseEntity<HttpStatus> rateDriver(@PathVariable("id") long id,
-                                                 @RequestBody @Valid RatingDTO ratingDTO,
-                                                 BindingResult bindingResult)
-            throws EntityValidateException, EntityNotFoundException {
-        driversService.rateDriver(id, ratingDTO, bindingResult);
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PatchMapping(value = "/{id}")

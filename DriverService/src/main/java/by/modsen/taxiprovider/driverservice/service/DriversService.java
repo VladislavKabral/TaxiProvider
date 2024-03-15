@@ -1,27 +1,27 @@
-package by.modsen.taxiprovider.driverservice.service.driver;
+package by.modsen.taxiprovider.driverservice.service;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
-import by.modsen.taxiprovider.driverservice.dto.rating.DriverRatingDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.driverservice.mapper.driver.DriverMapper;
-import by.modsen.taxiprovider.driverservice.mapper.rating.RatingMapper;
-import by.modsen.taxiprovider.driverservice.model.driver.Driver;
-import by.modsen.taxiprovider.driverservice.model.rating.DriverRating;
-import by.modsen.taxiprovider.driverservice.model.rating.Rating;
-import by.modsen.taxiprovider.driverservice.repository.driver.DriversRepository;
-import by.modsen.taxiprovider.driverservice.service.rating.RatingsService;
+import by.modsen.taxiprovider.driverservice.mapper.DriverMapper;
+import by.modsen.taxiprovider.driverservice.model.Driver;
+import by.modsen.taxiprovider.driverservice.repository.DriversRepository;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,13 +36,8 @@ public class DriversService {
 
     private final DriversValidator driversValidator;
 
-    private final RatingsService ratingsService;
-
-    private final RatingMapper ratingMapper;
-
-    private static final int COUNT_OF_RATINGS = 30;
-
-    private static final int DEFAULT_RATING_VALUE = 5;
+    @Value("${ratings-service-host-url}")
+    private String RATINGS_SERVICE_HOST_URL;
 
     public List<DriverDTO> findAll() throws EntityNotFoundException {
         List<Driver> drivers = driversRepository.findByAccountStatus("ACTIVE");
@@ -92,13 +87,6 @@ public class DriversService {
         driver.setStatus("FREE");
         driver.setBalance(BigDecimal.ZERO);
         driversRepository.save(driver);
-
-        for (int i = 0; i < COUNT_OF_RATINGS; i++) {
-            Rating rating = new Rating();
-            rating.setValue(DEFAULT_RATING_VALUE);
-            rating.setDriver(driver);
-            ratingsService.save(rating);
-        }
     }
 
     @Transactional
@@ -156,36 +144,33 @@ public class DriversService {
         driversRepository.save(driver);
     }
 
-    public DriverRatingDTO getDriverRating(long id) throws EntityNotFoundException {
-        Driver driver = driversRepository.findById(id)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException("Driver with id '" + id + "' wasn't found"));
+    private RatingDTO getDriverRating(long driverId) throws EntityNotFoundException {
+        Driver driver = driversRepository.findById(driverId).orElseThrow(EntityNotFoundException
+                .entityNotFoundException("Driver with id '" + driverId + "' wasn't found"));
 
-        return ratingMapper.toDTO(new DriverRating(ratingsService.calculateDriverRating(driver)));
-    }
+        WebClient webClient = WebClient.builder()
+                .baseUrl(RATINGS_SERVICE_HOST_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
 
-    @Transactional
-    public void rateDriver(long id, RatingDTO ratingDTO, BindingResult bindingResult) throws EntityNotFoundException,
-            EntityValidateException {
-
-        Driver driver = driversRepository.findById(id)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException("Driver with id '" + id + "' wasn't found"));
-
-        handleBindingResult(bindingResult);
-        Rating rating = ratingMapper.toEntity(ratingDTO);
-        rating.setDriver(driver);
-
-        ratingsService.save(rating);
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .queryParam("taxiUserId", driver.getId())
+                        .queryParam("role", driver.getRole())
+                        .build())
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                        Mono.error(new EntityNotFoundException("Cannot find driver with id '" + driverId + "'")))
+                .bodyToMono(RatingDTO.class)
+                .block();
     }
 
     public DriverProfileDTO getDriverProfile(long id) throws EntityNotFoundException {
         DriverDTO driver = findById(id);
-        DriverRatingDTO driverRating = getDriverRating(id);
 
         return DriverProfileDTO.builder()
                 .driver(driver)
-                .rating(driverRating)
+                .rating(getDriverRating(id).getValue())
                 .build();
     }
 

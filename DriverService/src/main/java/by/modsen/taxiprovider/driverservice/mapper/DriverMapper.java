@@ -1,8 +1,8 @@
-package by.modsen.taxiprovider.driverservice.mapper.driver;
+package by.modsen.taxiprovider.driverservice.mapper;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
-import by.modsen.taxiprovider.driverservice.model.driver.Driver;
+import by.modsen.taxiprovider.driverservice.model.Driver;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;

@@ -1,6 +1,6 @@
-package by.modsen.taxiprovider.driverservice.repository.driver;
+package by.modsen.taxiprovider.driverservice.repository;
 
-import by.modsen.taxiprovider.driverservice.model.driver.Driver;
+import by.modsen.taxiprovider.driverservice.model.Driver;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
