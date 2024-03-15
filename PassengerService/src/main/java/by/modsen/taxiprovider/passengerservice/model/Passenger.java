@@ -1,18 +1,14 @@
-package by.modsen.taxiprovider.passengerservice.model.passenger;
+package by.modsen.taxiprovider.passengerservice.model;
 
-import by.modsen.taxiprovider.passengerservice.model.rating.Rating;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Entity
 @Table(name = "passengers")
@@ -46,7 +42,4 @@ public class Passenger {
 
     @Column(name = "status")
     private String status;
-
-    @OneToMany(mappedBy = "passenger")
-    private List<Rating> ratings;
 }

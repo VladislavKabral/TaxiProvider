@@ -1,8 +1,8 @@
-package by.modsen.taxiprovider.passengerservice.mapper.passenger;
+package by.modsen.taxiprovider.passengerservice.mapper;
 
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
-import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
+import by.modsen.taxiprovider.passengerservice.model.Passenger;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
