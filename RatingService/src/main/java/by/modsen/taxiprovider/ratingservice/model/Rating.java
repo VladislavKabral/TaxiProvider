@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -17,7 +18,8 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Rating {
+@Builder
+public class Rating implements Comparable<Rating> {
 
     @Id
     @Column(name = "id")
@@ -35,4 +37,9 @@ public class Rating {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Override
+    public int compareTo(Rating rating) {
+        return createdAt.compareTo(rating.getCreatedAt());
+    }
 }
