@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PassengerDTO {
 
+    private long id;
+
     @Size(min = 2, max = 50, message = "Passenger's lastname must be between 2 and 50 symbols")
     @Pattern(regexp = "^[a-zA-Z ]+$", message = "Passenger's lastname must contain only letters")
     private String lastname;
