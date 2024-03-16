@@ -12,6 +12,7 @@ import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.data.mapping.PropertyReferenceException;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -20,15 +21,25 @@ import java.time.ZonedDateTime;
 public class ExceptionAPIController {
 
     @ExceptionHandler(value = {
-            EntityNotFoundException.class,
             InvalidRequestDataException.class,
             EntityValidateException.class,
             HttpMessageNotReadableException.class,
-            UnsatisfiedServletRequestParameterException.class
+            UnsatisfiedServletRequestParameterException.class,
+            PropertyReferenceException.class
     })
     public ResponseEntity<ErrorResponseDTO> defaultMessageExceptionHandler(Exception exception) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDTO.builder()
+                        .message(exception.getMessage())
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
+                        .build());
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> entityNotFoundException(EntityNotFoundException exception) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage())
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
