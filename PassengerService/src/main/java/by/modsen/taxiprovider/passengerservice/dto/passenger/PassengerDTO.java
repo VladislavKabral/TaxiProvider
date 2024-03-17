@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import static by.modsen.taxiprovider.passengerservice.util.Message.*;
+import static by.modsen.taxiprovider.passengerservice.util.Regex.*;
 
 @Data
 @NoArgsConstructor
@@ -14,17 +16,17 @@ public class PassengerDTO {
 
     private long id;
 
-    @Size(min = 2, max = 50, message = "Passenger's lastname must be between 2 and 50 symbols")
-    @Pattern(regexp = "^[a-zA-Z ]+$", message = "Passenger's lastname must contain only letters")
+    @Size(min = 2, max = 50, message = PASSENGER_LASTNAME_SIZE_IS_INVALID)
+    @Pattern(regexp = PASSENGER_LASTNAME_FIRSTNAME_REGEXP, message = PASSENGER_LASTNAME_BODY_IS_INVALID)
     private String lastname;
 
-    @Size(min = 2, max = 50, message = "Passenger's firstname must be between 2 and 50 symbols")
-    @Pattern(regexp = "^[a-zA-Z ]+$", message = "Passenger's firstname must contain only letters")
+    @Size(min = 2, max = 50, message = PASSENGER_FIRSTNAME_SIZE_IS_INVALID)
+    @Pattern(regexp = PASSENGER_LASTNAME_FIRSTNAME_REGEXP, message = PASSENGER_FIRSTNAME_BODY_IS_INVALID)
     private String firstname;
 
-    @Email(message = "Wrong email format")
+    @Email(message = PASSENGER_EMAIL_WRONG_FORMAT)
     private String email;
 
-    @Pattern(regexp = "^(\\+375|80)(29|25|44|33)(\\d{3})(\\d{2})(\\d{2})$", message = "Wrong phone number format")
+    @Pattern(regexp = PASSENGER_PHONE_NUMBER_REGEXP, message = PASSENGER_PHONE_NUMBER_FORMAT_IS_WRONG)
     private String phoneNumber;
 }
