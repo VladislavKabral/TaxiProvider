@@ -11,21 +11,23 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+import static by.modsen.taxiprovider.ridesservice.util.Message.*;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class NewRideDTO {
 
-    @Min(value = 1, message = "Passenger's id must be a number and can't be less than one")
+    @Min(value = 1, message = PASSENGER_ID_MINIMAL_VALUE_IS_INVALID)
     private long passengerId;
 
     @Valid
-    @NotNull(message = "Source address must be not empty")
+    @NotNull(message = SOURCE_ADDRESS_IS_EMPTY)
     private AddressDTO sourceAddress;
 
     @Valid
-    @NotNull(message = "Destination address-(es) must be not empty")
-    @Size(min = 1, message = "Must be at least one destination address")
+    @NotNull(message = DESTINATION_ADDRESS_IS_EMPTY)
+    @Size(min = 1, message = DESTINATION_ADDRESSES_COUNT_IS_INVALID)
     private List<AddressDTO> destinationAddresses;
 
     @Valid
