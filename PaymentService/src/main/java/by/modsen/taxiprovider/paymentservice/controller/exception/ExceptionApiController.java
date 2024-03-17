@@ -19,7 +19,6 @@ public class ExceptionApiController {
 
     @ExceptionHandler(value = {
             NotEnoughMoneyException.class,
-            EntityNotFoundException.class,
             PaymentException.class,
             HttpMessageNotReadableException.class,
             EntityValidateException.class
@@ -27,6 +26,16 @@ public class ExceptionApiController {
     public ResponseEntity<ErrorResponseDTO> exceptionHandler(Exception exception) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDTO.builder()
+                        .message(exception.getMessage())
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
+                        .build());
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> entityNotFoundException(EntityNotFoundException exception) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage())
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
