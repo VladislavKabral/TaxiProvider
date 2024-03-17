@@ -3,6 +3,7 @@ package by.modsen.taxiprovider.ratingservice.service;
 import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDTO;
 import by.modsen.taxiprovider.ratingservice.dto.rating.TaxiUserRatingDTO;
 import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDTO;
+import by.modsen.taxiprovider.ratingservice.dto.response.RatingResponseDTO;
 import by.modsen.taxiprovider.ratingservice.mapper.RatingMapper;
 import by.modsen.taxiprovider.ratingservice.model.Rating;
 import by.modsen.taxiprovider.ratingservice.repository.RatingsRepository;
@@ -22,6 +23,8 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
+
+import static by.modsen.taxiprovider.ratingservice.util.Message.TAXI_USER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -48,8 +51,9 @@ public class RatingsService {
                 .toList();
 
         if (ratings.isEmpty()) {
-            throw new EntityNotFoundException("Cannot find ratings of user with id '" + request.getTaxiUserId() +
-                    "' and role " + request.getRole());
+            throw new EntityNotFoundException(String.format(TAXI_USER_NOT_FOUND,
+                    request.getTaxiUserId(),
+                    request.getRole()));
         }
 
         return TaxiUserRatingDTO.builder()
@@ -65,7 +69,7 @@ public class RatingsService {
     }
 
     @Transactional
-    public void initTaxiUserRatings(TaxiUserRequestDTO request, BindingResult bindingResult)
+    public RatingResponseDTO initTaxiUserRatings(TaxiUserRequestDTO request, BindingResult bindingResult)
             throws EntityValidateException {
         taxiUserRequestValidator.validate(request, bindingResult);
         handleBindingResult(bindingResult);
@@ -79,16 +83,28 @@ public class RatingsService {
                     .build();
             ratingsRepository.save(rating);
         }
+
+        return RatingResponseDTO.builder()
+                .taxiUserid(request.getTaxiUserId())
+                .role(request.getRole())
+                .value(INIT_GRADE)
+                .build();
     }
 
     @Transactional
-    public void save(RatingDTO ratingDTO, BindingResult bindingResult) throws EntityValidateException {
+    public RatingResponseDTO save(RatingDTO ratingDTO, BindingResult bindingResult) throws EntityValidateException {
         ratingValidator.validate(ratingDTO, bindingResult);
         handleBindingResult(bindingResult);
 
         Rating rating = ratingMapper.toEntity(ratingDTO);
         rating.setCreatedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         ratingsRepository.save(rating);
+
+        return RatingResponseDTO.builder()
+                .taxiUserid(rating.getTaxiUserId())
+                .role(rating.getRole())
+                .value(rating.getValue())
+                .build();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
