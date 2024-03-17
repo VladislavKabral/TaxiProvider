@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.controller.ride;
 
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
+import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialCostDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDTO;
@@ -58,7 +59,7 @@ public class RidesController {
     }
 
     @PostMapping
-    public ResponseEntity<HttpStatus> saveRide(@RequestBody @Valid NewRideDTO rideDTO, BindingResult bindingResult)
+    public ResponseEntity<RideResponseDTO> saveRide(@RequestBody @Valid NewRideDTO rideDTO, BindingResult bindingResult)
             throws EntityNotFoundException, IOException, ParseException, DistanceCalculationException,
             InterruptedException, EntityValidateException {
 
@@ -67,31 +68,25 @@ public class RidesController {
             promoCodeDTO = promoCodesService.findByValue(rideDTO.getPromoCode().getValue());
         }
 
-        ridesService.save(rideDTO, promoCodeDTO, bindingResult);
-
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return new ResponseEntity<>(ridesService.save(rideDTO, promoCodeDTO, bindingResult), HttpStatus.CREATED);
     }
 
     @PatchMapping
-    public ResponseEntity<HttpStatus> updateRide(@RequestBody @Valid RideDTO rideDTO,
+    public ResponseEntity<RideResponseDTO> updateRide(@RequestBody @Valid RideDTO rideDTO,
                                                  BindingResult bindingResult) throws EntityValidateException,
             EntityNotFoundException {
-        ridesService.update(rideDTO, bindingResult);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(ridesService.update(rideDTO, bindingResult), HttpStatus.OK);
     }
 
     @PatchMapping("/{passengerId}")
-    public ResponseEntity<HttpStatus> cancelRide(@PathVariable("passengerId") long passengerId)
+    public ResponseEntity<RideResponseDTO> cancelRide(@PathVariable("passengerId") long passengerId)
             throws EntityNotFoundException {
-        ridesService.cancel(passengerId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(ridesService.cancel(passengerId), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deactivateRide(@PathVariable("id") long id) throws EntityNotFoundException {
-        ridesService.delete(id);
-
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<RideResponseDTO> deactivateRide(@PathVariable("id") long id) throws EntityNotFoundException {
+        return new ResponseEntity<>(ridesService.delete(id), HttpStatus.OK);
     }
 
     @PostMapping("/potentialCost")
