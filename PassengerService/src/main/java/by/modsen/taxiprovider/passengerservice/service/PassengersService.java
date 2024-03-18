@@ -4,6 +4,7 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
+import by.modsen.taxiprovider.passengerservice.dto.request.PassengerRatingRequestDTO;
 import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDTO;
 import by.modsen.taxiprovider.passengerservice.mapper.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.model.Passenger;
@@ -94,11 +95,14 @@ public class PassengersService {
 
         passengersRepository.save(passenger);
 
-        return new PassengerResponseDTO(passengersRepository
+        Passenger createdPassenger = passengersRepository
                 .findByEmail(passenger.getEmail())
                 .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException(String.format(PASSENGER_NOT_CREATED, passenger.getEmail())))
-                .getId());
+                        .entityNotFoundException(String.format(PASSENGER_NOT_CREATED, passenger.getEmail())));
+
+        initPassengerRating(createdPassenger.getId());
+
+        return new PassengerResponseDTO(createdPassenger.getId());
     }
 
     @Transactional
@@ -147,6 +151,23 @@ public class PassengersService {
         passengersRepository.save(passenger);
 
         return new PassengerResponseDTO(id);
+    }
+
+    private void initPassengerRating(long passengerId) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl(RATINGS_SERVICE_HOST_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        webClient.post()
+                .uri("/init")
+                .bodyValue(PassengerRatingRequestDTO.builder()
+                        .taxiUserId(passengerId)
+                        .role(PASSENGER_ROLE_NAME)
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
     }
 
     private RatingDTO getPassengerRating(long passengerId) throws EntityNotFoundException {

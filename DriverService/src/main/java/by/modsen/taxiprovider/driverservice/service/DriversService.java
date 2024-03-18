@@ -4,6 +4,7 @@ import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
+import by.modsen.taxiprovider.driverservice.dto.request.DriverRatingRequestDTO;
 import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDTO;
 import by.modsen.taxiprovider.driverservice.mapper.DriverMapper;
 import by.modsen.taxiprovider.driverservice.model.Driver;
@@ -108,11 +109,14 @@ public class DriversService {
         driver.setBalance(BigDecimal.ZERO);
         driversRepository.save(driver);
 
-        return new DriverResponseDTO(driversRepository
+        Driver createdDriver = driversRepository
                 .findByEmail(driverDTO.getEmail())
                 .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException(String.format(DRIVERS_NOT_CREATED, driver.getEmail())))
-                .getId());
+                        .entityNotFoundException(String.format(DRIVERS_NOT_CREATED, driver.getEmail())));
+
+        initDriverRating(createdDriver.getId());
+
+        return new DriverResponseDTO(createdDriver.getId());
     }
 
     @Transactional
@@ -171,6 +175,23 @@ public class DriversService {
         driversRepository.save(driver);
 
         return new DriverResponseDTO(id);
+    }
+
+    private void initDriverRating(long driverId) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl(RATINGS_SERVICE_HOST_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        webClient.post()
+                .uri("/init")
+                .bodyValue(DriverRatingRequestDTO.builder()
+                        .taxiUserId(driverId)
+                        .role(DRIVER_ROLE_NAME)
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
     }
 
     private RatingDTO getDriverRating(long driverId) throws EntityNotFoundException {

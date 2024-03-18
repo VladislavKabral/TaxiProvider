@@ -13,7 +13,7 @@ public class Message {
     public final String DRIVERS_NOT_CREATED = "Driver with email '%s' wasn't created";
     public final String INVALID_DRIVER_STATUS = "Invalid ride status for driver";
     public final String DRIVER_ID_IS_NULL = "Driver's id must be not null";
-    public final String DRIVER_ID_MINIMAL_VALUE = "Minimal value of driver's id is '1'";
+    public final String DRIVER_ID_MINIMAL_VALUE_IS_INVALID = "Minimal value of driver's id is '1'";
     public final String DRIVER_ROLE_IS_EMPTY = "Driver's role must be not empty";
     public final String DRIVER_LASTNAME_SIZE_IS_INVALID = "Driver's lastname must be between 2 and 50 symbols";
     public final String DRIVER_LASTNAME_BODY_IS_INVALID = "Driver's lastname must contain only letters";
