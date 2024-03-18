@@ -2,6 +2,7 @@ package by.modsen.taxiprovider.ridesservice.service.ride;
 
 import by.modsen.taxiprovider.ridesservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
+import by.modsen.taxiprovider.ridesservice.dto.request.CustomerChargeRequestDTO;
 import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDTO;
@@ -64,6 +65,9 @@ public class RidesService {
     @Value("${drivers-service-host-url}")
     private String DRIVERS_SERVICE_HOST_URL;
 
+    @Value("${payment-service-host-url}")
+    private String PAYMENT_SERVICE_HOST_URL;
+
     private static final int MINIMAL_COUNT_OF_TARGET_ADDRESSES = 1;
 
     private static final double STARTING_COST = 3.0;
@@ -71,6 +75,10 @@ public class RidesService {
     private static final double COST_OF_KILOMETER = 0.5;
 
     private static final int METERS_IN_KILOMETER = 1000;
+
+    private static final String RIDE_CURRENCY = "USD";
+
+    private static final String PASSENGER_ROLE_NAME = "PASSENGER";
 
     private final RideValidator rideValidator;
 
@@ -211,6 +219,12 @@ public class RidesService {
             case RIDE_STATUS_COMPLETED -> {
                 ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_IN_PROGRESS);
                 ride.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+                payRide(CustomerChargeRequestDTO.builder()
+                        .taxiUserId(ride.getPassengerId())
+                        .amount(ride.getCost())
+                        .currency(RIDE_CURRENCY)
+                        .role(PASSENGER_ROLE_NAME)
+                        .build());
                 DriverDTO driver = getDriverById(rideDTO.getDriverId());
                 driver.setStatus(DRIVER_STATUS_FREE);
                 driver.setBalance(driver.getBalance().add(ride.getCost()));
@@ -311,7 +325,7 @@ public class RidesService {
                 .build();
 
         return webClient.get()
-                .uri("/" + driverId)
+                .uri(String.format("/%d", driverId))
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
                         Mono.error(new EntityNotFoundException(String.format(DRIVER_NOT_FOUND, driverId))))
@@ -322,13 +336,26 @@ public class RidesService {
     private void updateDriver(DriverDTO driverDTO) {
         WebClient webClient = WebClient.builder()
                 .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Accept", MediaType.APPLICATION_JSON_VALUE,
-                        "Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
         webClient.patch()
-                .uri("/" + driverDTO.getId())
+                .uri(String.format("/%d", driverDTO.getId()))
                 .bodyValue(driverDTO)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+    }
+
+    private void payRide(CustomerChargeRequestDTO chargeRequest) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl(PAYMENT_SERVICE_HOST_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        webClient.post()
+                .uri("/customerCharge")
+                .bodyValue(chargeRequest)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
