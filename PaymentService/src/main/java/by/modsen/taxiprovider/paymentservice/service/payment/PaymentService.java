@@ -3,7 +3,6 @@ package by.modsen.taxiprovider.paymentservice.service.payment;
 import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.CustomerBalanceRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
@@ -396,16 +395,13 @@ public class PaymentService {
                 .block();
     }
 
-    public BalanceResponseDTO getCustomerBalance(CustomerBalanceRequestDTO balanceRequestDTO,
-                                                 BindingResult bindingResult)
-            throws PaymentException, EntityValidateException {
+    public BalanceResponseDTO getCustomerBalance(String customerId)
+            throws PaymentException{
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
-
-        handleBindingResult(bindingResult);
 
         Customer resource;
         try {
-            resource = Customer.retrieve(balanceRequestDTO.getCustomerId());
+            resource = Customer.retrieve(customerId);
         } catch (StripeException exception) {
             throw new PaymentException(exception.getMessage());
         }

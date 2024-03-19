@@ -1,7 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.util.validation.ride;
 
 import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
-import by.modsen.taxiprovider.ridesservice.model.ride.Ride;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;

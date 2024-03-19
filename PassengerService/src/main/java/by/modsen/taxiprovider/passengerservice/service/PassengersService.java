@@ -11,6 +11,7 @@ import by.modsen.taxiprovider.passengerservice.model.Passenger;
 import by.modsen.taxiprovider.passengerservice.repository.PassengersRepository;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.passengerservice.util.exception.ExternalServiceRequestException;
 import by.modsen.taxiprovider.passengerservice.util.exception.InvalidRequestDataException;
 import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import lombok.RequiredArgsConstructor;
@@ -166,6 +167,8 @@ public class PassengersService {
                         .role(PASSENGER_ROLE_NAME)
                         .build())
                 .retrieve()
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(String.class)
                 .block();
     }
@@ -187,6 +190,8 @@ public class PassengersService {
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
                         Mono.error(new EntityNotFoundException(String.format(PASSENGER_NOT_FOUND, passenger.getId()))))
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(RatingDTO.class)
                 .block();
     }

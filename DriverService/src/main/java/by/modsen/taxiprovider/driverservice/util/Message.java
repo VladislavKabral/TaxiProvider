@@ -26,4 +26,8 @@ public class Message {
     public final String DRIVER_PHONE_NUMBER_FORMAT_IS_WRONG = "Wrong phone number format";
     public final String DRIVER_PHONE_NUMBER_IS_EMPTY = "Driver's phone number must be not empty";
     public final String DRIVER_PASSWORD_IS_EMPTY = "Driver's password must be not empty";
+    public final String EXTERNAL_SERVICE_ERROR = "Cannot get response from the rating's service";
+    public final String METHOD_NOT_ALLOWED = "%s for this endpoint";
+    public final String REQUEST_PARAMETER_IS_INVALID = "Failed to convert value in request parameter";
+    public final String EXTERNAL_SERVICE_IS_UNAVAILABLE = "Cannot connect to rating's service";
 }
