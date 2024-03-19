@@ -41,4 +41,7 @@ public class Message {
     public final String DRIVER_CURRENT_RIDES_NOT_FOUND = "Current driver doesn't have active rides";
     public final String WAITING_RIDES_NOT_FOUND = "Cannot find rides with status 'WAITING'";
     public final String DRIVER_NOT_FOUND = "Cannot find driver with id '%d'";
+    public final String PAYMENT_TYPE_IS_EMPTY = "Payment type must be not empty";
+    public final String RIDE_STATUS_IS_INVALID = "Wrong ride's status";
+    public final String PAYMENT_TYPE_IS_INVALID = "Wrong payment type";
 }

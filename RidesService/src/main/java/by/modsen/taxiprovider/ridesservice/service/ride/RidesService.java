@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 
 import static by.modsen.taxiprovider.ridesservice.util.Message.*;
 import static by.modsen.taxiprovider.ridesservice.util.Status.*;
+import static by.modsen.taxiprovider.ridesservice.util.PaymentType.*;
 
 @Service
 @RequiredArgsConstructor
@@ -184,8 +185,8 @@ public class RidesService {
                 .promoCode(promoCode)
                 .build());
 
-        ride.setCost(rideCost);
         ride.setStatus(RIDE_STATUS_WAITING);
+        ride.setCost(rideCost);
 
         DriverDTO driver = getFreeDrivers().get(0);
         driver.setStatus(DRIVER_STATUS_TAKEN);
@@ -211,25 +212,11 @@ public class RidesService {
         Ride ride = null;
         switch (rideDTO.getStatus()) {
             case RIDE_STATUS_IN_PROGRESS -> {
-                ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_WAITING);
-                ride.setStartedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-                ride.setStatus(rideDTO.getStatus());
+                ride = startRide(rideDTO);
                 break;
             }
             case RIDE_STATUS_COMPLETED -> {
-                ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_IN_PROGRESS);
-                ride.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-                payRide(CustomerChargeRequestDTO.builder()
-                        .taxiUserId(ride.getPassengerId())
-                        .amount(ride.getCost())
-                        .currency(RIDE_CURRENCY)
-                        .role(PASSENGER_ROLE_NAME)
-                        .build());
-                DriverDTO driver = getDriverById(rideDTO.getDriverId());
-                driver.setStatus(DRIVER_STATUS_FREE);
-                driver.setBalance(driver.getBalance().add(ride.getCost()));
-                updateDriver(driver);
-                ride.setStatus(rideDTO.getStatus());
+                ride = completeRide(rideDTO);
                 break;
             }
         }
@@ -258,6 +245,33 @@ public class RidesService {
         updateDriver(driver);
 
         return new RideResponseDTO(ride.getId());
+    }
+
+    private Ride startRide(RideDTO rideDTO) throws EntityNotFoundException {
+        Ride ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_WAITING);
+        ride.setStartedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+        ride.setStatus(rideDTO.getStatus());
+        return ride;
+    }
+
+    private Ride completeRide(RideDTO rideDTO) throws EntityNotFoundException {
+        Ride ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_IN_PROGRESS);
+        ride.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+
+        if (ride.getPaymentType().equals(PAYMENT_TYPE_CARD)) {
+            payRide(CustomerChargeRequestDTO.builder()
+                    .taxiUserId(ride.getPassengerId())
+                    .amount(ride.getCost())
+                    .currency(RIDE_CURRENCY)
+                    .role(PASSENGER_ROLE_NAME)
+                    .build());
+        }
+        DriverDTO driver = getDriverById(rideDTO.getDriverId());
+        driver.setStatus(DRIVER_STATUS_FREE);
+        driver.setBalance(driver.getBalance().add(ride.getCost()));
+        updateDriver(driver);
+        ride.setStatus(rideDTO.getStatus());
+        return ride;
     }
 
     public BigDecimal getPotentialRideCost(PotentialRideDTO potentialRideDTO, BindingResult bindingResult)

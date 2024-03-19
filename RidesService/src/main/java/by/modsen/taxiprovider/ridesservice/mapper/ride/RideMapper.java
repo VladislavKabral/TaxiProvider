@@ -20,6 +20,10 @@ public class RideMapper {
         return modelMapper.map(rideDTO, Ride.class);
     }
 
+    public Ride toEntity(RideDTO rideDTO) {
+        return modelMapper.map(rideDTO, Ride.class);
+    }
+
     public RideDTO toDTO(Ride ride) {
         return modelMapper.map(ride, RideDTO.class);
     }
