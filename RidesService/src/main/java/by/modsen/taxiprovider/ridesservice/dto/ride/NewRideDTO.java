@@ -3,6 +3,7 @@ package by.modsen.taxiprovider.ridesservice.dto.ride;
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -32,4 +33,7 @@ public class NewRideDTO {
 
     @Valid
     private PromoCodeDTO promoCode;
+
+    @NotBlank(message = PAYMENT_TYPE_IS_EMPTY)
+    private String paymentType;
 }
