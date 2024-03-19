@@ -24,4 +24,8 @@ public class Message {
     public final String PASSENGER_PHONE_NUMBER_FORMAT_IS_WRONG = "Wrong phone number format";
     public final String PASSENGER_PHONE_NUMBER_IS_EMPTY = "Passenger's phone number must be not empty";
     public final String PASSENGER_PASSWORD_IS_EMPTY = "Passenger's password must be not empty";
+    public final String EXTERNAL_SERVICE_IS_UNAVAILABLE = "Cannot connect to rating's service";
+    public final String EXTERNAL_SERVICE_ERROR = "Cannot get response from the rating's service";
+    public final String REQUEST_PARAMETER_IS_INVALID = "Failed to convert value in request parameter";
+    public final String METHOD_NOT_ALLOWED = "%s for this endpoint";
 }

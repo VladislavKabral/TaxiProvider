@@ -3,7 +3,6 @@ package by.modsen.taxiprovider.paymentservice.controller.payment;
 import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.CustomerBalanceRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
@@ -47,12 +46,10 @@ public class PaymentController {
         return new ResponseEntity<>(paymentService.createCustomer(customerDTO, bindingResult), HttpStatus.CREATED);
     }
 
-    @PostMapping("/customerBalance")
-    public ResponseEntity<BalanceResponseDTO> getCustomerBalance(@RequestBody @Valid CustomerBalanceRequestDTO customerBalanceRequestDTO,
-                                                                 BindingResult bindingResult)
-            throws PaymentException, EntityValidateException {
-        return new ResponseEntity<>(paymentService.getCustomerBalance(customerBalanceRequestDTO, bindingResult),
-                HttpStatus.OK);
+    @GetMapping("/customers/{id}/balance")
+    public ResponseEntity<BalanceResponseDTO> getCustomerBalance(@PathVariable("id") String customerId)
+            throws PaymentException {
+        return new ResponseEntity<>(paymentService.getCustomerBalance(customerId), HttpStatus.OK);
     }
 
     @PatchMapping("/customers/{id}")

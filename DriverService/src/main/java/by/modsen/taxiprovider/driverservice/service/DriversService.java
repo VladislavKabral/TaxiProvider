@@ -11,6 +11,7 @@ import by.modsen.taxiprovider.driverservice.model.Driver;
 import by.modsen.taxiprovider.driverservice.repository.DriversRepository;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.driverservice.util.exception.ExternalServiceRequestException;
 import by.modsen.taxiprovider.driverservice.util.exception.InvalidRequestDataException;
 import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
@@ -190,6 +191,8 @@ public class DriversService {
                         .role(DRIVER_ROLE_NAME)
                         .build())
                 .retrieve()
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(String.class)
                 .block();
     }
@@ -211,6 +214,8 @@ public class DriversService {
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
                         Mono.error(new EntityNotFoundException(String.format(DRIVER_NOT_FOUND, driver.getId()))))
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(RatingDTO.class)
                 .block();
     }

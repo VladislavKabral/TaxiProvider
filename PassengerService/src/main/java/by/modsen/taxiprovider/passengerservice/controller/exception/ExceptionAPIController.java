@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.data.mapping.PropertyReferenceException;
 
+import static by.modsen.taxiprovider.passengerservice.util.Message.*;
+
+import java.net.ConnectException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
@@ -51,7 +54,7 @@ public class ExceptionAPIController {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
-                        .message("Failed to convert value in request parameter")
+                        .message(REQUEST_PARAMETER_IS_INVALID)
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
@@ -61,8 +64,19 @@ public class ExceptionAPIController {
         return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ErrorResponseDTO.builder()
-                        .message(exception.getMessage() + " for this endpoint")
+                        .message(String.format(METHOD_NOT_ALLOWED, exception.getMessage()))
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
+    }
+
+    @ExceptionHandler(ConnectException.class)
+    public ResponseEntity<ErrorResponseDTO> connectException() {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponseDTO.builder()
+                        .message(EXTERNAL_SERVICE_IS_UNAVAILABLE)
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
+                        .build());
+
     }
 }
