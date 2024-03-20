@@ -3,6 +3,7 @@ package by.modsen.taxiprovider.driverservice.controller.exception;
 import by.modsen.taxiprovider.driverservice.dto.error.ErrorResponseDTO;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.driverservice.util.exception.ExternalServiceRequestException;
 import by.modsen.taxiprovider.driverservice.util.exception.InvalidRequestDataException;
 import java.net.ConnectException;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import static by.modsen.taxiprovider.driverservice.util.Message.*;
 public class ExceptionAPIController {
 
     @ExceptionHandler(value = {
+            ExternalServiceRequestException.class,
             InvalidRequestDataException.class,
             EntityValidateException.class,
             HttpMessageNotReadableException.class,

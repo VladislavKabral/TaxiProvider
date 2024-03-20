@@ -3,6 +3,7 @@ package by.modsen.taxiprovider.driverservice.service;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
+import by.modsen.taxiprovider.driverservice.dto.error.ErrorResponseDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
 import by.modsen.taxiprovider.driverservice.dto.request.DriverRatingRequestDTO;
 import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDTO;
@@ -213,7 +214,8 @@ public class DriversService {
                         .build())
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        Mono.error(new EntityNotFoundException(String.format(DRIVER_NOT_FOUND, driver.getId()))))
+                        clientResponse.bodyToMono(ErrorResponseDTO.class)
+                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(RatingDTO.class)

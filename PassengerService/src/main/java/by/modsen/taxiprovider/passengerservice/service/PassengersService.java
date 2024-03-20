@@ -1,5 +1,6 @@
 package by.modsen.taxiprovider.passengerservice.service;
 
+import by.modsen.taxiprovider.passengerservice.dto.error.ErrorResponseDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
@@ -188,8 +189,9 @@ public class PassengersService {
                         .queryParam("role", passenger.getRole())
                         .build())
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        Mono.error(new EntityNotFoundException(String.format(PASSENGER_NOT_FOUND, passenger.getId()))))
+                .onStatus(HttpStatusCode::is4xxClientError,clientResponse ->
+                        clientResponse.bodyToMono(ErrorResponseDTO.class)
+                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(RatingDTO.class)

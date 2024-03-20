@@ -31,5 +31,6 @@ public class Message {
     public final String USER_NOT_FOUND = "User with id '%d' and role '%s' wasn't found";
     public final String CUSTOMER_NOT_FOUND = "Customer with email '%s' wasn't created";
     public final String NOT_ENOUGH_MONEY_ON_BALANCE = "Not enough money on the balance";
-    public final String CUSTOMER_ID_IS_EMPTY = "Customer's id must be not empty";
+    public final String EXTERNAL_SERVICE_IS_UNAVAILABLE = "Cannot connect to rating's service";
+    public final String EXTERNAL_SERVICE_ERROR = "Cannot get response from the rating's service";
 }

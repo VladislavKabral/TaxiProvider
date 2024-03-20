@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.service.ride;
 
 import by.modsen.taxiprovider.ridesservice.dto.driver.DriverDTO;
+import by.modsen.taxiprovider.ridesservice.dto.error.ErrorResponseDTO;
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
 import by.modsen.taxiprovider.ridesservice.dto.request.CustomerChargeRequestDTO;
 import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDTO;
@@ -20,6 +21,7 @@ import by.modsen.taxiprovider.ridesservice.service.ride.distance.DistanceCalcula
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.ridesservice.util.exception.ExternalServiceRequestException;
 import by.modsen.taxiprovider.ridesservice.util.exception.NotEnoughFreeDriversException;
 import by.modsen.taxiprovider.ridesservice.util.validation.ride.RideValidator;
 import lombok.RequiredArgsConstructor;
@@ -326,7 +328,10 @@ public class RidesService {
                 .uri("/free")
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                                Mono.error(new NotEnoughFreeDriversException()))
+                        clientResponse.bodyToMono(ErrorResponseDTO.class)
+                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToFlux(DriverDTO.class)
                 .collect(Collectors.toList())
                 .block();
@@ -342,7 +347,10 @@ public class RidesService {
                 .uri(String.format("/%d", driverId))
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        Mono.error(new EntityNotFoundException(String.format(DRIVER_NOT_FOUND, driverId))))
+                        clientResponse.bodyToMono(ErrorResponseDTO.class)
+                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(DriverDTO.class)
                 .block();
     }
@@ -357,6 +365,11 @@ public class RidesService {
                 .uri(String.format("/%d", driverDTO.getId()))
                 .bodyValue(driverDTO)
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                        clientResponse.bodyToMono(ErrorResponseDTO.class)
+                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(String.class)
                 .block();
     }
@@ -371,6 +384,11 @@ public class RidesService {
                 .uri("/customerCharge")
                 .bodyValue(chargeRequest)
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                        clientResponse.bodyToMono(ErrorResponseDTO.class)
+                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(String.class)
                 .block();
     }
