@@ -40,8 +40,13 @@ public class Message {
     public final String DRIVER_RIDES_NOT_FOUND = "Driver with id '%d' doesn't have any rides";
     public final String DRIVER_CURRENT_RIDES_NOT_FOUND = "Current driver doesn't have active rides";
     public final String WAITING_RIDES_NOT_FOUND = "Cannot find rides with status 'WAITING'";
-    public final String DRIVER_NOT_FOUND = "Cannot find driver with id '%d'";
     public final String PAYMENT_TYPE_IS_EMPTY = "Payment type must be not empty";
     public final String RIDE_STATUS_IS_INVALID = "Wrong ride's status";
     public final String PAYMENT_TYPE_IS_INVALID = "Wrong payment type";
+    public final String EXTERNAL_SERVICE_ERROR = "Cannot get response from the rating's service";
+    public final String EXTERNAL_SERVICE_IS_UNAVAILABLE = "Cannot connect to rating's service";
+    public final String REQUEST_PARAMETER_IS_INVALID = "Failed to convert value in request parameter";
+    public final String METHOD_NOT_ALLOWED = "%s for this endpoint";
+    public final String DATE_FORMAT_IS_INVALID = "Wrong ride's time format. Correct format is 'yyyy-MM-dd, HH-mm-ss'";
+    public final String NO_FREE_DRIVERS = "There aren't any free drivers now. Try again";
 }

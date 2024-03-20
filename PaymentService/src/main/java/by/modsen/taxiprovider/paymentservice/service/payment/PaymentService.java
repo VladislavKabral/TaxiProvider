@@ -1,5 +1,6 @@
 package by.modsen.taxiprovider.paymentservice.service.payment;
 
+import by.modsen.taxiprovider.paymentservice.dto.error.ErrorResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
@@ -13,6 +14,7 @@ import by.modsen.taxiprovider.paymentservice.model.User;
 import by.modsen.taxiprovider.paymentservice.service.user.UsersService;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.paymentservice.util.exception.ExternalServiceRequestException;
 import by.modsen.taxiprovider.paymentservice.util.exception.NotEnoughMoneyException;
 import by.modsen.taxiprovider.paymentservice.util.exception.PaymentException;
 import by.modsen.taxiprovider.paymentservice.util.validation.CardRequestValidator;
@@ -34,11 +36,13 @@ import com.stripe.param.PaymentIntentCreateParams;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import static by.modsen.taxiprovider.paymentservice.util.Message.*;
 
@@ -377,6 +381,11 @@ public class PaymentService {
         return webClient.get()
                 .uri(String.format("/%d", driverId))
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                        clientResponse.bodyToMono(ErrorResponseDTO.class)
+                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(DriverDTO.class)
                 .block();
     }
@@ -391,6 +400,11 @@ public class PaymentService {
                 .uri(String.format("/%d", driverDTO.getId()))
                 .bodyValue(driverDTO)
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                        clientResponse.bodyToMono(ErrorResponseDTO.class)
+                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(String.class)
                 .block();
     }
