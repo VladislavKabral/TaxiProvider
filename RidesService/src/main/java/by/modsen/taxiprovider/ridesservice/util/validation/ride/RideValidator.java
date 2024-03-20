@@ -27,7 +27,8 @@ public class RideValidator implements Validator {
         if ((!status.equals(RIDE_STATUS_IN_PROGRESS))
                 && (!status.equals(RIDE_STATUS_COMPLETED))
                 && (!status.equals(RIDE_STATUS_CANCELLED))
-                && (!status.equals(RIDE_STATUS_WAITING))) {
+                && (!status.equals(RIDE_STATUS_WAITING))
+                && (!status.equals(RIDE_STATUS_PAID))) {
             errors.rejectValue("status", "", RIDE_STATUS_IS_INVALID);
         }
 

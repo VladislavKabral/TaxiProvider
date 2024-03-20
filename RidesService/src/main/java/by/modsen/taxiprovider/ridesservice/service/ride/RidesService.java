@@ -221,6 +221,10 @@ public class RidesService {
                 ride = completeRide(rideDTO);
                 break;
             }
+            case RIDE_STATUS_PAID -> {
+                ride = closeRide(rideDTO);
+                break;
+            }
         }
 
         ridesRepository.save(ride);
@@ -277,6 +281,19 @@ public class RidesService {
         driver.setBalance(driver.getBalance().add(ride.getCost()));
         updateDriver(driver);
         ride.setStatus(rideDTO.getStatus());
+        return ride;
+    }
+
+    private Ride closeRide(RideDTO rideDTO) throws EntityNotFoundException {
+        Ride ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_IN_PROGRESS);
+        ride.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+
+        DriverDTO driver = getDriverById(rideDTO.getDriverId());
+        driver.setStatus(DRIVER_STATUS_FREE);
+        driver.setBalance(driver.getBalance().add(ride.getCost()));
+        updateDriver(driver);
+        ride.setStatus(RIDE_STATUS_COMPLETED);
+
         return ride;
     }
 

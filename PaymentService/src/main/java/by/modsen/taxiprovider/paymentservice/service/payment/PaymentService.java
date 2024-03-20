@@ -5,6 +5,7 @@ import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
+import by.modsen.taxiprovider.paymentservice.dto.request.RideDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.CustomerResponseDTO;
@@ -74,8 +75,13 @@ public class PaymentService {
 
     private static final String DRIVER_ROLE_NAME = "DRIVER";
 
+    private static final String RIDE_STATUS_PAID = "PAID";
+
     @Value("${drivers-service-host-url}")
-    private String DRIVER_SERVICE_HOST_URL;
+    private String DRIVERS_SERVICE_HOST_URL;
+
+    @Value("${rides-service-host-url}")
+    private String RIDES_SERVICE_HOST_URL;
 
     @PostConstruct
     public void init(){
@@ -101,6 +107,12 @@ public class PaymentService {
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
         }
+
+        sendRequestForClosingRide(RideDTO.builder()
+                .driverId(chargeRequestDTO.getDriverId())
+                .passengerId(chargeRequestDTO.getPassengerId())
+                .status(RIDE_STATUS_PAID)
+                .build());
 
         return ChargeResponseDTO.builder()
                 .currency(charge.getCurrency())
@@ -374,7 +386,7 @@ public class PaymentService {
 
     private DriverDTO getDriver(long driverId) {
         WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVER_SERVICE_HOST_URL)
+                .baseUrl(DRIVERS_SERVICE_HOST_URL)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
@@ -392,7 +404,7 @@ public class PaymentService {
 
     private void updateDriver(DriverDTO driverDTO) {
         WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVER_SERVICE_HOST_URL)
+                .baseUrl(DRIVERS_SERVICE_HOST_URL)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
@@ -437,6 +449,24 @@ public class PaymentService {
                 .currency(customerBalanceTransactions.getData().get(0).getCurrency())
                 .build();
 
+    }
+
+    private void sendRequestForClosingRide(RideDTO rideDTO) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl(RIDES_SERVICE_HOST_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        webClient.patch()
+                .bodyValue(rideDTO)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                        clientResponse.bodyToMono(ErrorResponseDTO.class)
+                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
+                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
+                .bodyToMono(String.class)
+                .block();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
