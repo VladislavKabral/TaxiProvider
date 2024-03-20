@@ -33,4 +33,6 @@ public class Message {
     public final String NOT_ENOUGH_MONEY_ON_BALANCE = "Not enough money on the balance";
     public final String EXTERNAL_SERVICE_IS_UNAVAILABLE = "Cannot connect to rating's service";
     public final String EXTERNAL_SERVICE_ERROR = "Cannot get response from the driver's service";
+    public final String PASSENGER_ID_IS_INVALID = "Passenger's id must be a number and can't be less than one";
+    public final String DRIVER_ID_IS_INVALID = "Driver's id must be a number and can't be less than one";
 }
