@@ -260,6 +260,10 @@ public class RidesService {
         Ride ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_IN_PROGRESS);
         ride.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
 
+        if ((rideDTO.getPaymentType() != null) && (!rideDTO.getPaymentType().equals(ride.getPaymentType()))) {
+            ride.setPaymentType(rideDTO.getPaymentType());
+        }
+
         if (ride.getPaymentType().equals(PAYMENT_TYPE_CARD)) {
             payRide(CustomerChargeRequestDTO.builder()
                     .taxiUserId(ride.getPassengerId())
@@ -331,7 +335,8 @@ public class RidesService {
                         clientResponse.bodyToMono(ErrorResponseDTO.class)
                                 .map(body -> new ExternalServiceRequestException(body.getMessage())))
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
+                        Mono.error(new ExternalServiceRequestException(String
+                                .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
                 .bodyToFlux(DriverDTO.class)
                 .collect(Collectors.toList())
                 .block();
@@ -350,7 +355,8 @@ public class RidesService {
                         clientResponse.bodyToMono(ErrorResponseDTO.class)
                                 .map(body -> new ExternalServiceRequestException(body.getMessage())))
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
+                        Mono.error(new ExternalServiceRequestException(String
+                                        .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
                 .bodyToMono(DriverDTO.class)
                 .block();
     }
@@ -369,7 +375,8 @@ public class RidesService {
                         clientResponse.bodyToMono(ErrorResponseDTO.class)
                                 .map(body -> new ExternalServiceRequestException(body.getMessage())))
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
+                        Mono.error(new ExternalServiceRequestException(String
+                                .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
                 .bodyToMono(String.class)
                 .block();
     }
@@ -388,7 +395,8 @@ public class RidesService {
                         clientResponse.bodyToMono(ErrorResponseDTO.class)
                                 .map(body -> new ExternalServiceRequestException(body.getMessage())))
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
+                        Mono.error(new ExternalServiceRequestException(String
+                                .format(EXTERNAL_SERVICE_ERROR, PAYMENT_SERVICE_HOST_URL))))
                 .bodyToMono(String.class)
                 .block();
     }

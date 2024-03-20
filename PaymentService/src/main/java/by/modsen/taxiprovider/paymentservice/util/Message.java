@@ -32,5 +32,5 @@ public class Message {
     public final String CUSTOMER_NOT_FOUND = "Customer with email '%s' wasn't created";
     public final String NOT_ENOUGH_MONEY_ON_BALANCE = "Not enough money on the balance";
     public final String EXTERNAL_SERVICE_IS_UNAVAILABLE = "Cannot connect to rating's service";
-    public final String EXTERNAL_SERVICE_ERROR = "Cannot get response from the rating's service";
+    public final String EXTERNAL_SERVICE_ERROR = "Cannot get response from the driver's service";
 }
