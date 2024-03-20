@@ -86,11 +86,11 @@ public class ExceptionAPIController {
     }
 
     @ExceptionHandler(ConnectException.class)
-    public ResponseEntity<ErrorResponseDTO> connectException() {
+    public ResponseEntity<ErrorResponseDTO> connectException(ConnectException connectException) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponseDTO.builder()
-                        .message(EXTERNAL_SERVICE_IS_UNAVAILABLE)
+                        .message(String.format(EXTERNAL_SERVICE_IS_UNAVAILABLE, connectException.getMessage()))
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
 

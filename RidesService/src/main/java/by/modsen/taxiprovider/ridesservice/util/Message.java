@@ -43,8 +43,8 @@ public class Message {
     public final String PAYMENT_TYPE_IS_EMPTY = "Payment type must be not empty";
     public final String RIDE_STATUS_IS_INVALID = "Wrong ride's status";
     public final String PAYMENT_TYPE_IS_INVALID = "Wrong payment type";
-    public final String EXTERNAL_SERVICE_ERROR = "Cannot get response from the rating's service";
-    public final String EXTERNAL_SERVICE_IS_UNAVAILABLE = "Cannot connect to rating's service";
+    public final String EXTERNAL_SERVICE_ERROR = "Cannot get response from the '%s' service";
+    public final String EXTERNAL_SERVICE_IS_UNAVAILABLE = "Cannot connect to external service: %s";
     public final String REQUEST_PARAMETER_IS_INVALID = "Failed to convert value in request parameter";
     public final String METHOD_NOT_ALLOWED = "%s for this endpoint";
     public final String DATE_FORMAT_IS_INVALID = "Wrong ride's time format. Correct format is 'yyyy-MM-dd, HH-mm-ss'";
