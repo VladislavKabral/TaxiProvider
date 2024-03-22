@@ -4,6 +4,7 @@ import by.modsen.taxiprovider.paymentservice.dto.error.ErrorResponseDTO;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.paymentservice.util.exception.ExternalServiceRequestException;
+import by.modsen.taxiprovider.paymentservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.paymentservice.util.exception.NotEnoughMoneyException;
 import by.modsen.taxiprovider.paymentservice.util.exception.PaymentException;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ public class ExceptionApiController {
 
     @ExceptionHandler(value = {
             ExternalServiceRequestException.class,
+            ExternalServiceUnavailableException.class,
             NotEnoughMoneyException.class,
             PaymentException.class,
             HttpMessageNotReadableException.class,

@@ -13,6 +13,7 @@ import by.modsen.taxiprovider.passengerservice.repository.PassengersRepository;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.passengerservice.util.exception.ExternalServiceRequestException;
+import by.modsen.taxiprovider.passengerservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.passengerservice.util.exception.InvalidRequestDataException;
 import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +31,12 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+
 import static by.modsen.taxiprovider.passengerservice.util.Message.*;
 import static by.modsen.taxiprovider.passengerservice.util.Status.*;
 
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -51,6 +55,10 @@ public class PassengersService {
     private static final String PASSENGER_ROLE_NAME = "PASSENGER";
 
     private static final String KAFKA_TOPIC_NAME = "RIDE";
+
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+
+    private static final int RETRY_DURATION_TIME = 5;
 
     public List<PassengerDTO> findAll() throws EntityNotFoundException {
         List<Passenger> passengers = passengersRepository.findByStatusOrderByLastname(PASSENGER_ACCOUNT_STATUS_ACTIVE);
@@ -174,6 +182,13 @@ public class PassengersService {
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(String.class)
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    RATINGS_SERVICE_HOST_URL));
+                        }))
                 .block();
     }
 
@@ -198,6 +213,13 @@ public class PassengersService {
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(RatingDTO.class)
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    RATINGS_SERVICE_HOST_URL));
+                        }))
                 .block();
     }
 

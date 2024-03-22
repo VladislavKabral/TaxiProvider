@@ -5,6 +5,7 @@ import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationExc
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.ridesservice.util.exception.ExternalServiceRequestException;
+import by.modsen.taxiprovider.ridesservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.ridesservice.util.exception.InvalidRequestDataException;
 
 import java.net.ConnectException;
@@ -30,6 +31,7 @@ public class ExceptionAPIController {
 
     @ExceptionHandler(value = {EntityNotFoundException.class,
             ExternalServiceRequestException.class,
+            ExternalServiceUnavailableException.class,
             InvalidRequestDataException.class,
             EntityValidateException.class,
             DistanceCalculationException.class,

@@ -13,6 +13,7 @@ import by.modsen.taxiprovider.driverservice.repository.DriversRepository;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.driverservice.util.exception.ExternalServiceRequestException;
+import by.modsen.taxiprovider.driverservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.driverservice.util.exception.InvalidRequestDataException;
 import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
@@ -31,11 +32,13 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import static by.modsen.taxiprovider.driverservice.util.Status.*;
 import static by.modsen.taxiprovider.driverservice.util.Message.*;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -55,6 +58,10 @@ public class DriversService {
     private static final String DRIVER_ROLE_NAME = "DRIVER";
 
     private static final String KAFKA_TOPIC_NAME = "RIDE";
+
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+
+    private static final int RETRY_DURATION_TIME = 5;
 
     public List<DriverDTO> findAll() throws EntityNotFoundException {
         List<Driver> drivers = driversRepository.findByAccountStatus(DRIVER_ACCOUNT_STATUS_ACTIVE);
@@ -200,6 +207,13 @@ public class DriversService {
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(String.class)
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    RATINGS_SERVICE_HOST_URL));
+                        }))
                 .block();
     }
 
@@ -224,6 +238,13 @@ public class DriversService {
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(RatingDTO.class)
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    RATINGS_SERVICE_HOST_URL));
+                        }))
                 .block();
     }
 
