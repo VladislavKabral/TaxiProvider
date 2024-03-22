@@ -22,7 +22,7 @@ import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationExc
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.ridesservice.util.exception.ExternalServiceRequestException;
-import by.modsen.taxiprovider.ridesservice.util.exception.NotEnoughFreeDriversException;
+import by.modsen.taxiprovider.ridesservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.ridesservice.util.validation.ride.RideValidator;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
@@ -36,10 +36,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -84,6 +85,10 @@ public class RidesService {
     private static final double COST_OF_KILOMETER = 0.5;
 
     private static final int METERS_IN_KILOMETER = 1000;
+
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+
+    private static final int RETRY_DURATION_TIME = 5;
 
     private static final String RIDE_CURRENCY = "USD";
 
@@ -143,7 +148,7 @@ public class RidesService {
     public Ride findPassengerCurrentDrive(long passengerId) throws EntityNotFoundException {
         List<Ride> rides = ridesRepository.findByPassengerIdAndStatus(passengerId, RIDE_STATUS_WAITING);
 
-        if (rides == null) {
+        if (rides.isEmpty()) {
             throw new EntityNotFoundException(WAITING_RIDES_NOT_FOUND);
         }
 
@@ -389,6 +394,13 @@ public class RidesService {
                         Mono.error(new ExternalServiceRequestException(String
                                 .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
                 .bodyToFlux(DriverDTO.class)
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    DRIVERS_SERVICE_HOST_URL));
+                        }))
                 .collect(Collectors.toList())
                 .block();
     }
@@ -409,6 +421,13 @@ public class RidesService {
                         Mono.error(new ExternalServiceRequestException(String
                                         .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
                 .bodyToMono(DriverDTO.class)
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    DRIVERS_SERVICE_HOST_URL));
+                        }))
                 .block();
     }
 
@@ -429,7 +448,13 @@ public class RidesService {
                         Mono.error(new ExternalServiceRequestException(String
                                 .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
                 .bodyToMono(String.class)
-                .block();
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    DRIVERS_SERVICE_HOST_URL));
+                        }));
     }
 
     private void payRide(CustomerChargeRequestDTO chargeRequest) {
@@ -449,6 +474,13 @@ public class RidesService {
                         Mono.error(new ExternalServiceRequestException(String
                                 .format(EXTERNAL_SERVICE_ERROR, PAYMENT_SERVICE_HOST_URL))))
                 .bodyToMono(String.class)
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    PAYMENT_SERVICE_HOST_URL));
+                        }))
                 .block();
     }
 

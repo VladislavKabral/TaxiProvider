@@ -28,4 +28,5 @@ public class Message {
     public final String EXTERNAL_SERVICE_ERROR = "Cannot get response from the rating's service";
     public final String REQUEST_PARAMETER_IS_INVALID = "Failed to convert value in request parameter";
     public final String METHOD_NOT_ALLOWED = "%s for this endpoint";
+    public final String CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE = "External service '%s' failed to process after max retries";
 }

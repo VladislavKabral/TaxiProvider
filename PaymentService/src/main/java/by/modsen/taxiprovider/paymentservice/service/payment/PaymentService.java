@@ -16,6 +16,7 @@ import by.modsen.taxiprovider.paymentservice.service.user.UsersService;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.paymentservice.util.exception.ExternalServiceRequestException;
+import by.modsen.taxiprovider.paymentservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.paymentservice.util.exception.NotEnoughMoneyException;
 import by.modsen.taxiprovider.paymentservice.util.exception.PaymentException;
 import by.modsen.taxiprovider.paymentservice.util.validation.CardRequestValidator;
@@ -44,10 +45,12 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import static by.modsen.taxiprovider.paymentservice.util.Message.*;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,6 +73,10 @@ public class PaymentService {
     private static final int CONVERT_COEFFICIENT = 100;
 
     private static final double DRIVER_COMMISSION = 0.74;
+
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+
+    private static final int RETRY_DURATION_TIME = 5;
 
     private static final String SUCCEED_CHARGE_STATUS_NAME = "SUCCEED";
 
@@ -399,6 +406,13 @@ public class PaymentService {
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(DriverDTO.class)
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    DRIVERS_SERVICE_HOST_URL));
+                        }))
                 .block();
     }
 
@@ -418,6 +432,13 @@ public class PaymentService {
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(String.class)
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    DRIVERS_SERVICE_HOST_URL));
+                        }))
                 .block();
     }
 
@@ -466,6 +487,13 @@ public class PaymentService {
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
                 .bodyToMono(String.class)
+                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
+                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                            throw new ExternalServiceUnavailableException(String.format(
+                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
+                                    RIDES_SERVICE_HOST_URL));
+                        }))
                 .block();
     }
 
