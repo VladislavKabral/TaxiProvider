@@ -29,6 +29,7 @@ import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
@@ -38,6 +39,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -65,6 +67,10 @@ public class RidesService {
 
     private final PotentialRideMapper potentialRideMapper;
 
+    private final RideValidator rideValidator;
+
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
     @Value("${drivers-service-host-url}")
     private String DRIVERS_SERVICE_HOST_URL;
 
@@ -83,7 +89,7 @@ public class RidesService {
 
     private static final String PASSENGER_ROLE_NAME = "PASSENGER";
 
-    private final RideValidator rideValidator;
+    private static final String KAFKA_TOPIC_NAME = "RIDE";
 
     @Transactional(readOnly = true)
     public List<RideDTO> findAll() throws EntityNotFoundException {
@@ -127,8 +133,8 @@ public class RidesService {
     public Ride findDriverCurrentDrive(long driverId, String status) throws EntityNotFoundException {
         List<Ride> rides = ridesRepository.findByDriverIdAndStatus(driverId, status);
 
-        if (rides == null) {
-            throw new EntityNotFoundException(DRIVER_CURRENT_RIDES_NOT_FOUND);
+        if (rides.isEmpty()) {
+            throw new EntityNotFoundException(String.format(DRIVER_CURRENT_RIDES_NOT_FOUND, status));
         }
 
         return rides.get(0);
@@ -201,6 +207,12 @@ public class RidesService {
         if (createdRide == null) {
             throw new EntityNotFoundException(String.format(RIDE_NOT_CREATED, driver.getId()));
         }
+
+        kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(NEW_RIDE_WAS_CREATED,
+                createdRide.getPassengerId(),
+                createdRide.getDriverId(),
+                ZonedDateTime.now(ZoneId.of("UTC"))).toString());
+
         return new RideResponseDTO(createdRide.getId());
     }
 
@@ -250,6 +262,11 @@ public class RidesService {
         driver.setStatus(DRIVER_STATUS_FREE);
         updateDriver(driver);
 
+        kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_CANCELLED,
+                ride.getPassengerId(),
+                ride.getDriverId(),
+                ZonedDateTime.now(ZoneId.of("UTC")).toString()));
+
         return new RideResponseDTO(ride.getId());
     }
 
@@ -257,6 +274,12 @@ public class RidesService {
         Ride ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_WAITING);
         ride.setStartedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         ride.setStatus(rideDTO.getStatus());
+
+        kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_STARTED,
+                ride.getPassengerId(),
+                ride.getDriverId(),
+                ride.getStartedAt().toString()));
+
         return ride;
     }
 
@@ -281,6 +304,12 @@ public class RidesService {
         driver.setBalance(driver.getBalance().add(ride.getCost()));
         updateDriver(driver);
         ride.setStatus(rideDTO.getStatus());
+
+        kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_ENDED,
+                ride.getPassengerId(),
+                ride.getDriverId(),
+                ride.getEndedAt()));
+
         return ride;
     }
 
@@ -293,6 +322,11 @@ public class RidesService {
         driver.setBalance(driver.getBalance().add(ride.getCost()));
         updateDriver(driver);
         ride.setStatus(RIDE_STATUS_COMPLETED);
+
+        kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_ENDED,
+                ride.getPassengerId(),
+                ride.getDriverId(),
+                ride.getEndedAt()));
 
         return ride;
     }

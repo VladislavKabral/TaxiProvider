@@ -23,6 +23,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
@@ -37,6 +39,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
+@EnableKafka
 @RequiredArgsConstructor
 public class DriversService {
 
@@ -50,6 +53,8 @@ public class DriversService {
     private String RATINGS_SERVICE_HOST_URL;
 
     private static final String DRIVER_ROLE_NAME = "DRIVER";
+
+    private static final String KAFKA_TOPIC_NAME = "RIDE";
 
     public List<DriverDTO> findAll() throws EntityNotFoundException {
         List<Driver> drivers = driversRepository.findByAccountStatus(DRIVER_ACCOUNT_STATUS_ACTIVE);
@@ -229,6 +234,12 @@ public class DriversService {
                 .driver(driver)
                 .rating(getDriverRating(id).getValue())
                 .build();
+    }
+
+    @KafkaListener(topics = KAFKA_TOPIC_NAME)
+    private void messageListener(String message) {
+        //TODO: change to log
+        System.out.println(message);
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {

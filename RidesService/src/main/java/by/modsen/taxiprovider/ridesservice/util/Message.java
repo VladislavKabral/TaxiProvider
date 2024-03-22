@@ -38,7 +38,7 @@ public class Message {
     public final String RIDE_NOT_CREATED = "Ride with driver's id '%d' wasn't created";
     public final String PASSENGER_RIDES_NOT_FOUND = "Passenger with id '%d' doesn't have any rides";
     public final String DRIVER_RIDES_NOT_FOUND = "Driver with id '%d' doesn't have any rides";
-    public final String DRIVER_CURRENT_RIDES_NOT_FOUND = "Current driver doesn't have active rides";
+    public final String DRIVER_CURRENT_RIDES_NOT_FOUND = "Current driver doesn't have active rides with status '%s'";
     public final String WAITING_RIDES_NOT_FOUND = "Cannot find rides with status 'WAITING'";
     public final String PAYMENT_TYPE_IS_EMPTY = "Payment type must be not empty";
     public final String RIDE_STATUS_IS_INVALID = "Wrong ride's status";
@@ -49,4 +49,8 @@ public class Message {
     public final String METHOD_NOT_ALLOWED = "%s for this endpoint";
     public final String DATE_FORMAT_IS_INVALID = "Wrong ride's time format. Correct format is 'yyyy-MM-dd, HH-mm-ss'";
     public final String NO_FREE_DRIVERS = "There aren't any free drivers now. Try again";
+    public final String NEW_RIDE_WAS_CREATED = "New ride was created. Passenger's id: '%d', driver's id: '%d'. Time: %s";
+    public final String RIDE_WAS_STARTED = "A ride was started. Passenger's id is '%d', driver's id is '%d'. Time: %s";
+    public final String RIDE_WAS_ENDED = "A ride was ended. Passenger's id: '%d', driver's id: '%d'. Time: %s";
+    public final String RIDE_WAS_CANCELLED = "A ride was cancelled. Passenger's id: '%d', driver's id: '%d'. Time: %s";
 }
