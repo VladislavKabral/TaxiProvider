@@ -23,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
@@ -48,6 +49,8 @@ public class PassengersService {
     private String RATINGS_SERVICE_HOST_URL;
 
     private static final String PASSENGER_ROLE_NAME = "PASSENGER";
+
+    private static final String KAFKA_TOPIC_NAME = "RIDE";
 
     public List<PassengerDTO> findAll() throws EntityNotFoundException {
         List<Passenger> passengers = passengersRepository.findByStatusOrderByLastname(PASSENGER_ACCOUNT_STATUS_ACTIVE);
@@ -205,6 +208,12 @@ public class PassengersService {
                 .passenger(passenger)
                 .rating(getPassengerRating(id).getValue())
                 .build();
+    }
+
+    @KafkaListener(topics = KAFKA_TOPIC_NAME)
+    private void messageListener(String message) {
+        //TODO: change to log
+        System.out.println(message);
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
