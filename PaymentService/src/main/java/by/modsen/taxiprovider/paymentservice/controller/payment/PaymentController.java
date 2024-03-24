@@ -4,8 +4,9 @@ import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.DriverBalanceRequestDTO;
+import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
+import by.modsen.taxiprovider.paymentservice.dto.response.CustomerResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDTO;
 import by.modsen.taxiprovider.paymentservice.service.payment.PaymentService;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityNotFoundException;
@@ -39,36 +40,38 @@ public class PaymentController {
     }
 
     @PostMapping("/customers")
-    public ResponseEntity<HttpStatus> saveCustomer(@RequestBody @Valid CustomerDTO customerDTO,
-                                        BindingResult bindingResult) throws PaymentException, EntityValidateException {
-        paymentService.createCustomer(customerDTO, bindingResult);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<CustomerResponseDTO> saveCustomer(@RequestBody @Valid CustomerDTO customerDTO,
+                                                            BindingResult bindingResult) throws PaymentException,
+            EntityValidateException, EntityNotFoundException {
+        return new ResponseEntity<>(paymentService.createCustomer(customerDTO, bindingResult), HttpStatus.CREATED);
+    }
+
+    @GetMapping("/customers/{id}/balance")
+    public ResponseEntity<BalanceResponseDTO> getCustomerBalance(@PathVariable("id") String customerId)
+            throws PaymentException {
+        return new ResponseEntity<>(paymentService.getCustomerBalance(customerId), HttpStatus.OK);
     }
 
     @PatchMapping("/customers/{id}")
-    public ResponseEntity<HttpStatus> editCustomer(@PathVariable("id") long id,
+    public ResponseEntity<CustomerResponseDTO> editCustomer(@PathVariable("id") long id,
                                                    @RequestBody @Valid CustomerDTO customerDTO,
                                                    BindingResult bindingResult)
             throws PaymentException, EntityNotFoundException, EntityValidateException {
-        paymentService.updateCustomer(id, customerDTO, bindingResult);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(paymentService.updateCustomer(id, customerDTO, bindingResult), HttpStatus.OK);
     }
 
     @PatchMapping("/customers/drivers/{id}")
-    public ResponseEntity<HttpStatus> updateDriverBalance(@PathVariable("id") long id,
-                                                          @RequestBody @Valid DriverBalanceRequestDTO balanceRequestDTO,
-                                                          BindingResult bindingResult)
-            throws PaymentException, EntityValidateException, EntityNotFoundException {
-        paymentService.updateDriverBalance(id, balanceRequestDTO, bindingResult);
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<CustomerResponseDTO> updateDriverBalance(@PathVariable("id") long id)
+            throws PaymentException, EntityNotFoundException {
+        return new ResponseEntity<>(paymentService.updateDriverBalance(id),
+                HttpStatus.OK);
     }
 
-    @DeleteMapping("/customers/{id}")
-    public ResponseEntity<HttpStatus> deleteCustomer(@PathVariable("id") long id) throws PaymentException,
+    @DeleteMapping(value = "/customers/{id}", params = "role")
+    public ResponseEntity<CustomerResponseDTO> deleteCustomer(@PathVariable("id") long id,
+                                                     @RequestParam("role") String role) throws PaymentException,
             EntityNotFoundException {
-
-        paymentService.deleteCustomer(id);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(paymentService.deleteCustomer(id, role), HttpStatus.OK);
     }
 
     @PostMapping("/customerCharge")
@@ -76,7 +79,8 @@ public class PaymentController {
                                                               BindingResult bindingResult)
             throws NotEnoughMoneyException, PaymentException, EntityNotFoundException, EntityValidateException {
 
-        return new ResponseEntity<>(paymentService.chargeFromCustomer(customerChargeRequestDTO, bindingResult), HttpStatus.OK);
+        return new ResponseEntity<>(paymentService.chargeFromCustomer(customerChargeRequestDTO, bindingResult),
+                HttpStatus.OK);
     }
 
 }

@@ -1,11 +1,13 @@
 package by.modsen.taxiprovider.driverservice.util.validation;
 
-import by.modsen.taxiprovider.driverservice.model.driver.Driver;
-import by.modsen.taxiprovider.driverservice.repository.driver.DriversRepository;
+import by.modsen.taxiprovider.driverservice.model.Driver;
+import by.modsen.taxiprovider.driverservice.repository.DriversRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+
+import static by.modsen.taxiprovider.driverservice.util.Message.*;
 
 import java.util.Optional;
 
@@ -14,6 +16,10 @@ import java.util.Optional;
 public class DriversValidator implements Validator {
 
     private final DriversRepository driversRepository;
+
+    private static final String EMAIL_FIELD_NAME = "email";
+
+    private static final String PHONE_NUMBER_FIELD_NAME = "phoneNumber";
 
     @Override
     public boolean supports(Class<?> clazz) {
@@ -26,14 +32,14 @@ public class DriversValidator implements Validator {
 
         Optional<Driver> existingDriver = driversRepository.findByEmail(driver.getEmail());
         if ((existingDriver.isPresent()) && (existingDriver.get().getId() != driver.getId())) {
-            errors.rejectValue("email", "", "Driver with email '" + driver.getEmail() +
-                    "' already exists");
+            errors.rejectValue(EMAIL_FIELD_NAME, "",
+                    String.format(DRIVER_WITH_GIVEN_EMAIL_ALREADY_EXISTS, driver.getEmail()));
         }
 
         existingDriver = driversRepository.findByPhoneNumber(driver.getPhoneNumber());
         if ((existingDriver.isPresent()) && (existingDriver.get().getId() != driver.getId())) {
-            errors.rejectValue("phoneNumber", "", "Driver with phone number '" +
-                    driver.getPhoneNumber() + "' already exists");
+            errors.rejectValue(PHONE_NUMBER_FIELD_NAME, "",
+                    String.format(DRIVER_WITH_GIVEN_PHONE_NUMBER_ALREADY_EXISTS, driver.getPhoneNumber()));
         }
     }
 }

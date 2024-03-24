@@ -3,7 +3,10 @@ package by.modsen.taxiprovider.driverservice.controller.exception;
 import by.modsen.taxiprovider.driverservice.dto.error.ErrorResponseDTO;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.driverservice.util.exception.ExternalServiceRequestException;
+import by.modsen.taxiprovider.driverservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.driverservice.util.exception.InvalidRequestDataException;
+import java.net.ConnectException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -12,23 +15,38 @@ import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.data.mapping.PropertyReferenceException;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+
+import static by.modsen.taxiprovider.driverservice.util.Message.*;
 
 @RestControllerAdvice
 public class ExceptionAPIController {
 
     @ExceptionHandler(value = {
-            EntityNotFoundException.class,
+            ExternalServiceRequestException.class,
+            ExternalServiceUnavailableException.class,
             InvalidRequestDataException.class,
             EntityValidateException.class,
             HttpMessageNotReadableException.class,
-            UnsatisfiedServletRequestParameterException.class
+            UnsatisfiedServletRequestParameterException.class,
+            PropertyReferenceException.class
     })
     public ResponseEntity<ErrorResponseDTO> defaultMessageExceptionHandler(Exception exception) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDTO.builder()
+                        .message(exception.getMessage())
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
+                        .build());
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> entityNotFoundException(EntityNotFoundException exception) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage())
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
@@ -40,7 +58,7 @@ public class ExceptionAPIController {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
-                        .message("Failed to convert value in request parameter")
+                        .message(REQUEST_PARAMETER_IS_INVALID)
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
@@ -50,8 +68,19 @@ public class ExceptionAPIController {
         return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ErrorResponseDTO.builder()
-                        .message(exception.getMessage() + " for this endpoint")
+                        .message(String.format(METHOD_NOT_ALLOWED, exception.getMessage()))
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
+    }
+
+    @ExceptionHandler(ConnectException.class)
+    public ResponseEntity<ErrorResponseDTO> connectException() {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponseDTO.builder()
+                        .message(EXTERNAL_SERVICE_IS_UNAVAILABLE)
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
+                        .build());
+
     }
 }

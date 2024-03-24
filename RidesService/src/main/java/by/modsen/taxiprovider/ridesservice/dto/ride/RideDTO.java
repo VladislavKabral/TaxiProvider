@@ -4,7 +4,6 @@ import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,30 +13,34 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static by.modsen.taxiprovider.ridesservice.util.Message.*;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class RideDTO {
 
-    @Min(value = 1, message = "Passenger's id must be a number and can't be less than one")
+    private static final String DATE_FORMAT = "yyyy-MM-dd, HH-mm-ss";
+
+    private long id;
+
+    @Min(value = 1, message = PASSENGER_ID_IS_INVALID)
     private long passengerId;
 
-    @Min(value = 1, message = "Driver's id must be a number and can't be less than one")
+    @Min(value = 1, message = DRIVER_ID_IS_INVALID)
     private long driverId;
 
-    @JsonFormat(pattern = "yyyy-MM-dd, HH-mm-ss")
+    @JsonFormat(pattern = DATE_FORMAT)
     private LocalDateTime startedAt;
 
-    @JsonFormat(pattern = "yyyy-MM-dd, HH-mm-ss")
+    @JsonFormat(pattern = DATE_FORMAT)
     private LocalDateTime endedAt;
 
     @Valid
-    @NotNull(message = "Source address must be not empty")
     private AddressDTO sourceAddress;
 
     @Valid
-    @NotNull(message = "Destination address-(es) must be not empty")
-    @Size(min = 1, message = "Must be at least one destination address")
+    @Size(min = 1, message = DESTINATION_ADDRESSES_COUNT_IS_INVALID)
     private List<AddressDTO> destinationAddresses;
 
     @Valid
@@ -46,4 +49,6 @@ public class RideDTO {
     private BigDecimal cost;
 
     private String status;
+
+    private String paymentType;
 }
