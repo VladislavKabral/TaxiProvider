@@ -11,4 +11,7 @@ public class Message {
     public final String TAXI_USER_ROLE_IS_EMPTY = "Taxi user's role must be not empty";
     public final String RATING_VALUE_IS_EMPTY = "Value of rating must be not empty";
     public final String TAXI_USER_NOT_FOUND = "Cannot find ratings of user with id '%d' and role '%s'";
+    public final String REQUEST_PARAM_IS_INVALID = "Failed to convert value in request parameter";
+    public final String METHOD_NOT_ALLOWED = "%s for this endpoint";
+    public final String ROLE_IS_INVALID = "%s is wrong role name";
 }

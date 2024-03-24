@@ -79,7 +79,8 @@ public class PaymentController {
                                                               BindingResult bindingResult)
             throws NotEnoughMoneyException, PaymentException, EntityNotFoundException, EntityValidateException {
 
-        return new ResponseEntity<>(paymentService.chargeFromCustomer(customerChargeRequestDTO, bindingResult), HttpStatus.OK);
+        return new ResponseEntity<>(paymentService.chargeFromCustomer(customerChargeRequestDTO, bindingResult),
+                HttpStatus.OK);
     }
 
 }

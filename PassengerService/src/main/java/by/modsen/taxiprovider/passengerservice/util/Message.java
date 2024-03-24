@@ -29,4 +29,6 @@ public class Message {
     public final String REQUEST_PARAMETER_IS_INVALID = "Failed to convert value in request parameter";
     public final String METHOD_NOT_ALLOWED = "%s for this endpoint";
     public final String CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE = "External service '%s' failed to process after max retries";
+    public final String PASSENGER_WITH_GIVEN_EMAIL_ALREADY_EXISTS = "A passenger with email '%s' already exists";
+    public final String PASSENGER_WITH_GIVEN_PHONE_NUMBER_ALREADY_EXISTS = "A passenger with phone number '%s' already exists";
 }
