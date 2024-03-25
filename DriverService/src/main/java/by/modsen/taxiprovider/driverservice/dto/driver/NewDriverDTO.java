@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import static by.modsen.taxiprovider.driverservice.util.Regex.*;
@@ -13,6 +14,7 @@ import static by.modsen.taxiprovider.driverservice.util.Message.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class NewDriverDTO {
 
     @Size(min = 2, max = 50, message = DRIVER_LASTNAME_SIZE_IS_INVALID)
