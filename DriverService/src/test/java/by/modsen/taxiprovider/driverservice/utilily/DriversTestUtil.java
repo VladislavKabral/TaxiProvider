@@ -17,6 +17,7 @@ public class DriversTestUtil {
     public final int DEFAULT_PAGE_SIZE = 3;
     public final int DEFAULT_INVALID_PAGE = -1;
     public final int DEFAULT_INVALID_PAGE_SIZE = 0;
+    public final double DEFAULT_DRIVER_RATING = 5.0;
     public final String DEFAULT_DRIVER_LASTNAME = "Vasiliev";
     public final String DEFAULT_DRIVER_FIRSTNAME = "Platon";
     public final String DEFAULT_DRIVER_EMAIL = "mr.vasiliev@mail.ru";
@@ -108,7 +109,7 @@ public class DriversTestUtil {
     public DriverProfileDTO getDriverProfile() {
         return DriverProfileDTO.builder()
                 .driver(getDriver())
-                .rating(5.0)
+                .rating(DEFAULT_DRIVER_RATING)
                 .build();
     }
 
@@ -182,19 +183,6 @@ public class DriversTestUtil {
                 .accountStatus(DEFAULT_DRIVER_ACCOUNT_STATUS)
                 .status("lwekljwf")
                 .balance(DEFAULT_DRIVER_BALANCE)
-                .build();
-    }
-
-    public DriverDTO getRequestForUpdateDriverWithInvalidBalance() {
-        return DriverDTO.builder()
-                .id(DEFAULT_DRIVER_ID)
-                .lastname(DEFAULT_DRIVER_LASTNAME)
-                .firstname(DEFAULT_DRIVER_FIRSTNAME)
-                .email(DEFAULT_DRIVER_EMAIL)
-                .phoneNumber(DEFAULT_DRIVER_PHONE_NUMBER)
-                .accountStatus(DEFAULT_DRIVER_ACCOUNT_STATUS)
-                .status(DEFAULT_DRIVER_STATUS)
-                .balance(BigDecimal.valueOf(-5.4))
                 .build();
     }
 }

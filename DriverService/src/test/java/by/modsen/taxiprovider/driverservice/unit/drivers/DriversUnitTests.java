@@ -65,7 +65,7 @@ class DriversUnitTests {
     }
 
     @Test
-    public void testGetSortedDriversByLastNameWhenDriversExistReturnListOfDrivers() throws Exception {
+    public void testGetSortedDriversByLastnameWhenDriversExistReturnListOfDrivers() throws Exception {
         //given
         List<DriverDTO> sortedDrivers = getSortedDrivers();
 
@@ -103,12 +103,13 @@ class DriversUnitTests {
         DriverDTO driver = getDriver();
 
         //when
-        when(driversService.findById(1)).thenReturn(driver);
+        when(driversService.findById(DEFAULT_DRIVER_ID)).thenReturn(driver);
 
         //then
         mockMvc.perform(get("/drivers/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(driver.getId()))
                 .andExpect(jsonPath("$.lastname").value(driver.getLastname()))
                 .andExpect(jsonPath("$.firstname").value(driver.getFirstname()))
                 .andExpect(jsonPath("$.email").value(driver.getEmail()))
