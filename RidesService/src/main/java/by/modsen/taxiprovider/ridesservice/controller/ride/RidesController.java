@@ -72,12 +72,18 @@ public class RidesController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<HttpStatus> updateRide(@PathVariable("id") long id, @RequestBody @Valid RideDTO rideDTO,
+    @PatchMapping
+    public ResponseEntity<HttpStatus> updateRide(@RequestBody @Valid RideDTO rideDTO,
                                                  BindingResult bindingResult) throws EntityValidateException,
             EntityNotFoundException {
+        ridesService.update(rideDTO, bindingResult);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
-        ridesService.update(id, rideDTO, bindingResult);
+    @PatchMapping("/{passengerId}")
+    public ResponseEntity<HttpStatus> cancelRide(@PathVariable("passengerId") long passengerId)
+            throws EntityNotFoundException {
+        ridesService.cancel(passengerId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -87,8 +93,6 @@ public class RidesController {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
-
-
 
     @PostMapping("/potentialCost")
     public ResponseEntity<PotentialCostDTO> getPotentialCost(@RequestBody @Valid PotentialRideDTO potentialRideDTO,

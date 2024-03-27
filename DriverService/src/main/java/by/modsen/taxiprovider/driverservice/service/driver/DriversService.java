@@ -45,7 +45,7 @@ public class DriversService {
     private static final int DEFAULT_RATING_VALUE = 5;
 
     public List<DriverDTO> findAll() throws EntityNotFoundException {
-        List<Driver> drivers = driversRepository.findByStatus("Active");
+        List<Driver> drivers = driversRepository.findByAccountStatus("ACTIVE");
 
         if (drivers.isEmpty()) {
             throw new EntityNotFoundException("There aren't any drivers");
@@ -71,14 +71,25 @@ public class DriversService {
                         .entityNotFoundException("Driver with id '" + id + "' wasn't found")));
     }
 
+    public List<DriverDTO> findFreeDrivers() throws EntityNotFoundException {
+        List<Driver> drivers = driversRepository.findByStatus("FREE");
+
+        if (drivers.isEmpty()) {
+            throw new EntityNotFoundException("There aren't any free drivers");
+        }
+
+        return driverMapper.toListDTO(drivers);
+    }
+
     @Transactional
     public void save(NewDriverDTO driverDTO, BindingResult bindingResult) throws EntityValidateException {
         Driver driver = driverMapper.toEntity(driverDTO);
         driversValidator.validate(driver, bindingResult);
         handleBindingResult(bindingResult);
 
-        driver.setRole("Driver");
-        driver.setStatus("Active");
+        driver.setRole("DRIVER");
+        driver.setAccountStatus("ACTIVE");
+        driver.setStatus("FREE");
         driver.setBalance(BigDecimal.ZERO);
         driversRepository.save(driver);
 
@@ -105,6 +116,8 @@ public class DriversService {
         String lastname = driverDTO.getLastname();
         String email = driverDTO.getEmail();
         String phoneNumber = driverDTO.getPhoneNumber();
+        String status = driverDTO.getStatus();
+        BigDecimal balance = driverDTO.getBalance();
 
         if (email != null) {
             driver.setEmail(email);
@@ -118,6 +131,16 @@ public class DriversService {
         if (phoneNumber != null) {
             driver.setPhoneNumber(phoneNumber);
         }
+        if (status != null) {
+            if ((!status.equals("FREE")) && (!status.equals("TAKEN"))) {
+                throw new EntityValidateException("Invalid ride status for driver");
+            } else {
+                driver.setStatus(status);
+            }
+        }
+        if (balance != null) {
+            driver.setBalance(balance);
+        }
 
         driver.setId(id);
         driversRepository.save(driver);
@@ -129,7 +152,7 @@ public class DriversService {
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException("Driver with id '" + id + "' wasn't found"));
 
-        driver.setStatus("Inactive");
+        driver.setAccountStatus("INACTIVE");
         driversRepository.save(driver);
     }
 

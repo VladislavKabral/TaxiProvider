@@ -16,10 +16,6 @@ public class DriverMapper {
 
     private final ModelMapper modelMapper;
 
-    public Driver toEntity(DriverDTO driverDTO) {
-        return modelMapper.map(driverDTO, Driver.class);
-    }
-
     public Driver toEntity(NewDriverDTO newDriverDTO) {
         return modelMapper.map(newDriverDTO, Driver.class);
     }
@@ -33,5 +29,4 @@ public class DriverMapper {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
-
 }

@@ -29,4 +29,7 @@ public class User {
 
     @Column(name = "customer_id")
     private String customerId;
+
+    @Column(name = "role")
+    private String role;
 }

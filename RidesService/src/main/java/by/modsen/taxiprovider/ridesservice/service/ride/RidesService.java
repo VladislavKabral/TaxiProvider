@@ -1,5 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.service.ride;
 
+import by.modsen.taxiprovider.ridesservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDTO;
@@ -17,19 +18,26 @@ import by.modsen.taxiprovider.ridesservice.service.ride.distance.DistanceCalcula
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.ridesservice.util.exception.NotEnoughFreeDriversException;
 import by.modsen.taxiprovider.ridesservice.util.validation.ride.RideValidator;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +56,9 @@ public class RidesService {
     private final PromoCodeMapper promoCodeMapper;
 
     private final PotentialRideMapper potentialRideMapper;
+
+    @Value("${drivers-service-host-url}")
+    private String DRIVERS_SERVICE_HOST_URL;
 
     private static final int MINIMAL_COUNT_OF_TARGET_ADDRESSES = 1;
 
@@ -78,7 +89,7 @@ public class RidesService {
 
     @Transactional(readOnly = true)
     public List<RideDTO> findByPassengerId(long passengerId) throws EntityNotFoundException {
-        List<Ride> rides = ridesRepository.findByPassengerIdAndStatus(passengerId, "Active");
+        List<Ride> rides = ridesRepository.findByPassengerIdAndStatus(passengerId, "Completed");
 
         if (rides.isEmpty()) {
             throw new EntityNotFoundException("Passenger with id '" + passengerId + "' doesn't have any rides");
@@ -89,13 +100,33 @@ public class RidesService {
 
     @Transactional(readOnly = true)
     public List<RideDTO> findByDriverId(long driverId) throws EntityNotFoundException {
-        List<Ride> rides = ridesRepository.findByDriverIdAndStatus(driverId, "Active");
+        List<Ride> rides = ridesRepository.findByDriverIdAndStatus(driverId, "Completed");
 
         if (rides.isEmpty()) {
             throw new EntityNotFoundException("Driver with id '" + driverId + "' doesn't have any rides");
         }
 
         return rideMapper.toListDTO(rides);
+    }
+
+    public Ride findDriverCurrentDrive(long driverId, String status) throws EntityNotFoundException {
+        List<Ride> rides = ridesRepository.findByDriverIdAndStatus(driverId, status);
+
+        if (rides == null) {
+            throw new EntityNotFoundException("Current driver doesn't have active rides");
+        }
+
+        return rides.get(0);
+    }
+
+    public Ride findPassengerCurrentDrive(long passengerId) throws EntityNotFoundException {
+        List<Ride> rides = ridesRepository.findByPassengerIdAndStatus(passengerId, "WAITING");
+
+        if (rides == null) {
+            throw new EntityNotFoundException("Cannot find rides with status 'WAITING'");
+        }
+
+        return rides.get(0);
     }
 
     @Transactional
@@ -142,37 +173,62 @@ public class RidesService {
                 .build());
 
         ride.setCost(rideCost);
-        ride.setStatus("Waiting");
+        ride.setStatus("WAITING");
+
+        DriverDTO driver = getFreeDrivers().get(0);
+        driver.setStatus("TAKEN");
+
+        updateDriver(driver);
+        ride.setDriverId(driver.getId());
         ridesRepository.save(ride);
     }
 
     @Transactional
-    public void update(long id, RideDTO rideDTO, BindingResult bindingResult) throws EntityValidateException,
+    public void update(RideDTO rideDTO, BindingResult bindingResult) throws EntityValidateException,
             EntityNotFoundException {
 
-        Ride ride = rideMapper.toEntity(rideDTO);
-        rideValidator.validate(ride, bindingResult);
+        rideValidator.validate(rideDTO, bindingResult);
         handleBindingResult(bindingResult);
 
-        Ride updatingRide = ridesRepository.findById(id).orElseThrow(EntityNotFoundException
-                .entityNotFoundException("Ride with id '" + id + "' wasn't found"));
-        updatingRide.setDriverId(ride.getDriverId());
-        updatingRide.setStatus(ride.getStatus());
-
-        switch (ride.getStatus()) {
-            case "In process" -> updatingRide.setStartedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-            case "Completed" -> updatingRide.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+        Ride ride = null;
+        switch (rideDTO.getStatus()) {
+            case "IN_PROGRESS" -> {
+                ride = findDriverCurrentDrive(rideDTO.getDriverId(), "WAITING");
+                ride.setStartedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+                ride.setStatus(rideDTO.getStatus());
+                break;
+            }
+            case "COMPLETED" -> {
+                ride = findDriverCurrentDrive(rideDTO.getDriverId(), "IN_PROGRESS");
+                ride.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+                DriverDTO driver = getDriverById(rideDTO.getDriverId());
+                driver.setStatus("FREE");
+                driver.setBalance(driver.getBalance().add(ride.getCost()));
+                updateDriver(driver);
+                ride.setStatus(rideDTO.getStatus());
+                break;
+            }
         }
 
-        ridesRepository.save(updatingRide);
+        ridesRepository.save(ride);
     }
 
     @Transactional
     public void delete(long id) throws EntityNotFoundException {
         Ride ride = ridesRepository.findById(id)
                 .orElseThrow(EntityNotFoundException.entityNotFoundException("Ride with id '" + id + "' wasn't found"));
-
         ridesRepository.delete(ride);
+    }
+
+    @Transactional
+    public void cancel(long passengerId) throws EntityNotFoundException {
+        Ride ride = findPassengerCurrentDrive(passengerId);
+        ride.setStatus("CANCELLED");
+        ridesRepository.save(ride);
+
+        DriverDTO driver = getDriverById(ride.getDriverId());
+        driver.setStatus("FREE");
+        updateDriver(driver);
     }
 
     public BigDecimal getPotentialRideCost(PotentialRideDTO potentialRideDTO, BindingResult bindingResult)
@@ -215,6 +271,52 @@ public class RidesService {
         }
 
         return rideDistance;
+    }
+
+    private List<DriverDTO> getFreeDrivers() {
+        WebClient webClient = WebClient.builder()
+                .baseUrl(DRIVERS_SERVICE_HOST_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        return webClient.get()
+                .uri("/free")
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                                Mono.error(new NotEnoughFreeDriversException()))
+                .bodyToFlux(DriverDTO.class)
+                .collect(Collectors.toList())
+                .block();
+    }
+
+    private DriverDTO getDriverById(long driverId) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl(DRIVERS_SERVICE_HOST_URL)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        return webClient.get()
+                .uri("/" + driverId)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                        Mono.error(new EntityNotFoundException("Cannot find driver with id '" + driverId + "'")))
+                .bodyToMono(DriverDTO.class)
+                .block();
+    }
+
+    private void updateDriver(DriverDTO driverDTO) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl(DRIVERS_SERVICE_HOST_URL)
+                .defaultHeader("Accept", MediaType.APPLICATION_JSON_VALUE,
+                        "Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        webClient.patch()
+                .uri("/" + driverDTO.getId())
+                .bodyValue(driverDTO)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {

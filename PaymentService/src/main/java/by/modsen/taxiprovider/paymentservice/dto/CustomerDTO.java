@@ -36,4 +36,7 @@ public class CustomerDTO {
     @NotNull(message = "Balance must be not null")
     @DecimalMin(value = "0.01", message = "Minimal value of balance is '0.01'")
     private BigDecimal balance;
+
+    @NotBlank(message = "Taxi user's role must be not empty")
+    private String role;
 }

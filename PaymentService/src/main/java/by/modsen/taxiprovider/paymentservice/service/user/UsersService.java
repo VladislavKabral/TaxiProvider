@@ -13,17 +13,12 @@ public class UsersService {
 
     private final UsersRepository usersRepository;
 
-    public User findById(long id) throws EntityNotFoundException {
-        return usersRepository.findById(id).orElseThrow(EntityNotFoundException
-                .entityNotFoundException("User with id '" + id + "' wasn't found"));
+    public Boolean isUserExists(long taxiUserId, String role) {
+        return usersRepository.findByTaxiUserIdAndRole(taxiUserId, role).isPresent();
     }
 
-    public Boolean isUserExists(long taxiUserId) {
-        return usersRepository.findByTaxiUserId(taxiUserId).isPresent();
-    }
-
-    public User findByTaxiUserId(long id) throws EntityNotFoundException {
-        return usersRepository.findByTaxiUserId(id).orElseThrow(EntityNotFoundException
+    public User findByTaxiUserIdAndRole(long id, String role) throws EntityNotFoundException {
+        return usersRepository.findByTaxiUserIdAndRole(id, role).orElseThrow(EntityNotFoundException
                 .entityNotFoundException("User with id '" + id + "' wasn't found"));
     }
 
@@ -33,8 +28,8 @@ public class UsersService {
     }
 
     @Transactional
-    public void delete(long id) throws EntityNotFoundException {
-        User user = findById(id);
+    public void delete(long id, String role) throws EntityNotFoundException {
+        User user = findByTaxiUserIdAndRole(id, role);
         usersRepository.delete(user);
     }
 

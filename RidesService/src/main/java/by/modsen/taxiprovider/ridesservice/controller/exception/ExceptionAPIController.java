@@ -9,6 +9,8 @@ import by.modsen.taxiprovider.ridesservice.util.exception.InvalidRequestDataExce
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+
+import by.modsen.taxiprovider.ridesservice.util.exception.NotEnoughFreeDriversException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -63,6 +65,16 @@ public class ExceptionAPIController {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
                         .message("Wrong ride's time format. Correct format is 'yyyy-MM-dd, HH-mm-ss'")
+                        .time(ZonedDateTime.now(ZoneOffset.UTC))
+                        .build());
+    }
+
+    @ExceptionHandler(NotEnoughFreeDriversException.class)
+    public ResponseEntity<ErrorResponseDTO> notEnoughFreeDriversException() {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponseDTO.builder()
+                        .message("There aren't any free drivers now. Try again")
                         .time(ZonedDateTime.now(ZoneOffset.UTC))
                         .build());
     }

@@ -63,11 +63,12 @@ public class PaymentController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @DeleteMapping("/customers/{id}")
-    public ResponseEntity<HttpStatus> deleteCustomer(@PathVariable("id") long id) throws PaymentException,
+    @DeleteMapping(value = "/customers/{id}", params = "role")
+    public ResponseEntity<HttpStatus> deleteCustomer(@PathVariable("id") long id,
+                                                     @RequestParam("role") String role) throws PaymentException,
             EntityNotFoundException {
 
-        paymentService.deleteCustomer(id);
+        paymentService.deleteCustomer(id, role);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

@@ -41,7 +41,6 @@ public class DriversController {
     public ResponseEntity<List<DriverDTO>> getDriversPage(@RequestParam("page") int page,
                                                           @RequestParam("size") int size)
             throws EntityNotFoundException {
-
         return new ResponseEntity<>(driversService.findPageDrivers(page, size), HttpStatus.OK);
     }
 
@@ -60,10 +59,14 @@ public class DriversController {
         return new ResponseEntity<>(driversService.getDriverProfile(id), HttpStatus.OK);
     }
 
+    @GetMapping("/free")
+    public ResponseEntity<List<DriverDTO>> getFreeDrivers() throws EntityNotFoundException {
+        return new ResponseEntity<>(driversService.findFreeDrivers(), HttpStatus.OK);
+    }
+
     @PostMapping
     public ResponseEntity<HttpStatus> saveDriver(@RequestBody @Valid NewDriverDTO driverDTO,
                                                  BindingResult bindingResult) throws EntityValidateException {
-
         driversService.save(driverDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
@@ -73,27 +76,22 @@ public class DriversController {
                                                  @RequestBody @Valid RatingDTO ratingDTO,
                                                  BindingResult bindingResult)
             throws EntityValidateException, EntityNotFoundException {
-
         driversService.rateDriver(id, ratingDTO, bindingResult);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping(value = "/{id}")
     public ResponseEntity<HttpStatus> editDriver(@PathVariable("id") long id,
                                                  @RequestBody @Valid DriverDTO driverDTO,
                                                  BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
-
         driversService.update(id, driverDTO, bindingResult);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deactivateDriver(@PathVariable("id") long id) throws EntityNotFoundException {
         driversService.deactivate(id);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

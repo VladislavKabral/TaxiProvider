@@ -25,4 +25,7 @@ public class CustomerChargeRequestDTO {
 
     @NotBlank(message = "Currency must be not empty")
     private String currency;
+
+    @NotBlank(message = "Taxi user's role must be not empty")
+    private String role;
 }

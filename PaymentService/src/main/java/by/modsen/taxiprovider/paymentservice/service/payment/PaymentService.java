@@ -132,20 +132,19 @@ public class PaymentService {
                         .build();
 
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
-        createUser(params, customerDTO.getTaxiUserId());
+        createUser(params, customerDTO.getTaxiUserId(), customerDTO.getRole());
     }
 
     public void updateCustomer(long id, CustomerDTO customerDTO, BindingResult bindingResult) throws PaymentException,
             EntityNotFoundException, EntityValidateException {
 
-        cardRequestValidator.validate(customerDTO, bindingResult);
         handleBindingResult(bindingResult);
 
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
 
-        User user = usersService.findById(id);
+        User user = usersService.findByTaxiUserIdAndRole(id, customerDTO.getRole());
 
         try {
             Customer resource = Customer.retrieve(user.getCustomerId());
@@ -161,13 +160,13 @@ public class PaymentService {
         }
     }
 
-    public void deleteCustomer(long id) throws EntityNotFoundException, PaymentException {
+    public void deleteCustomer(long id, String role) throws EntityNotFoundException, PaymentException {
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
 
-        User user = usersService.findById(id);
-        usersService.delete(user.getId());
+        User user = usersService.findByTaxiUserIdAndRole(id, role);
+        usersService.delete(user.getId(), role);
 
         Customer customer;
         try {
@@ -186,7 +185,8 @@ public class PaymentService {
         handleBindingResult(bindingResult);
 
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
-        User user = usersService.findById(customerChargeRequestDTO.getTaxiUserId());
+        User user = usersService.findByTaxiUserIdAndRole(customerChargeRequestDTO.getTaxiUserId(),
+                customerChargeRequestDTO.getRole());
         String customerId = user.getCustomerId();
         checkBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * 100));
         updateBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * 100));
@@ -256,7 +256,7 @@ public class PaymentService {
 
         handleBindingResult(bindingResult);
 
-        User driver = usersService.findByTaxiUserId(driverId);
+        User driver = usersService.findByTaxiUserIdAndRole(driverId, "Driver");
         BigDecimal amount = driverBalanceRequestDTO.getAmount();
 
         Customer customer;
@@ -295,7 +295,7 @@ public class PaymentService {
         }
     }
 
-    private void createUser(CustomerCreateParams params, long id) throws PaymentException {
+    private void createUser(CustomerCreateParams params, long id, String role) throws PaymentException {
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
         Customer customer = checkCustomerParams(params);
         createPaymentMethod(customer.getId());
@@ -303,6 +303,7 @@ public class PaymentService {
                 .customerId(customer.getId())
                 .customerId(customer.getId())
                 .taxiUserId(id)
+                .role(role)
                 .build();
 
         usersService.save(user);
