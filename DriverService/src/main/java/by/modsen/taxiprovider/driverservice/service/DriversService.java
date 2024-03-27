@@ -73,6 +73,16 @@ public class DriversService {
         return driverMapper.toListDTO(drivers);
     }
 
+    public List<DriverDTO> findSortedDrivers(String sortField) throws EntityNotFoundException {
+        List<Driver> drivers = driversRepository.findAll(Sort.by(sortField));
+
+        if (drivers.isEmpty()) {
+            throw new EntityNotFoundException(DRIVERS_NOT_FOUND);
+        }
+
+        return driverMapper.toListDTO(drivers);
+    }
+
     public Page<DriverDTO> findPageDrivers(int index, int count, String sortField)
             throws EntityNotFoundException, InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {
@@ -82,7 +92,7 @@ public class DriversService {
         List<Driver> drivers = driversRepository
                 .findAll(PageRequest.of(index - 1, count, Sort.by(sortField))).getContent()
                 .stream()
-                .filter(driver -> driver.getStatus().equals(DRIVER_ACCOUNT_STATUS_ACTIVE))
+                .filter(driver -> driver.getAccountStatus().equals(DRIVER_ACCOUNT_STATUS_ACTIVE))
                 .toList();
 
         if (drivers.isEmpty()) {

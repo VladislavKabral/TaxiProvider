@@ -38,6 +38,12 @@ public class DriversController {
         return new ResponseEntity<>(driversService.findAll(), HttpStatus.OK);
     }
 
+    @GetMapping(params = {"sort"})
+    public ResponseEntity<List<DriverDTO>> getSortedDrivers(@RequestParam("sort") String sortField)
+            throws EntityNotFoundException {
+        return new ResponseEntity<>(driversService.findSortedDrivers(sortField), HttpStatus.OK);
+    }
+
     @GetMapping(params = {"page", "size", "sort"})
     public ResponseEntity<Page<DriverDTO>> getDriversPage(@RequestParam("page") int page,
                                                           @RequestParam("size") int size,
@@ -52,7 +58,8 @@ public class DriversController {
     }
 
     @GetMapping("/{id}/profile")
-    public ResponseEntity<DriverProfileDTO> getDriverProfile(@PathVariable("id") long id) throws EntityNotFoundException {
+    public ResponseEntity<DriverProfileDTO> getDriverProfile(@PathVariable("id") long id)
+            throws EntityNotFoundException {
         return new ResponseEntity<>(driversService.getDriverProfile(id), HttpStatus.OK);
     }
 
@@ -77,7 +84,8 @@ public class DriversController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<DriverResponseDTO> deactivateDriver(@PathVariable("id") long id) throws EntityNotFoundException {
+    public ResponseEntity<DriverResponseDTO> deactivateDriver(@PathVariable("id") long id)
+            throws EntityNotFoundException {
         return new ResponseEntity<>(driversService.deactivate(id), HttpStatus.OK);
     }
 }

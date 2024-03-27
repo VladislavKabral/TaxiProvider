@@ -40,7 +40,8 @@ public class DistanceCalculator {
 
     private static final String STATUS_PARAM_NAME = "status";
 
-    public int calculate(Address source, Address target) throws IOException, InterruptedException, ParseException, DistanceCalculationException {
+    public int calculate(Address source, Address target) throws IOException, InterruptedException, ParseException,
+            DistanceCalculationException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URI))
                 .POST(HttpRequest.BodyPublishers.ofString(getRequestBody(source, target)))

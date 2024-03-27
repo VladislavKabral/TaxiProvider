@@ -31,4 +31,6 @@ public class Message {
     public final String REQUEST_PARAMETER_IS_INVALID = "Failed to convert value in request parameter";
     public final String EXTERNAL_SERVICE_IS_UNAVAILABLE = "Cannot connect to rating's service";
     public final String CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE = "External service '%s' failed to process after max retries";
+    public final String DRIVER_WITH_GIVEN_EMAIL_ALREADY_EXISTS = "Driver with email '%s' already exists";
+    public final String DRIVER_WITH_GIVEN_PHONE_NUMBER_ALREADY_EXISTS = "Driver with phone number '%s' already exists";
 }

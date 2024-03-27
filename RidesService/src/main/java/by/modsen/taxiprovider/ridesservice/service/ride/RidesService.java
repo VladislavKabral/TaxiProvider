@@ -194,7 +194,7 @@ public class RidesService {
 
         BigDecimal rideCost = calculatePotentialRideCost(PotentialRide.builder()
                 .sourceAddress(sourceAddress)
-                .targetAddresses(destinationAddresses)
+                .destinationAddresses(destinationAddresses)
                 .promoCode(promoCode)
                 .build());
 
@@ -362,7 +362,7 @@ public class RidesService {
     private int getRideDistance(PotentialRide potentialRide) throws IOException,
             ParseException, InterruptedException, DistanceCalculationException {
 
-        List<Address> targetAddresses = potentialRide.getTargetAddresses();
+        List<Address> targetAddresses = potentialRide.getDestinationAddresses();
 
         int rideDistance =  distanceCalculator.calculate(
                 potentialRide.getSourceAddress(),

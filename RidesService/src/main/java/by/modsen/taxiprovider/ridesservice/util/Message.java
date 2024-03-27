@@ -54,4 +54,6 @@ public class Message {
     public final String RIDE_WAS_ENDED = "A ride was ended. Passenger's id: '%d', driver's id: '%d'. Time: %s";
     public final String RIDE_WAS_CANCELLED = "A ride was cancelled. Passenger's id: '%d', driver's id: '%d'. Time: %s";
     public final String CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE = "External service '%s' failed to process after max retries";
+    public final String PROMO_CODE_ALREADY_EXISTS = "Promo code '%s' already exists";
+    public final String DISCOUNT_IS_INVALID = "Invalid discount's value. Discount must be equal or less than 1.0 and equal or more than 0.01";
 }

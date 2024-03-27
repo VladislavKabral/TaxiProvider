@@ -36,4 +36,5 @@ public class Message {
     public final String PASSENGER_ID_IS_INVALID = "Passenger's id must be a number and can't be less than one";
     public final String DRIVER_ID_IS_INVALID = "Driver's id must be a number and can't be less than one";
     public final String CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE = "External service '%s' failed to process after max retries";
+    public final String BANK_CARD_EXPIRATION_IS_INVALID = "Bank card's expiration is invalid";
 }

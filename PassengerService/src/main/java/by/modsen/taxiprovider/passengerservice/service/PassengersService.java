@@ -70,6 +70,16 @@ public class PassengersService {
         return passengerMapper.toListDTO(passengers);
     }
 
+    public List<PassengerDTO> findSortedPassengers(String sortField) throws EntityNotFoundException {
+        List<Passenger> passengers = passengersRepository.findAll(Sort.by(sortField));
+
+        if (passengers.isEmpty()) {
+            throw new EntityNotFoundException(PASSENGERS_NOT_FOUND);
+        }
+
+        return passengerMapper.toListDTO(passengers);
+    }
+
     public Page<PassengerDTO> findPagePassengers(int index, int count, String sortField)
             throws EntityNotFoundException, InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {

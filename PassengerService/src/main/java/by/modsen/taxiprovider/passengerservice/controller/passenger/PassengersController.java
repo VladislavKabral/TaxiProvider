@@ -38,6 +38,12 @@ public class PassengersController {
         return new ResponseEntity<>(passengersService.findAll(), HttpStatus.OK);
     }
 
+    @GetMapping(params = {"sort"})
+    public ResponseEntity<List<PassengerDTO>> getSortedPassengers(@RequestParam("sort") String sortField)
+            throws EntityNotFoundException {
+        return new ResponseEntity<>(passengersService.findSortedPassengers(sortField), HttpStatus.OK);
+    }
+
     @GetMapping(params = {"page", "size", "sort"})
     public ResponseEntity<Page<PassengerDTO>> getPassengersPage(@RequestParam("page") int page,
                                                                 @RequestParam("size") int size,
@@ -62,7 +68,7 @@ public class PassengersController {
     public ResponseEntity<PassengerResponseDTO> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO,
                                                               BindingResult bindingResult)
             throws EntityValidateException, EntityNotFoundException {
-        return new ResponseEntity<>(passengersService.save(passengerDTO, bindingResult), HttpStatus.OK);
+        return new ResponseEntity<>(passengersService.save(passengerDTO, bindingResult), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")

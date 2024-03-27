@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import static by.modsen.taxiprovider.ratingservice.util.Message.*;
+
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
@@ -33,11 +35,12 @@ public class ExceptionAPIController {
             UnsatisfiedServletRequestParameterException.class
     })
     public ResponseEntity<ErrorResponseDTO> defaultMessageExceptionHandler(Exception exception) {
-        return new ResponseEntity<>(ErrorResponseDTO.builder()
-                .message(exception.getMessage())
-                .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
-                .build(),
-                HttpStatus.BAD_REQUEST);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDTO.builder()
+                        .message(exception.getMessage())
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
+                        .build());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -45,7 +48,7 @@ public class ExceptionAPIController {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
-                        .message("Failed to convert value in request parameter")
+                        .message(REQUEST_PARAM_IS_INVALID)
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
@@ -55,7 +58,7 @@ public class ExceptionAPIController {
         return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ErrorResponseDTO.builder()
-                        .message(exception.getMessage() + " for this endpoint")
+                        .message(String.format(METHOD_NOT_ALLOWED, exception.getMessage()))
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }

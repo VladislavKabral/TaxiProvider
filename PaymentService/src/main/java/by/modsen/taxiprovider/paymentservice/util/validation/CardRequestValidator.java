@@ -5,11 +5,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import static by.modsen.taxiprovider.paymentservice.util.Message.*;
+
 import java.time.Year;
 import java.util.Calendar;
 
 @Component
 public class CardRequestValidator implements Validator {
+
+    private static final String MONTH_FIELD_NAME = "month";
+
+    private static final String YEAR_FIELD_NAME = "year";
 
     @Override
     public boolean supports(Class<?> clazz) {
@@ -23,13 +29,11 @@ public class CardRequestValidator implements Validator {
         int currentYear = Year.now().getValue();
         int currentMonth = Calendar.MONTH + 1;
         if ((currentYear == cardRequestDTO.getYear()) && (currentMonth >= cardRequestDTO.getMonth())) {
-            errors.rejectValue("month", "",
-                    "Bank card's expiration is invalid");
+            errors.rejectValue(MONTH_FIELD_NAME, "", BANK_CARD_EXPIRATION_IS_INVALID);
         }
 
         if (currentYear > cardRequestDTO.getYear()) {
-            errors.rejectValue("year", "",
-                    "Bank card's expiration is invalid");
+            errors.rejectValue(YEAR_FIELD_NAME, "", BANK_CARD_EXPIRATION_IS_INVALID);
         }
     }
 }

@@ -14,6 +14,10 @@ import static by.modsen.taxiprovider.ridesservice.util.PaymentType.*;
 @AllArgsConstructor
 public class RideValidator implements Validator {
 
+    private static final String STATUS_FIELD_NAME = "status";
+
+    private static final String PAYMENT_TYPE_FIELD_NAME = "paymentType";
+
     @Override
     public boolean supports(Class<?> clazz) {
         return RideDTO.class.equals(clazz);
@@ -29,13 +33,13 @@ public class RideValidator implements Validator {
                 && (!status.equals(RIDE_STATUS_CANCELLED))
                 && (!status.equals(RIDE_STATUS_WAITING))
                 && (!status.equals(RIDE_STATUS_PAID))) {
-            errors.rejectValue("status", "", RIDE_STATUS_IS_INVALID);
+            errors.rejectValue(STATUS_FIELD_NAME, "", RIDE_STATUS_IS_INVALID);
         }
 
         if (ride.getPaymentType() != null) {
             String paymentType = ride.getPaymentType();
             if ((!paymentType.equals(PAYMENT_TYPE_CASH)) && (!paymentType.equals(PAYMENT_TYPE_CARD))) {
-                errors.rejectValue("paymentType", "", PAYMENT_TYPE_IS_INVALID);
+                errors.rejectValue(PAYMENT_TYPE_FIELD_NAME, "", PAYMENT_TYPE_IS_INVALID);
             }
         }
     }
