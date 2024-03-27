@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <preConditions>
+        <dbms type="postgresql"/>
+    </preConditions>
+
+    <changeSet id="1" author="Vladislav Kabral">
+        <tagDatabase tag="db_init"/>
+    </changeSet>
+
+    <include file="v1.0.0/v1.0.0-changelog.xml" relativeToChangelogFile="true"/>
+
+    <changeSet id="10" author="Vladislav Kabral">
+        <tagDatabase tag="v1.0.0"/>
+    </changeSet>
+
+</databaseChangeLog>

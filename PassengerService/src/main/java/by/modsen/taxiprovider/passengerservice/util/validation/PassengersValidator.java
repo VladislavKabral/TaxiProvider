@@ -1,7 +1,7 @@
 package by.modsen.taxiprovider.passengerservice.util.validation;
 
-import by.modsen.taxiprovider.passengerservice.model.passenger.Passenger;
-import by.modsen.taxiprovider.passengerservice.repository.passenger.PassengersRepository;
+import by.modsen.taxiprovider.passengerservice.model.Passenger;
+import by.modsen.taxiprovider.passengerservice.repository.PassengersRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;

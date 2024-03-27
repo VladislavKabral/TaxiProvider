@@ -1,7 +1,7 @@
 package by.modsen.taxiprovider.driverservice.util.validation;
 
-import by.modsen.taxiprovider.driverservice.model.driver.Driver;
-import by.modsen.taxiprovider.driverservice.repository.driver.DriversRepository;
+import by.modsen.taxiprovider.driverservice.model.Driver;
+import by.modsen.taxiprovider.driverservice.repository.DriversRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;

@@ -3,9 +3,7 @@ package by.modsen.taxiprovider.passengerservice.controller.passenger;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
-import by.modsen.taxiprovider.passengerservice.dto.rating.PassengerRatingDTO;
-import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.passengerservice.service.passenger.PassengersService;
+import by.modsen.taxiprovider.passengerservice.service.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
 import jakarta.validation.Valid;
@@ -50,11 +48,6 @@ public class PassengersController {
         return new ResponseEntity<>(passengersService.findById(id), HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/rating")
-    public ResponseEntity<PassengerRatingDTO> getPassengerRating(@PathVariable long id) throws EntityNotFoundException {
-        return new ResponseEntity<>(passengersService.getPassengerRating(id), HttpStatus.OK);
-    }
-
     @GetMapping("/{id}/profile")
     public ResponseEntity<PassengerProfileDTO> getPassengerProfile(@PathVariable long id)
             throws EntityNotFoundException {
@@ -65,15 +58,6 @@ public class PassengersController {
     public ResponseEntity<HttpStatus> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO,
                                                     BindingResult bindingResult) throws EntityValidateException {
         passengersService.save(passengerDTO, bindingResult);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("/{id}/rating")
-    public ResponseEntity<HttpStatus> ratePassenger(@PathVariable long id,
-                                                    @RequestBody @Valid RatingDTO ratingDTO,
-                                                    BindingResult bindingResult)
-            throws EntityNotFoundException, EntityValidateException {
-        passengersService.ratePassenger(id, ratingDTO, bindingResult);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

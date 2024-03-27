@@ -5,8 +5,6 @@
        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
     <include file="01-changeset-drivers-schema.xml" relativeToChangelogFile="true"/>
-    <include file="10-changeset-rating-schema.xml" relativeToChangelogFile="true"/>
     <include file="02-init-drivers-schema.xml" relativeToChangelogFile="true"/>
-    <include file="init-rating-schema.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

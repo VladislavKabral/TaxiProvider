@@ -5,8 +5,6 @@
        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
     <include file="01-changeset-passengers-schema.xml" relativeToChangelogFile="true"/>
-    <include file="10-changeset-ratings-schema.xml" relativeToChangelogFile="true"/>
     <include file="02-init-passengers-schema.xml" relativeToChangelogFile="true"/>
-    <include file="11-init-ratings-schema.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
