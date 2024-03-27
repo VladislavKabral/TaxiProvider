@@ -26,6 +26,7 @@ import java.util.List;
 import static by.modsen.taxiprovider.driverservice.utilily.DriversTestUtil.*;
 import static by.modsen.taxiprovider.driverservice.util.Message.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -36,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @WebMvcTest(DriversController.class)
-class DriversUnitTests {
+class DriversControllerUnitTests {
 
     @Autowired
     private MockMvc mockMvc;
@@ -262,7 +263,7 @@ class DriversUnitTests {
         NewDriverDTO newDriverRequest = getRequestForSaveDriver();
 
         //when
-        when(driversService.save(any(NewDriverDTO.class), any(BindingResult.class)))
+        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
                 .thenReturn(new DriverResponseDTO(DEFAULT_DRIVER_ID));
 
         //then
@@ -279,7 +280,7 @@ class DriversUnitTests {
         NewDriverDTO newDriverRequest = getRequestForSaveDriverWithInvalidLastName();
 
         //when
-        when(driversService.save(any(NewDriverDTO.class), any(BindingResult.class)))
+        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
                 .thenThrow(new EntityValidateException(DRIVER_LASTNAME_BODY_IS_INVALID));
 
         //then
@@ -296,7 +297,7 @@ class DriversUnitTests {
         NewDriverDTO newDriverRequest = getRequestForSaveDriverWithInvalidFirstName();
 
         //when
-        when(driversService.save(any(NewDriverDTO.class), any(BindingResult.class)))
+        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
                 .thenThrow(new EntityValidateException(DRIVER_FIRSTNAME_BODY_IS_INVALID));
 
         //then
@@ -313,7 +314,7 @@ class DriversUnitTests {
         NewDriverDTO newDriverRequest = getRequestForSaveDriverWithInvalidEmail();
 
         //when
-        when(driversService.save(any(NewDriverDTO.class), any(BindingResult.class)))
+        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
                 .thenThrow(new EntityValidateException(DRIVER_EMAIL_WRONG_FORMAT));
 
         //then
@@ -330,7 +331,7 @@ class DriversUnitTests {
         NewDriverDTO newDriverRequest = getRequestForSaveDriverWithInvalidPhoneNumber();
 
         //when
-        when(driversService.save(any(NewDriverDTO.class), any(BindingResult.class)))
+        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
                 .thenThrow(new EntityValidateException(DRIVER_PHONE_NUMBER_FORMAT_IS_WRONG));
 
         //then
@@ -347,7 +348,7 @@ class DriversUnitTests {
         NewDriverDTO newDriverRequest = getRequestForSaveDriverWithInvalidPassword();
 
         //when
-        when(driversService.save(any(NewDriverDTO.class), any(BindingResult.class)))
+        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
                 .thenThrow(new EntityValidateException(DRIVER_PASSWORD_IS_EMPTY));
 
         //then
@@ -364,7 +365,7 @@ class DriversUnitTests {
         DriverDTO driverDTO = getDriver();
 
         //when
-        when(driversService.update(any(Long.class), any(DriverDTO.class), any(BindingResult.class)))
+        when(driversService.update(eq(DEFAULT_DRIVER_ID), eq(driverDTO), any(BindingResult.class)))
                 .thenReturn(new DriverResponseDTO(DEFAULT_DRIVER_ID));
 
         //then
@@ -381,7 +382,7 @@ class DriversUnitTests {
         DriverDTO driverDTO = getRequestForUpdateDriverWithInvalidStatus();
 
         //when
-        when(driversService.update(any(Long.class), any(DriverDTO.class), any(BindingResult.class)))
+        when(driversService.update(eq(DEFAULT_DRIVER_ID), eq(driverDTO), any(BindingResult.class)))
                 .thenThrow(new EntityValidateException(INVALID_DRIVER_STATUS));
 
         //then

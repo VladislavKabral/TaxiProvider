@@ -26,6 +26,7 @@ import java.util.List;
 import static by.modsen.taxiprovider.passengerservice.utility.PassengersTestUtil.*;
 import static by.modsen.taxiprovider.passengerservice.util.Message.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @WebMvcTest(PassengersController.class)
-class PassengersUnitTests {
+class PassengersControllerUnitTests {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -229,7 +230,7 @@ class PassengersUnitTests {
 		NewPassengerDTO newPassengerRequest = getRequestForSavePassenger();
 
 		//when
-		when(passengersService.save(any(NewPassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
 				.thenReturn(new PassengerResponseDTO(DEFAULT_PASSENGER_ID));
 
 		//then
@@ -246,7 +247,7 @@ class PassengersUnitTests {
 		NewPassengerDTO newPassengerRequest = getRequestForSavePassengerWithInvalidLastName();
 
 		//when
-		when(passengersService.save(any(NewPassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
 				.thenThrow(new EntityValidateException(PASSENGER_LASTNAME_BODY_IS_INVALID));
 
 		//then
@@ -263,7 +264,7 @@ class PassengersUnitTests {
 		NewPassengerDTO newPassengerRequest = getRequestForSavePassengerWithInvalidFirstName();
 
 		//when
-		when(passengersService.save(any(NewPassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
 				.thenThrow(new EntityValidateException(PASSENGER_FIRSTNAME_BODY_IS_INVALID));
 
 		//then
@@ -280,7 +281,7 @@ class PassengersUnitTests {
 		NewPassengerDTO newPassengerRequest = getRequestForSavePassengerWithInvalidEmail();
 
 		//when
-		when(passengersService.save(any(NewPassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
 				.thenThrow(new EntityValidateException(PASSENGER_EMAIL_WRONG_FORMAT));
 
 		//then
@@ -297,7 +298,7 @@ class PassengersUnitTests {
 		NewPassengerDTO newPassengerRequest = getRequestForSavePassengerWithInvalidPhoneNumber();
 
 		//when
-		when(passengersService.save(any(NewPassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
 				.thenThrow(new EntityValidateException(PASSENGER_PHONE_NUMBER_FORMAT_IS_WRONG));
 
 		//then
@@ -314,7 +315,7 @@ class PassengersUnitTests {
 		NewPassengerDTO newPassengerRequest = getRequestForSavePassengerWithInvalidPassword();
 
 		//when
-		when(passengersService.save(any(NewPassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
 				.thenThrow(new EntityValidateException(PASSENGER_PASSWORD_IS_EMPTY));
 
 		//then
@@ -331,7 +332,7 @@ class PassengersUnitTests {
 		PassengerDTO passengerDTO = getRequestForEditPassenger();
 
 		//when
-		when(passengersService.update(any(Long.class), any(PassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
 				.thenReturn(new PassengerResponseDTO(DEFAULT_PASSENGER_ID));
 
 		//then
@@ -348,7 +349,7 @@ class PassengersUnitTests {
 		PassengerDTO passengerDTO = getRequestForEditPassenger();
 
 		//when
-		when(passengersService.update(any(Long.class), any(PassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
 				.thenThrow(new EntityNotFoundException(String.format(PASSENGER_NOT_FOUND, DEFAULT_PASSENGER_ID)));
 
 		//then
@@ -365,7 +366,7 @@ class PassengersUnitTests {
 		PassengerDTO passengerDTO = getRequestForEditPassengerWithInvalidLastname();
 
 		//when
-		when(passengersService.update(any(Long.class), any(PassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
 				.thenThrow(new EntityValidateException(PASSENGER_LASTNAME_BODY_IS_INVALID));
 
 		//then
@@ -382,7 +383,7 @@ class PassengersUnitTests {
 		PassengerDTO passengerDTO = getRequestForEditPassengerWithInvalidFirstname();
 
 		//when
-		when(passengersService.update(any(Long.class), any(PassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
 				.thenThrow(new EntityValidateException(PASSENGER_FIRSTNAME_BODY_IS_INVALID));
 
 		//then
@@ -399,7 +400,7 @@ class PassengersUnitTests {
 		PassengerDTO passengerDTO = getRequestForEditPassengerWithInvalidEmail();
 
 		//when
-		when(passengersService.update(any(Long.class), any(PassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
 				.thenThrow(new EntityValidateException(PASSENGER_EMAIL_WRONG_FORMAT));
 
 		//then
@@ -416,7 +417,7 @@ class PassengersUnitTests {
 		PassengerDTO passengerDTO = getRequestForEditPassengerWithInvalidPhoneNumber();
 
 		//when
-		when(passengersService.update(any(Long.class), any(PassengerDTO.class), any(BindingResult.class)))
+		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
 				.thenThrow(new EntityValidateException(PASSENGER_PHONE_NUMBER_FORMAT_IS_WRONG));
 
 		//then
