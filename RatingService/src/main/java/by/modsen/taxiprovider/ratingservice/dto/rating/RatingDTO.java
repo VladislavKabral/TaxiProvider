@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static by.modsen.taxiprovider.ratingservice.util.Message.*;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,15 +19,15 @@ public class RatingDTO {
 
     private long id;
 
-    @NotNull(message = "Taxi user's id must be not null")
-    @Min(value = 1, message = "Minimal value for taxi user's id id '1'")
+    @NotNull(message = TAXI_USER_ID_IS_NULL)
+    @Min(value = 1, message = TAXI_USER_ID_MINIMAL_VALUE)
     private long taxiUserId;
 
-    @NotBlank(message = "Taxi user's role must be not empty")
+    @NotBlank(message = TAXI_USER_ROLE_IS_EMPTY)
     private String role;
 
-    @NotNull(message = "Value of rating must be not empty")
-    @Min(value = 1, message = "Minimal value for the rating's value is '1'")
-    @Max(value = 5, message = "Maximum value for the rating's value is '5'")
+    @NotNull(message = RATING_VALUE_IS_EMPTY)
+    @Min(value = 1, message = RATING_MINIMAL_VALUE_IS_INVALID)
+    @Max(value = 5, message = RATING_MAXIMUM_VALUE_IS_INVALID)
     private int value;
 }

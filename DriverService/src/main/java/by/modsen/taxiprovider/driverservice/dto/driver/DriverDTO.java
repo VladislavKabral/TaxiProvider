@@ -7,7 +7,8 @@ import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import static by.modsen.taxiprovider.driverservice.util.Message.*;
+import static by.modsen.taxiprovider.driverservice.util.Regex.*;
 import java.math.BigDecimal;
 
 @Data
@@ -17,22 +18,22 @@ public class DriverDTO {
 
     private long id;
 
-    @Size(min = 2, max = 50, message = "Driver's lastname must be between 2 and 50 symbols")
-    @Pattern(regexp = "^[a-zA-Z ]+$", message = "Driver's lastname must contain only letters")
-    @NotEmpty(message = "Driver's lastname must be not empty")
+    @Size(min = 2, max = 50, message = DRIVER_LASTNAME_SIZE_IS_INVALID)
+    @Pattern(regexp = DRIVER_LASTNAME_FIRSTNAME_REGEXP, message = DRIVER_LASTNAME_BODY_IS_INVALID)
+    @NotEmpty(message = DRIVER_LASTNAME_IS_EMPTY)
     private String lastname;
 
-    @Size(min = 2, max = 50, message = "Driver's firstname must be between 2 and 50 symbols")
-    @Pattern(regexp = "^[a-zA-Z ]+$", message = "Driver's firstname must contain only letters")
-    @NotEmpty(message = "Driver's firstname must be not empty")
+    @Size(min = 2, max = 50, message = DRIVER_FIRSTNAME_SIZE_IS_INVALID)
+    @Pattern(regexp = DRIVER_LASTNAME_FIRSTNAME_REGEXP, message = DRIVER_FIRSTNAME_BODY_IS_INVALID)
+    @NotEmpty(message = DRIVER_FIRSTNAME_IS_EMPTY)
     private String firstname;
 
-    @Email(message = "Wrong email format")
-    @NotEmpty(message = "Driver's email must be not empty")
+    @Email(message = DRIVER_EMAIL_WRONG_FORMAT)
+    @NotEmpty(message = DRIVER_EMAIL_IS_EMPTY)
     private String email;
 
-    @Pattern(regexp = "^(\\+375|80)(29|25|44|33)(\\d{3})(\\d{2})(\\d{2})$", message = "Wrong phone number format")
-    @NotEmpty(message = "Driver's phone number must be not empty")
+    @Pattern(regexp = DRIVER_PHONE_NUMBER_REGEXP, message = DRIVER_PHONE_NUMBER_FORMAT_IS_WRONG)
+    @NotEmpty(message = DRIVER_PHONE_NUMBER_IS_EMPTY)
     private String phoneNumber;
 
     private String accountStatus;

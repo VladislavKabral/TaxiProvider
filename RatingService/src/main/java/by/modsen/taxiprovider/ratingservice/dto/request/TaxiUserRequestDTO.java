@@ -7,15 +7,19 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static by.modsen.taxiprovider.ratingservice.util.Message.TAXI_USER_ID_IS_NULL;
+import static by.modsen.taxiprovider.ratingservice.util.Message.TAXI_USER_ID_MINIMAL_VALUE;
+import static by.modsen.taxiprovider.ratingservice.util.Message.TAXI_USER_ROLE_IS_EMPTY;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class TaxiUserRequestDTO {
 
-    @NotNull(message = "Taxi user's id must be not empty")
-    @Min(value = 1, message = "Minimal value for taxi user's id is 1")
+    @NotNull(message = TAXI_USER_ID_IS_NULL)
+    @Min(value = 1, message = TAXI_USER_ID_MINIMAL_VALUE)
     private long taxiUserId;
 
-    @NotBlank(message = "Taxi user's role must be not empty")
+    @NotBlank(message = TAXI_USER_ROLE_IS_EMPTY)
     private String role;
 }

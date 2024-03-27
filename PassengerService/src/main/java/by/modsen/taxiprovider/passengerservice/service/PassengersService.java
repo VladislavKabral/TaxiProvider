@@ -4,14 +4,18 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
+import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDTO;
 import by.modsen.taxiprovider.passengerservice.mapper.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.model.Passenger;
 import by.modsen.taxiprovider.passengerservice.repository.PassengersRepository;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
+import by.modsen.taxiprovider.passengerservice.util.exception.InvalidRequestDataException;
 import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatusCode;
@@ -22,9 +26,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import static by.modsen.taxiprovider.passengerservice.util.Message.*;
+import static by.modsen.taxiprovider.passengerservice.util.Status.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,53 +44,69 @@ public class PassengersService {
     @Value("${ratings-service-host-url}")
     private String RATINGS_SERVICE_HOST_URL;
 
+    private static final String PASSENGER_ROLE_NAME = "PASSENGER";
+
     public List<PassengerDTO> findAll() throws EntityNotFoundException {
-        List<Passenger> passengers = passengersRepository.findByStatusOrderByLastname("Active");
+        List<Passenger> passengers = passengersRepository.findByStatusOrderByLastname(PASSENGER_ACCOUNT_STATUS_ACTIVE);
 
         if (passengers.isEmpty()) {
-            throw new EntityNotFoundException("There aren't any passengers");
+            throw new EntityNotFoundException(PASSENGERS_NOT_FOUND);
         }
 
         return passengerMapper.toListDTO(passengers);
     }
 
-    public List<PassengerDTO> findPagePassengers(int index, int count) throws EntityNotFoundException {
-        List<Passenger> passengers = passengersRepository
-                .findAll(PageRequest.of(index, count, Sort.by("lastname"))).getContent();
-
-        if (passengers.isEmpty()) {
-            throw new EntityNotFoundException("There aren't any passengers on this page");
+    public Page<PassengerDTO> findPagePassengers(int index, int count, String sortField)
+            throws EntityNotFoundException, InvalidRequestDataException {
+        if ((index <= 0) || (count <= 0)) {
+            throw new InvalidRequestDataException(INVALID_PAGE_REQUEST);
         }
 
-        return passengerMapper.toListDTO(passengers.stream()
-                .filter(passenger -> passenger.getStatus().equals("Active"))
-                .collect(Collectors.toList()));
+        List<Passenger> passengers = passengersRepository
+                .findAll(PageRequest.of(index - 1, count, Sort.by(sortField))).getContent()
+                .stream()
+                .filter(passenger -> passenger.getStatus().equals(PASSENGER_ACCOUNT_STATUS_ACTIVE))
+                .toList();
+
+        if (passengers.isEmpty()) {
+            throw new EntityNotFoundException(PASSENGERS_ON_PAGE_NOT_FOUND);
+        }
+
+        return new PageImpl<>(passengers.stream()
+                .map(passengerMapper::toDTO)
+                .toList());
     }
 
     public PassengerDTO findById(long id) throws EntityNotFoundException {
         return passengerMapper.toDTO(passengersRepository.findById(id).orElseThrow(EntityNotFoundException
-                .entityNotFoundException("Passenger with id '" + id + "' wasn't found")));
+                .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id))));
     }
 
     @Transactional
-    public void save(NewPassengerDTO passengerDTO, BindingResult bindingResult) throws EntityValidateException {
+    public PassengerResponseDTO save(NewPassengerDTO passengerDTO, BindingResult bindingResult)
+            throws EntityValidateException, EntityNotFoundException {
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
         passengersValidator.validate(passenger, bindingResult);
         handleBindingResult(bindingResult);
 
-        passenger.setRole("Passenger");
-        passenger.setStatus("Active");
+        passenger.setRole(PASSENGER_ROLE_NAME);
+        passenger.setStatus(PASSENGER_ACCOUNT_STATUS_ACTIVE);
 
         passengersRepository.save(passenger);
+
+        return new PassengerResponseDTO(passengersRepository
+                .findByEmail(passenger.getEmail())
+                .orElseThrow(EntityNotFoundException
+                        .entityNotFoundException(String.format(PASSENGER_NOT_CREATED, passenger.getEmail())))
+                .getId());
     }
 
     @Transactional
-    public void update(long id, PassengerDTO passengerDTO, BindingResult bindingResult) throws EntityNotFoundException,
-            EntityValidateException {
-
+    public PassengerResponseDTO update(long id, PassengerDTO passengerDTO, BindingResult bindingResult)
+            throws EntityNotFoundException, EntityValidateException {
         Passenger passengerData = passengersRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException("Passenger with id '" + id + "' wasn't found"));
+                        .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id)));
 
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
         passenger.setId(id);
@@ -111,22 +132,26 @@ public class PassengersService {
         }
 
         passengersRepository.save(passengerData);
+
+        return new PassengerResponseDTO(id);
     }
 
     @Transactional
-    public void deactivate(long id) throws EntityNotFoundException {
+    public PassengerResponseDTO deactivate(long id) throws EntityNotFoundException {
         Passenger passenger = passengersRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException("Passenger with id '" + id + "' wasn't found"));
+                        .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id)));
 
-        passenger.setStatus("Inactive");
+        passenger.setStatus(PASSENGER_ACCOUNT_STATUS_INACTIVE);
 
         passengersRepository.save(passenger);
+
+        return new PassengerResponseDTO(id);
     }
 
     private RatingDTO getPassengerRating(long passengerId) throws EntityNotFoundException {
         Passenger passenger = passengersRepository.findById(passengerId).orElseThrow(EntityNotFoundException
-                .entityNotFoundException("Passenger with id '" + passengerId + "' wasn't found"));
+                .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, passengerId)));
 
         WebClient webClient = WebClient.builder()
                 .baseUrl(RATINGS_SERVICE_HOST_URL)
@@ -140,7 +165,7 @@ public class PassengersService {
                         .build())
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        Mono.error(new EntityNotFoundException("Cannot find passenger with id '" + passengerId + "'")))
+                        Mono.error(new EntityNotFoundException(String.format(PASSENGER_NOT_FOUND, passenger.getId()))))
                 .bodyToMono(RatingDTO.class)
                 .block();
     }

@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.controller.promocode;
 
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
+import by.modsen.taxiprovider.ridesservice.dto.response.PromoCodeResponseDTO;
 import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
@@ -36,33 +37,26 @@ public class PromoCodesController {
     @GetMapping(params = "value")
     public ResponseEntity<PromoCodeDTO> getPromoCodeByValue(@RequestParam("value") String value)
             throws EntityNotFoundException {
-
         return new ResponseEntity<>(promoCodesService.findByValue(value), HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<HttpStatus> savePromoCode(@RequestBody @Valid PromoCodeDTO promoCodeDTO,
-                                                    BindingResult bindingResult) throws EntityValidateException {
-
-        promoCodesService.save(promoCodeDTO, bindingResult);
-
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<PromoCodeResponseDTO> savePromoCode(@RequestBody @Valid PromoCodeDTO promoCodeDTO,
+                                                              BindingResult bindingResult)
+            throws EntityValidateException, EntityNotFoundException {
+        return new ResponseEntity<>(promoCodesService.save(promoCodeDTO, bindingResult), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<HttpStatus> editPromoCode(@PathVariable("id") long id,
+    public ResponseEntity<PromoCodeResponseDTO> editPromoCode(@PathVariable("id") long id,
                                                     @RequestBody @Valid PromoCodeDTO promoCodeDTO,
                                                     BindingResult bindingResult) throws EntityValidateException {
-
-        promoCodesService.update(id, promoCodeDTO, bindingResult);
-
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(promoCodesService.update(id, promoCodeDTO, bindingResult), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deletePromoCode(@PathVariable("id") long id) throws EntityNotFoundException {
-        promoCodesService.delete(id);
-
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<PromoCodeResponseDTO> deletePromoCode(@PathVariable("id") long id)
+            throws EntityNotFoundException {
+        return new ResponseEntity<>(promoCodesService.delete(id), HttpStatus.OK);
     }
 }

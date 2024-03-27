@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static by.modsen.taxiprovider.paymentservice.util.Message.*;
+
 import java.math.BigDecimal;
 
 @Data
@@ -15,17 +17,19 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CustomerChargeRequestDTO {
 
-    @NotNull(message = "Taxi user's id must be not null")
-    @Min(value = 1, message = "Minimal value of taxi user's id is '1'")
+    private static final String AMOUNT_MINIMAL_VALUE = "0.01";
+
+    @NotNull(message = TAXI_USER_ID_IS_NULL)
+    @Min(value = 1, message = TAXI_USER_ID_IS_INVALID)
     private long taxiUserId;
 
-    @NotNull(message = "Amount must be not null")
-    @DecimalMin(value = "0.01", message = "Minimal value of amount is '0.01'")
+    @NotNull(message = AMOUNT_IS_NULL)
+    @DecimalMin(value = AMOUNT_MINIMAL_VALUE, message = AMOUNT_MINIMAL_VALUE_IS_INVALID)
     private BigDecimal amount;
 
-    @NotBlank(message = "Currency must be not empty")
+    @NotBlank(message = CURRENCY_IS_EMPTY)
     private String currency;
 
-    @NotBlank(message = "Taxi user's role must be not empty")
+    @NotBlank(message = TAXI_USER_ROLE_IS_EMPTY)
     private String role;
 }

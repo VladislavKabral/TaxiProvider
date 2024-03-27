@@ -10,6 +10,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static by.modsen.taxiprovider.paymentservice.util.Message.*;
+import static by.modsen.taxiprovider.paymentservice.util.Regex.*;
+
 import java.math.BigDecimal;
 
 @Data
@@ -17,26 +20,28 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CustomerDTO {
 
-    @NotBlank(message = "Customer's name must be not empty")
-    @Pattern(regexp = "^[a-zA-Z ]+$", message = "Customer's name can contain only letters and spaces")
+    private static final String BALANCE_MINIMAL_VALUE = "0.01";
+
+    @NotBlank(message = CUSTOMER_NAME_IS_EMPTY)
+    @Pattern(regexp = CUSTOMER_NAME_REGEXP, message = CUSTOMER_NAME_IS_INVALID)
     private String name;
 
-    @NotBlank(message = "Customer's email must be not empty")
-    @Email(message = "Wrong email format")
+    @NotBlank(message = CUSTOMER_EMAIL_IS_EMPTY)
+    @Email(message = CUSTOMER_EMAIL_IS_INVALID)
     private String email;
 
-    @NotBlank(message = "Customer's phone number must be not empty")
-    @Pattern(regexp = "^(\\+375|80)(29|25|44|33)(\\d{3})(\\d{2})(\\d{2})$", message = "Wrong format of phone number")
+    @NotBlank(message = CUSTOMER_PHONE_NUMBER_IS_EMPTY)
+    @Pattern(regexp = CUSTOMER_PHONE_NUMBER_REGEXP, message = CUSTOMER_PHONE_NUMBER_IS_INVALID)
     private String phone;
 
-    @NotNull(message = "Taxi user's id must be not null")
-    @Min(value = 1, message = "Minimal value of taxi user's id is '1'")
+    @NotNull(message = TAXI_USER_ID_IS_NULL)
+    @Min(value = 1, message = TAXI_USER_ID_IS_INVALID)
     private long taxiUserId;
 
-    @NotNull(message = "Balance must be not null")
-    @DecimalMin(value = "0.01", message = "Minimal value of balance is '0.01'")
+    @NotNull(message = BALANCE_IS_NULL)
+    @DecimalMin(value = BALANCE_MINIMAL_VALUE, message = BALANCE_VALUE_IS_INVALID)
     private BigDecimal balance;
 
-    @NotBlank(message = "Taxi user's role must be not empty")
+    @NotBlank(message = TAXI_USER_ROLE_IS_EMPTY)
     private String role;
 }

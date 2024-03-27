@@ -5,17 +5,18 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import static by.modsen.taxiprovider.passengerservice.util.Message.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class RatingDTO {
 
-    @NotNull(message = "Driver's id must be not null")
-    @Min(value = 1, message = "Minimal value of driver's id is '1'")
+    @NotNull(message = PASSENGER_ID_IS_NULL)
+    @Min(value = 1, message = PASSENGER_ID_MINIMAL_VALUE)
     private long taxiUserId;
 
-    @NotNull(message = "Driver's role must be not empty")
+    @NotNull(message = PASSENGER_ROLE_IS_EMPTY)
     private String role;
 
     private double value;

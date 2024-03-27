@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+import static by.modsen.taxiprovider.ridesservice.util.Message.*;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,13 +20,13 @@ import java.util.List;
 public class PotentialRideDTO {
 
     @Valid
-    @NotNull(message = "Source address must be not empty")
+    @NotNull(message = SOURCE_ADDRESS_IS_EMPTY)
     private AddressDTO sourceAddress;
 
     @Valid
-    @NotNull(message = "Target address-(es) must be not empty")
-    @Size(min = 1, message = "Must be at least one target address")
-    private List<AddressDTO> targetAddresses;
+    @NotNull(message = DESTINATION_ADDRESS_IS_EMPTY)
+    @Size(min = 1, message = DESTINATION_ADDRESSES_COUNT_IS_INVALID)
+    private List<AddressDTO> destinationAddresses;
 
     @Valid
     private PromoCodeDTO promoCode;

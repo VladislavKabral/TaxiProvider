@@ -10,26 +10,37 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static by.modsen.taxiprovider.paymentservice.util.Regex.*;
+import static by.modsen.taxiprovider.paymentservice.util.Message.*;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class CardRequestDTO {
 
-    @NotBlank(message = "Card's number must be not empty")
-    @Pattern(regexp = "(\\d{4}(-|)\\d{4}(-|)\\d{4}(-|)\\d{4})", message = "Wrong format of card's number")
+    private static final int CVC_MINIMAL_VALUE = 0;
+
+    private static final int CVC_MAXIMUM_VALUE = 999;
+
+    private static final int MONTH_MINIMUM_VALUE = 1;
+
+    private static final int MONTH_MAXIMUM_VALUE = 12;
+
+    @NotBlank(message = CARD_NUMBER_IS_EMPTY)
+    @Pattern(regexp = PAYMENT_CARD_REGEXP, message = CARD_NUMBER_BODY_IS_INVALID)
     private String number;
 
-    @Min(value = 1, message = "Minimal value of month's number is '1'")
-    @Max(value = 12, message = "Maximum value of month's number is '12'")
-    @NotNull(message = "Expiration month can't be null")
+    @Min(value = MONTH_MINIMUM_VALUE, message = MONTH_MINIMAL_VALUE_IS_INVALID)
+    @Max(value = MONTH_MAXIMUM_VALUE, message = MONTH_MAXIMUM_VALUE_IS_INVALID)
+    @NotNull(message = EXPIRATION_MONTH_IS_NULL)
     private int month;
 
-    @NotNull(message = "Expiration year can't be null")
+    @NotNull(message = EXPIRATION_YEAR_IS_NULL)
     private int year;
 
-    @NotNull(message = "CVC code can't be null")
-    @Min(value = 0, message = "Minimal value of CVC code is '000'")
-    @Max(value = 999, message = "Maximum value of CVC code is '999'")
+    @NotNull(message = CVC_IS_NULL)
+    @Min(value = CVC_MINIMAL_VALUE, message = CVC_MINIMAL_VALUE_IS_INVALID)
+    @Max(value = CVC_MAXIMUM_VALUE, message = CVC_MAXIMUM_VALUE_IS_INVALID)
     private int cvc;
 }

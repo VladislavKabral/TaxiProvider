@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static by.modsen.taxiprovider.paymentservice.util.Message.*;
+
 @Service
 @RequiredArgsConstructor
 public class UsersService {
@@ -19,7 +21,7 @@ public class UsersService {
 
     public User findByTaxiUserIdAndRole(long id, String role) throws EntityNotFoundException {
         return usersRepository.findByTaxiUserIdAndRole(id, role).orElseThrow(EntityNotFoundException
-                .entityNotFoundException("User with id '" + id + "' wasn't found"));
+                .entityNotFoundException(String.format(USER_NOT_FOUND, id, role)));
     }
 
     @Transactional

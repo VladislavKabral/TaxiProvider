@@ -15,8 +15,4 @@ public class RatingMapper {
     public Rating toEntity(RatingDTO ratingDTO) {
         return modelMapper.map(ratingDTO, Rating.class);
     }
-
-    public RatingDTO toDTO(Rating rating) {
-        return modelMapper.map(rating, RatingDTO.class);
-    }
 }

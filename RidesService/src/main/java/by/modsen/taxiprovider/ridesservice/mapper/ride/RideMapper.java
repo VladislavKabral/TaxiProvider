@@ -16,10 +16,6 @@ public class RideMapper {
 
     private final ModelMapper modelMapper;
 
-    public Ride toEntity(RideDTO rideDTO) {
-        return modelMapper.map(rideDTO, Ride.class);
-    }
-
     public Ride toEntity(NewRideDTO rideDTO) {
         return modelMapper.map(rideDTO, Ride.class);
     }

@@ -1,33 +1,38 @@
 package by.modsen.taxiprovider.passengerservice.dto.passenger;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import static by.modsen.taxiprovider.passengerservice.util.Message.*;
+import static by.modsen.taxiprovider.passengerservice.util.Regex.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class NewPassengerDTO {
 
-    @NotEmpty(message = "Passenger's lastname must be not empty")
-    @Size(min = 2, max = 50, message = "Passenger's lastname must be between 2 and 50 symbols")
-    @Pattern(regexp = "^[a-zA-Z ]+$", message = "Passenger's lastname must contain only letters")
+    @NotBlank(message = PASSENGER_LASTNAME_IS_EMPTY)
+    @Size(min = 2, max = 50, message = PASSENGER_LASTNAME_SIZE_IS_INVALID)
+    @Pattern(regexp = PASSENGER_LASTNAME_FIRSTNAME_REGEXP, message = PASSENGER_LASTNAME_BODY_IS_INVALID)
     private String lastname;
 
-    @NotEmpty(message = "Passenger's firstname must be not empty")
-    @Size(min = 2, max = 50, message = "Passenger's firstname must be between 2 and 50 symbols")
-    @Pattern(regexp = "^[a-zA-Z ]+$", message = "Passenger's firstname must contain only letters")
+    @NotBlank(message = PASSENGER_FIRSTNAME_IS_EMPTY)
+    @Size(min = 2, max = 50, message = PASSENGER_FIRSTNAME_SIZE_IS_INVALID)
+    @Pattern(regexp = PASSENGER_LASTNAME_FIRSTNAME_REGEXP, message = PASSENGER_FIRSTNAME_BODY_IS_INVALID)
     private String firstname;
 
-    @NotEmpty(message = "Passenger's email must be not empty")
-    @Email(message = "Wrong email format")
+    @NotBlank(message = PASSENGER_EMAIL_IS_EMPTY)
+    @Email(message = PASSENGER_EMAIL_WRONG_FORMAT)
     private String email;
 
-    @NotEmpty(message = "Passenger's password must be not empty")
+    @NotBlank(message = PASSENGER_PASSWORD_IS_EMPTY)
     private String password;
 
-    @NotEmpty(message = "Phone number must be not empty")
-    @Pattern(regexp = "^(\\+375|80)(29|25|44|33)(\\d{3})(\\d{2})(\\d{2})$", message = "Wrong phone number format")
+    @NotBlank(message = PASSENGER_PHONE_NUMBER_IS_EMPTY)
+    @Pattern(regexp = PASSENGER_PHONE_NUMBER_REGEXP, message = PASSENGER_PHONE_NUMBER_FORMAT_IS_WRONG)
     private String phoneNumber;
 }

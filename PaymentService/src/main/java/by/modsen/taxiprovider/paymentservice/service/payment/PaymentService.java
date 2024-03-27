@@ -6,6 +6,7 @@ import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.DriverBalanceRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
+import by.modsen.taxiprovider.paymentservice.dto.response.CustomerResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDTO;
 import by.modsen.taxiprovider.paymentservice.model.User;
 import by.modsen.taxiprovider.paymentservice.service.user.UsersService;
@@ -34,6 +35,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 
+import static by.modsen.taxiprovider.paymentservice.util.Message.*;
+
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +57,12 @@ public class PaymentService {
 
     private final CustomerValidator customerValidator;
 
+    private static final int CONVERT_COEFFICIENT = 100;
+
+    private static final String SUCCEED_CHARGE_STATUS_NAME = "SUCCEED";
+
+    private static final String DRIVER_ROLE_NAME = "DRIVER";
+
     @PostConstruct
     public void init(){
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
@@ -71,7 +80,7 @@ public class PaymentService {
         Charge charge;
         try {
             Map<String, Object> params = new HashMap<>();
-            params.put("amount", Math.round(chargeRequestDTO.getAmount().floatValue() * 100));
+            params.put("amount", Math.round(chargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
             params.put("currency", chargeRequestDTO.getCurrency());
             params.put("source", chargeRequestDTO.getCardToken());
             charge = Charge.create(params, requestOptions);
@@ -82,7 +91,7 @@ public class PaymentService {
         return ChargeResponseDTO.builder()
                 .currency(charge.getCurrency())
                 .amount(BigDecimal.valueOf(charge.getAmount()))
-                .status(charge.getStatus())
+                .status(SUCCEED_CHARGE_STATUS_NAME)
                 .build();
     }
 
@@ -115,8 +124,8 @@ public class PaymentService {
                 .build();
     }
 
-    public void createCustomer(CustomerDTO customerDTO, BindingResult bindingResult) throws PaymentException,
-            EntityValidateException {
+    public CustomerResponseDTO createCustomer(CustomerDTO customerDTO, BindingResult bindingResult)
+            throws PaymentException, EntityValidateException, EntityNotFoundException {
 
         customerValidator.validate(customerDTO, bindingResult);
         handleBindingResult(bindingResult);
@@ -128,14 +137,20 @@ public class PaymentService {
                         .setName(customerDTO.getName())
                         .setEmail(customerDTO.getEmail())
                         .setPhone(customerDTO.getPhone())
-                        .setBalance((long) Math.round(customerDTO.getBalance().floatValue() * 100))
+                        .setBalance((long) Math.round(customerDTO.getBalance().floatValue() * CONVERT_COEFFICIENT))
                         .build();
 
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
         createUser(params, customerDTO.getTaxiUserId(), customerDTO.getRole());
+
+        Customer customer = checkCustomerParams(params);
+        if (customer == null) {
+            throw new EntityNotFoundException(String.format(CUSTOMER_NOT_FOUND, customerDTO.getEmail()));
+        }
+        return new CustomerResponseDTO(customer.getId());
     }
 
-    public void updateCustomer(long id, CustomerDTO customerDTO, BindingResult bindingResult) throws PaymentException,
+    public CustomerResponseDTO updateCustomer(long id, CustomerDTO customerDTO, BindingResult bindingResult) throws PaymentException,
             EntityNotFoundException, EntityValidateException {
 
         handleBindingResult(bindingResult);
@@ -146,21 +161,24 @@ public class PaymentService {
 
         User user = usersService.findByTaxiUserIdAndRole(id, customerDTO.getRole());
 
+        Customer resource;
         try {
-            Customer resource = Customer.retrieve(user.getCustomerId());
+            resource = Customer.retrieve(user.getCustomerId());
             CustomerUpdateParams params = CustomerUpdateParams.builder()
                     .setName(customerDTO.getName())
                     .setEmail(customerDTO.getEmail())
                     .setPhone(customerDTO.getPhone())
-                    .setBalance((long) Math.round(customerDTO.getBalance().floatValue() * 100))
+                    .setBalance((long) Math.round(customerDTO.getBalance().floatValue() * CONVERT_COEFFICIENT))
                     .build();
             resource.update(params, requestOptions);
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
         }
+
+        return new CustomerResponseDTO(resource.getId());
     }
 
-    public void deleteCustomer(long id, String role) throws EntityNotFoundException, PaymentException {
+    public CustomerResponseDTO deleteCustomer(long id, String role) throws EntityNotFoundException, PaymentException {
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
@@ -176,6 +194,7 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
+        return new CustomerResponseDTO(customer.getId());
     }
 
     public ChargeResponseDTO chargeFromCustomer(CustomerChargeRequestDTO customerChargeRequestDTO,
@@ -188,13 +207,13 @@ public class PaymentService {
         User user = usersService.findByTaxiUserIdAndRole(customerChargeRequestDTO.getTaxiUserId(),
                 customerChargeRequestDTO.getRole());
         String customerId = user.getCustomerId();
-        checkBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * 100));
-        updateBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * 100));
+        checkBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
+        updateBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
 
         PaymentIntent intent;
         try {
             PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                    .setAmount((long) Math.round(customerChargeRequestDTO.getAmount().floatValue() * 100))
+                    .setAmount((long) Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT))
                     .setCurrency(customerChargeRequestDTO.getCurrency())
                     .setCustomer(customerId)
                     .setAutomaticPaymentMethods(
@@ -215,7 +234,7 @@ public class PaymentService {
         return ChargeResponseDTO.builder()
                 .currency(intent.getCurrency())
                 .amount(BigDecimal.valueOf(intent.getAmount()))
-                .status(intent.getStatus())
+                .status(SUCCEED_CHARGE_STATUS_NAME)
                 .build();
     }
 
@@ -250,13 +269,13 @@ public class PaymentService {
         }
     }
 
-    public void updateDriverBalance(long driverId, DriverBalanceRequestDTO driverBalanceRequestDTO,
+    public CustomerResponseDTO updateDriverBalance(long driverId, DriverBalanceRequestDTO driverBalanceRequestDTO,
                                     BindingResult bindingResult) throws PaymentException, EntityNotFoundException,
             EntityValidateException {
 
         handleBindingResult(bindingResult);
 
-        User driver = usersService.findByTaxiUserIdAndRole(driverId, "Driver");
+        User driver = usersService.findByTaxiUserIdAndRole(driverId, DRIVER_ROLE_NAME);
         BigDecimal amount = driverBalanceRequestDTO.getAmount();
 
         Customer customer;
@@ -267,7 +286,7 @@ public class PaymentService {
         }
 
         CustomerUpdateParams params = CustomerUpdateParams.builder()
-                .setBalance(customer.getBalance() + (long)(amount.floatValue() * 100))
+                .setBalance(customer.getBalance() + (long)(amount.floatValue() * CONVERT_COEFFICIENT))
                 .build();
 
         RequestOptions requestOptions = RequestOptions.builder()
@@ -279,6 +298,8 @@ public class PaymentService {
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
         }
+
+        return new CustomerResponseDTO(customer.getId());
     }
 
     private void checkBalance(String customerId, long amount) throws NotEnoughMoneyException, PaymentException {
@@ -291,7 +312,7 @@ public class PaymentService {
 
         Long balance = customer.getBalance();
         if (balance < amount) {
-            throw new NotEnoughMoneyException("Not enough money on the balance");
+            throw new NotEnoughMoneyException(NOT_ENOUGH_MONEY_ON_BALANCE);
         }
     }
 

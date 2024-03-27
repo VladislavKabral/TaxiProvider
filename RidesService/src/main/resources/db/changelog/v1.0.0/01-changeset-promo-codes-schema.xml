@@ -10,14 +10,14 @@
                  relativeToChangelogFile="true"
                  splitStatements="true"
                  stripComments="true"
-                 path="01-create-ratings-schema.sql"/>
+                 path="01-create-promo-codes-schema.sql"/>
         <rollback>
             <sqlFile dbms="postgresql"
                      encoding="utf8"
                      relativeToChangelogFile="true"
                      splitStatements="true"
                      stripComments="true"
-                     path="01-drop-ratings-schema.sql"/>
+                     path="01-drop-promo-codes-schema.sql"/>
         </rollback>
     </changeSet>
     

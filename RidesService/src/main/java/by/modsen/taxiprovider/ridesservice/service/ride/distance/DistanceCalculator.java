@@ -23,6 +23,8 @@ import java.net.http.HttpResponse;
 import java.util.Iterator;
 import java.util.List;
 
+import static by.modsen.taxiprovider.ridesservice.util.Message.*;
+
 @Component
 @RequiredArgsConstructor
 public class DistanceCalculator {
@@ -53,7 +55,7 @@ public class DistanceCalculator {
         String status = route.get(STATUS_PARAM_NAME).toString();
 
         if (!status.equals("OK")) {
-            throw new DistanceCalculationException("Impossible to calculate the distance of the ride");
+            throw new DistanceCalculationException(DISTANCE_CALCULATION_IS_FAILED);
         }
 
         return Integer.parseInt(route.get(DISTANCE_PARAM_NAME).toString());
