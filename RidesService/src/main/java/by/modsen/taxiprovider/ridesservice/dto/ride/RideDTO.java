@@ -49,4 +49,6 @@ public class RideDTO {
     private BigDecimal cost;
 
     private String status;
+
+    private String paymentType;
 }

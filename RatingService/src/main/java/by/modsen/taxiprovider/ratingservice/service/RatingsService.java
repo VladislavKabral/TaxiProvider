@@ -24,7 +24,7 @@ import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 
-import static by.modsen.taxiprovider.ratingservice.util.Message.TAXI_USER_NOT_FOUND;
+import static by.modsen.taxiprovider.ratingservice.util.Message.*;
 
 @Service
 @RequiredArgsConstructor

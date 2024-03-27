@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CustomerDTO {
 
-    private static final String BALANCE_MINIMAL_VALUE = "0.01";
+    private static final String BALANCE_MINIMAL_VALUE = "0.00";
 
     @NotBlank(message = CUSTOMER_NAME_IS_EMPTY)
     @Pattern(regexp = CUSTOMER_NAME_REGEXP, message = CUSTOMER_NAME_IS_INVALID)

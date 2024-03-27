@@ -7,9 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import static by.modsen.taxiprovider.ratingservice.util.Message.TAXI_USER_ID_IS_NULL;
-import static by.modsen.taxiprovider.ratingservice.util.Message.TAXI_USER_ID_MINIMAL_VALUE;
-import static by.modsen.taxiprovider.ratingservice.util.Message.TAXI_USER_ROLE_IS_EMPTY;
+import static by.modsen.taxiprovider.ratingservice.util.Message.*;
 
 @Data
 @NoArgsConstructor

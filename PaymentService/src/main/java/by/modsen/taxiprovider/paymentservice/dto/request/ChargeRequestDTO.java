@@ -29,4 +29,8 @@ public class ChargeRequestDTO {
 
     @NotBlank(message = CARD_TOKEN_IS_EMPTY)
     private String cardToken;
+
+    private long passengerId;
+
+    private long driverId;
 }

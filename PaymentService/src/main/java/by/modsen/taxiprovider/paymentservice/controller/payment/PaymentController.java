@@ -4,7 +4,7 @@ import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.DriverBalanceRequestDTO;
+import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.CustomerResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDTO;
@@ -46,6 +46,12 @@ public class PaymentController {
         return new ResponseEntity<>(paymentService.createCustomer(customerDTO, bindingResult), HttpStatus.CREATED);
     }
 
+    @GetMapping("/customers/{id}/balance")
+    public ResponseEntity<BalanceResponseDTO> getCustomerBalance(@PathVariable("id") String customerId)
+            throws PaymentException {
+        return new ResponseEntity<>(paymentService.getCustomerBalance(customerId), HttpStatus.OK);
+    }
+
     @PatchMapping("/customers/{id}")
     public ResponseEntity<CustomerResponseDTO> editCustomer(@PathVariable("id") long id,
                                                    @RequestBody @Valid CustomerDTO customerDTO,
@@ -55,11 +61,9 @@ public class PaymentController {
     }
 
     @PatchMapping("/customers/drivers/{id}")
-    public ResponseEntity<CustomerResponseDTO> updateDriverBalance(@PathVariable("id") long id,
-                                                          @RequestBody @Valid DriverBalanceRequestDTO balanceRequestDTO,
-                                                          BindingResult bindingResult)
-            throws PaymentException, EntityValidateException, EntityNotFoundException {
-        return new ResponseEntity<>(paymentService.updateDriverBalance(id, balanceRequestDTO, bindingResult),
+    public ResponseEntity<CustomerResponseDTO> updateDriverBalance(@PathVariable("id") long id)
+            throws PaymentException, EntityNotFoundException {
+        return new ResponseEntity<>(paymentService.updateDriverBalance(id),
                 HttpStatus.OK);
     }
 

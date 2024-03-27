@@ -61,4 +61,7 @@ public class Ride {
 
     @Column(name = "status")
     private String status;
+
+    @Column(name = "payment_type")
+    private String paymentType;
 }

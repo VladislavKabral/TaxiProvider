@@ -6,5 +6,6 @@ create table rides (
     started_at timestamp(6),
     ended_at timestamp(6),
     source_address_id bigint not null references addresses(id) on delete cascade,
-    status varchar(20) not null
+    status varchar(20) not null,
+    payment_type varchar(20) not null
 )
