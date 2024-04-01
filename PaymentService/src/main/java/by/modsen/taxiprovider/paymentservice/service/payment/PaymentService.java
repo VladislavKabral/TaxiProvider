@@ -58,10 +58,21 @@ public class PaymentService {
     private final CustomerValidator customerValidator;
 
     private static final int CONVERT_COEFFICIENT = 100;
-
     private static final String SUCCEED_CHARGE_STATUS_NAME = "SUCCEED";
-
     private static final String DRIVER_ROLE_NAME = "DRIVER";
+    private static final String AMOUNT_PROPERTY_NAME = "amount";
+    private static final String CURRENCY_PROPERTY_NAME = "currency";
+    private static final String SOURCE_PROPERTY_NAME = "source";
+    private static final String PAYMENT_METHOD_PROPERTY_NAME = "pm_card_visa";
+    private static final String CARD_NUMBER_PROPERTY_NAME = "number";
+    private static final String EXPIRATION_MONTH_PROPERTY_NAME = "exp_month";
+    private static final String EXPIRATION_YEAR_PROPERTY_NAME = "exp_year";
+    private static final String CVC_PROPERTY_NAME = "cvc";
+    private static final String CARD_PROPERTY_NAME = "card";
+    private static final String PAYMENT_TYPE_PROPERTY_NAME = "type";
+    private static final String TOKEN_PROPERTY_NAME = "token";
+    private static final String TEST_TOKEN_VALUE = "tok_visa";
+    private static final String CUSTOMER_PROPERTY_NAME = "customer";
 
     @PostConstruct
     public void init(){
@@ -80,9 +91,9 @@ public class PaymentService {
         Charge charge;
         try {
             Map<String, Object> params = new HashMap<>();
-            params.put("amount", Math.round(chargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
-            params.put("currency", chargeRequestDTO.getCurrency());
-            params.put("source", chargeRequestDTO.getCardToken());
+            params.put(AMOUNT_PROPERTY_NAME, Math.round(chargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
+            params.put(CURRENCY_PROPERTY_NAME, chargeRequestDTO.getCurrency());
+            params.put(SOURCE_PROPERTY_NAME, chargeRequestDTO.getCardToken());
             charge = Charge.create(params, requestOptions);
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
@@ -108,12 +119,12 @@ public class PaymentService {
         Token token;
         try {
             Map<String, Object> card = new HashMap<>();
-            card.put("number", cardRequestDTO.getNumber());
-            card.put("exp_month", cardRequestDTO.getMonth());
-            card.put("exp_year", cardRequestDTO.getYear());
-            card.put("cvc", cardRequestDTO.getCvc());
+            card.put(CARD_NUMBER_PROPERTY_NAME, cardRequestDTO.getNumber());
+            card.put(EXPIRATION_MONTH_PROPERTY_NAME, cardRequestDTO.getMonth());
+            card.put(EXPIRATION_YEAR_PROPERTY_NAME, cardRequestDTO.getYear());
+            card.put(CVC_PROPERTY_NAME, cardRequestDTO.getCvc());
             Map<String, Object> params = new HashMap<>();
-            params.put("card", card);
+            params.put(CARD_PROPERTY_NAME, card);
             token = Token.create(params, requestOptions);
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
@@ -241,7 +252,7 @@ public class PaymentService {
     private void confirmPaymentIntent(PaymentIntent resource) throws StripeException {
         PaymentIntentConfirmParams params =
                 PaymentIntentConfirmParams.builder()
-                        .setPaymentMethod("pm_card_visa")
+                        .setPaymentMethod(PAYMENT_METHOD_PROPERTY_NAME)
                         .build();
         resource.confirm(params);
     }
@@ -343,14 +354,14 @@ public class PaymentService {
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
         Map<String, Object> paymentMethodParams = new HashMap<>();
-        paymentMethodParams.put("type", "card");
+        paymentMethodParams.put(PAYMENT_TYPE_PROPERTY_NAME, CARD_PROPERTY_NAME);
         Map<String, Object> cardParams = new HashMap<>();
-        cardParams.put("token", "tok_visa");
-        paymentMethodParams.put("card", cardParams);
+        cardParams.put(TOKEN_PROPERTY_NAME, TEST_TOKEN_VALUE);
+        paymentMethodParams.put(CARD_PROPERTY_NAME, cardParams);
         try {
             PaymentMethod paymentMethod = PaymentMethod.create(paymentMethodParams);
             Map<String, Object> attachParams = new HashMap<>();
-            attachParams.put("customer", customerId);
+            attachParams.put(CUSTOMER_PROPERTY_NAME, customerId);
             paymentMethod.attach(attachParams, requestOptions);
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
