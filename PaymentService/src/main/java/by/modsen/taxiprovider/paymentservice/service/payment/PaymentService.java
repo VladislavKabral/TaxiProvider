@@ -91,7 +91,7 @@ public class PaymentService {
         Charge charge;
         try {
             Map<String, Object> params = new HashMap<>();
-            params.put(AMOUNT_PROPERTY_NAME, Math.round(chargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
+            params.put(AMOUNT_PROPERTY_NAME, convertToStripeScale(chargeRequestDTO.getAmount().floatValue()));
             params.put(CURRENCY_PROPERTY_NAME, chargeRequestDTO.getCurrency());
             params.put(SOURCE_PROPERTY_NAME, chargeRequestDTO.getCardToken());
             charge = Charge.create(params, requestOptions);
@@ -148,7 +148,7 @@ public class PaymentService {
                         .setName(customerDTO.getName())
                         .setEmail(customerDTO.getEmail())
                         .setPhone(customerDTO.getPhone())
-                        .setBalance((long) Math.round(customerDTO.getBalance().floatValue() * CONVERT_COEFFICIENT))
+                        .setBalance(convertToStripeScale(customerDTO.getBalance().floatValue()))
                         .build();
 
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
@@ -179,7 +179,7 @@ public class PaymentService {
                     .setName(customerDTO.getName())
                     .setEmail(customerDTO.getEmail())
                     .setPhone(customerDTO.getPhone())
-                    .setBalance((long) Math.round(customerDTO.getBalance().floatValue() * CONVERT_COEFFICIENT))
+                    .setBalance(convertToStripeScale(customerDTO.getBalance().floatValue()))
                     .build();
             resource.update(params, requestOptions);
         } catch (StripeException stripeException) {
@@ -218,13 +218,13 @@ public class PaymentService {
         User user = usersService.findByTaxiUserIdAndRole(customerChargeRequestDTO.getTaxiUserId(),
                 customerChargeRequestDTO.getRole());
         String customerId = user.getCustomerId();
-        checkBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
-        updateBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
+        checkBalance(customerId, convertToStripeScale(customerChargeRequestDTO.getAmount().floatValue()));
+        updateBalance(customerId, convertToStripeScale(customerChargeRequestDTO.getAmount().floatValue()));
 
         PaymentIntent intent;
         try {
             PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                    .setAmount((long) Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT))
+                    .setAmount(convertToStripeScale(customerChargeRequestDTO.getAmount().floatValue()))
                     .setCurrency(customerChargeRequestDTO.getCurrency())
                     .setCustomer(customerId)
                     .setAutomaticPaymentMethods(
@@ -297,7 +297,7 @@ public class PaymentService {
         }
 
         CustomerUpdateParams params = CustomerUpdateParams.builder()
-                .setBalance(customer.getBalance() + (long)(amount.floatValue() * CONVERT_COEFFICIENT))
+                .setBalance(customer.getBalance() + convertToStripeScale(amount.floatValue()))
                 .build();
 
         RequestOptions requestOptions = RequestOptions.builder()
@@ -366,6 +366,10 @@ public class PaymentService {
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
         }
+    }
+
+    private long convertToStripeScale(float value) {
+        return Math.round(value * CONVERT_COEFFICIENT);
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
