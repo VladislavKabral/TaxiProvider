@@ -238,13 +238,13 @@ public class PaymentControllerUnitTests {
 
         //when
         when(paymentService.getCustomerBalance(DEFAULT_CUSTOMER_ID))
-                .thenThrow(new PaymentException(CUSTOMER_WAS_NOT_FOUND_MESSAGE));
+                .thenThrow(new PaymentException(String.format(CUSTOMER_WAS_NOT_FOUND_MESSAGE, DEFAULT_CUSTOMER_ID)));
 
         //then
         mockMvc.perform(get("/payment/customers/wqjhfqkjfhqf63jkbn/balance")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(CUSTOMER_WAS_NOT_FOUND_MESSAGE));
+                .andExpect(jsonPath("$.message").value(String.format(CUSTOMER_WAS_NOT_FOUND_MESSAGE, DEFAULT_CUSTOMER_ID)));
     }
 
     @Test

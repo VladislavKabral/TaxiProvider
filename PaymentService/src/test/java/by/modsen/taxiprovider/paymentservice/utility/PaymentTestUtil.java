@@ -30,8 +30,7 @@ public class PaymentTestUtil {
     public final String DEFAULT_CUSTOMER_PHONE_NUMBER = "+375291234567";
     public final BigDecimal DEFAULT_CUSTOMER_BALANCE = BigDecimal.valueOf(100.0);
     public final String DEFAULT_CUSTOMER_ROLE = "PASSENGER";
-    //TODO: Change exception's message
-    public final String CUSTOMER_WAS_NOT_FOUND_MESSAGE = "";
+    public final String CUSTOMER_WAS_NOT_FOUND_MESSAGE = "No such customer: '%s'; code: resource_missing; request-id: req_BJrTochHEYdE88";
 
     public CardRequestDTO getCardRequest() {
         return CardRequestDTO.builder()
