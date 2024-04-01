@@ -1,44 +1,33 @@
 package by.modsen.taxiprovider.driverservice.service;
 
+import by.modsen.taxiprovider.driverservice.client.RatingHttpClient;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
-import by.modsen.taxiprovider.driverservice.dto.error.ErrorResponseDto;
-import by.modsen.taxiprovider.driverservice.dto.rating.RatingDto;
-import by.modsen.taxiprovider.driverservice.dto.request.DriverRatingRequestDto;
 import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDto;
 import by.modsen.taxiprovider.driverservice.mapper.DriverMapper;
 import by.modsen.taxiprovider.driverservice.model.Driver;
 import by.modsen.taxiprovider.driverservice.repository.DriversRepository;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
-import by.modsen.taxiprovider.driverservice.util.exception.ExternalServiceRequestException;
-import by.modsen.taxiprovider.driverservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.driverservice.util.exception.InvalidRequestDataException;
 import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
 import static by.modsen.taxiprovider.driverservice.util.Status.*;
 import static by.modsen.taxiprovider.driverservice.util.Message.*;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -52,16 +41,11 @@ public class DriversService {
 
     private final DriversValidator driversValidator;
 
-    @Value("${ratings-service-host-url}")
-    private String RATINGS_SERVICE_HOST_URL;
+    private final RatingHttpClient ratingHttpClient;
 
     private static final String DRIVER_ROLE_NAME = "DRIVER";
 
     private static final String KAFKA_TOPIC_NAME = "RIDE";
-
-    private static final int MAX_RETRY_ATTEMPTS = 3;
-
-    private static final int RETRY_DURATION_TIME = 5;
 
     public List<DriverDto> findAll() throws EntityNotFoundException {
         List<Driver> drivers = driversRepository.findByAccountStatus(DRIVER_ACCOUNT_STATUS_ACTIVE);
@@ -128,7 +112,7 @@ public class DriversService {
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException(String.format(DRIVERS_NOT_CREATED, driver.getEmail())));
 
-        initDriverRating(createdDriver.getId());
+        ratingHttpClient.initDriverRating(createdDriver.getId());
 
         return new DriverResponseDto(createdDriver.getId());
     }
@@ -191,69 +175,12 @@ public class DriversService {
         return new DriverResponseDto(id);
     }
 
-    private void initDriverRating(long driverId) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(RATINGS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        webClient.post()
-                .uri("/init")
-                .bodyValue(DriverRatingRequestDto.builder()
-                        .taxiUserId(driverId)
-                        .role(DRIVER_ROLE_NAME)
-                        .build())
-                .retrieve()
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
-                .bodyToMono(String.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    RATINGS_SERVICE_HOST_URL));
-                        }))
-                .block();
-    }
-
-    private RatingDto getDriverRating(long driverId) throws EntityNotFoundException {
-        Driver driver = driversRepository.findById(driverId).orElseThrow(EntityNotFoundException
-                .entityNotFoundException(String.format(DRIVER_NOT_FOUND, driverId)));
-
-        WebClient webClient = WebClient.builder()
-                .baseUrl(RATINGS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .queryParam("taxiUserId", driver.getId())
-                        .queryParam("role", driver.getRole())
-                        .build())
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDto.class)
-                                .map(errorResponseDto -> new ExternalServiceRequestException(errorResponseDto.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
-                .bodyToMono(RatingDto.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    RATINGS_SERVICE_HOST_URL));
-                        }))
-                .block();
-    }
-
     public DriverProfileDto getDriverProfile(long id) throws EntityNotFoundException {
         DriverDto driver = findById(id);
 
         return DriverProfileDto.builder()
                 .driver(driver)
-                .rating(getDriverRating(id).getValue())
+                .rating(ratingHttpClient.getDriverRating(id).getValue())
                 .build();
     }
 

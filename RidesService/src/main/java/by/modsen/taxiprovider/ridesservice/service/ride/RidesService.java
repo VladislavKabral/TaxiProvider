@@ -1,5 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.service.ride;
 
+import by.modsen.taxiprovider.ridesservice.client.DriverHttpClient;
+import by.modsen.taxiprovider.ridesservice.client.PaymentHttpClient;
 import by.modsen.taxiprovider.ridesservice.dto.driver.DriverDto;
 import by.modsen.taxiprovider.ridesservice.dto.error.ErrorResponseDto;
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDto;
@@ -70,13 +72,11 @@ public class RidesService {
 
     private final RideValidator rideValidator;
 
+    private final DriverHttpClient driverHttpClient;
+
+    private final PaymentHttpClient paymentHttpClient;
+
     private final KafkaTemplate<String, String> kafkaTemplate;
-
-    @Value("${drivers-service-host-url}")
-    private String DRIVERS_SERVICE_HOST_URL;
-
-    @Value("${payment-service-host-url}")
-    private String PAYMENT_SERVICE_HOST_URL;
 
     private static final int MINIMAL_COUNT_OF_TARGET_ADDRESSES = 1;
 
@@ -85,10 +85,6 @@ public class RidesService {
     private static final double COST_OF_KILOMETER = 0.5;
 
     private static final int METERS_IN_KILOMETER = 1000;
-
-    private static final int MAX_RETRY_ATTEMPTS = 3;
-
-    private static final int RETRY_DURATION_TIME = 5;
 
     private static final String RIDE_CURRENCY = "USD";
 
@@ -201,10 +197,10 @@ public class RidesService {
         ride.setStatus(RIDE_STATUS_WAITING);
         ride.setCost(rideCost);
 
-        DriverDto driver = getFreeDrivers().get(0);
+        DriverDto driver = driverHttpClient.getFreeDrivers().get(0);
         driver.setStatus(DRIVER_STATUS_TAKEN);
 
-        updateDriver(driver);
+        driverHttpClient.updateDriver(driver);
         ride.setDriverId(driver.getId());
         ridesRepository.save(ride);
 
@@ -263,9 +259,9 @@ public class RidesService {
         ride.setStatus(RIDE_STATUS_CANCELLED);
         ridesRepository.save(ride);
 
-        DriverDto driver = getDriverById(ride.getDriverId());
+        DriverDto driver = driverHttpClient.getDriverById(ride.getDriverId());
         driver.setStatus(DRIVER_STATUS_FREE);
-        updateDriver(driver);
+        driverHttpClient.updateDriver(driver);
 
         kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_CANCELLED,
                 ride.getPassengerId(),
@@ -297,17 +293,17 @@ public class RidesService {
         }
 
         if (ride.getPaymentType().equals(PAYMENT_TYPE_CARD)) {
-            payRide(CustomerChargeRequestDto.builder()
+            paymentHttpClient.payRide(CustomerChargeRequestDto.builder()
                     .taxiUserId(ride.getPassengerId())
                     .amount(ride.getCost())
                     .currency(RIDE_CURRENCY)
                     .role(PASSENGER_ROLE_NAME)
                     .build());
         }
-        DriverDto driver = getDriverById(rideDTO.getDriverId());
+        DriverDto driver = driverHttpClient.getDriverById(rideDTO.getDriverId());
         driver.setStatus(DRIVER_STATUS_FREE);
         driver.setBalance(driver.getBalance().add(ride.getCost()));
-        updateDriver(driver);
+        driverHttpClient.updateDriver(driver);
         ride.setStatus(rideDTO.getStatus());
 
         kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_ENDED,
@@ -322,10 +318,10 @@ public class RidesService {
         Ride ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_IN_PROGRESS);
         ride.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
 
-        DriverDto driver = getDriverById(rideDTO.getDriverId());
+        DriverDto driver = driverHttpClient.getDriverById(rideDTO.getDriverId());
         driver.setStatus(DRIVER_STATUS_FREE);
         driver.setBalance(driver.getBalance().add(ride.getCost()));
-        updateDriver(driver);
+        driverHttpClient.updateDriver(driver);
         ride.setStatus(RIDE_STATUS_COMPLETED);
 
         kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_ENDED,
@@ -376,112 +372,6 @@ public class RidesService {
         }
 
         return rideDistance;
-    }
-
-    private List<DriverDto> getFreeDrivers() {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        return webClient.get()
-                .uri("/free")
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDto.class)
-                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(String
-                                .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
-                .bodyToFlux(DriverDto.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    DRIVERS_SERVICE_HOST_URL));
-                        }))
-                .collect(Collectors.toList())
-                .block();
-    }
-
-    private DriverDto getDriverById(long driverId) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        return webClient.get()
-                .uri(String.format("/%d", driverId))
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDto.class)
-                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(String
-                                        .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
-                .bodyToMono(DriverDto.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    DRIVERS_SERVICE_HOST_URL));
-                        }))
-                .block();
-    }
-
-    private void updateDriver(DriverDto driverDTO) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        webClient.patch()
-                .uri(String.format("/%d", driverDTO.getId()))
-                .bodyValue(driverDTO)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDto.class)
-                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(String
-                                .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
-                .bodyToMono(String.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    DRIVERS_SERVICE_HOST_URL));
-                        }));
-    }
-
-    private void payRide(CustomerChargeRequestDto chargeRequest) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(PAYMENT_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        webClient.post()
-                .uri("/customerCharge")
-                .bodyValue(chargeRequest)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDto.class)
-                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(String
-                                .format(EXTERNAL_SERVICE_ERROR, PAYMENT_SERVICE_HOST_URL))))
-                .bodyToMono(String.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    PAYMENT_SERVICE_HOST_URL));
-                        }))
-                .block();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
