@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import java.util.List;
+
 import static by.modsen.taxiprovider.ridesservice.util.Status.*;
 import static by.modsen.taxiprovider.ridesservice.util.Message.*;
 import static by.modsen.taxiprovider.ridesservice.util.PaymentType.*;
@@ -13,6 +15,8 @@ import static by.modsen.taxiprovider.ridesservice.util.PaymentType.*;
 @Component
 @AllArgsConstructor
 public class RideValidator implements Validator {
+
+    private final List<String> rideStatuses = getRideStatuses();
 
     @Override
     public boolean supports(Class<?> clazz) {
@@ -24,11 +28,7 @@ public class RideValidator implements Validator {
         RideDto ride = (RideDto) target;
 
         String status = ride.getStatus();
-        if ((!status.equals(RIDE_STATUS_IN_PROGRESS))
-                && (!status.equals(RIDE_STATUS_COMPLETED))
-                && (!status.equals(RIDE_STATUS_CANCELLED))
-                && (!status.equals(RIDE_STATUS_WAITING))
-                && (!status.equals(RIDE_STATUS_PAID))) {
+        if (!rideStatuses.contains(status)) {
             errors.rejectValue("status", "", RIDE_STATUS_IS_INVALID);
         }
 
