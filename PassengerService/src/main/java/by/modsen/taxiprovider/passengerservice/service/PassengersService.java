@@ -1,12 +1,12 @@
 package by.modsen.taxiprovider.passengerservice.service;
 
-import by.modsen.taxiprovider.passengerservice.dto.error.ErrorResponseDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
-import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.passengerservice.dto.request.PassengerRatingRequestDTO;
-import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDTO;
+import by.modsen.taxiprovider.passengerservice.dto.error.ErrorResponseDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDto;
+import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.passengerservice.dto.request.PassengerRatingRequestDto;
+import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDto;
 import by.modsen.taxiprovider.passengerservice.mapper.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.model.Passenger;
 import by.modsen.taxiprovider.passengerservice.repository.PassengersRepository;
@@ -60,7 +60,7 @@ public class PassengersService {
 
     private static final int RETRY_DURATION_TIME = 5;
 
-    public List<PassengerDTO> findAll() throws EntityNotFoundException {
+    public List<PassengerDto> findAll() throws EntityNotFoundException {
         List<Passenger> passengers = passengersRepository.findByStatusOrderByLastname(PASSENGER_ACCOUNT_STATUS_ACTIVE);
 
         if (passengers.isEmpty()) {
@@ -70,7 +70,7 @@ public class PassengersService {
         return passengerMapper.toListDTO(passengers);
     }
 
-    public Page<PassengerDTO> findPagePassengers(int index, int count, String sortField)
+    public Page<PassengerDto> findPagePassengers(int index, int count, String sortField)
             throws EntityNotFoundException, InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {
             throw new InvalidRequestDataException(INVALID_PAGE_REQUEST);
@@ -91,13 +91,13 @@ public class PassengersService {
                 .toList());
     }
 
-    public PassengerDTO findById(long id) throws EntityNotFoundException {
+    public PassengerDto findById(long id) throws EntityNotFoundException {
         return passengerMapper.toDTO(passengersRepository.findById(id).orElseThrow(EntityNotFoundException
                 .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id))));
     }
 
     @Transactional
-    public PassengerResponseDTO save(NewPassengerDTO passengerDTO, BindingResult bindingResult)
+    public PassengerResponseDto save(NewPassengerDto passengerDTO, BindingResult bindingResult)
             throws EntityValidateException, EntityNotFoundException {
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
         passengersValidator.validate(passenger, bindingResult);
@@ -115,11 +115,11 @@ public class PassengersService {
 
         initPassengerRating(createdPassenger.getId());
 
-        return new PassengerResponseDTO(createdPassenger.getId());
+        return new PassengerResponseDto(createdPassenger.getId());
     }
 
     @Transactional
-    public PassengerResponseDTO update(long id, PassengerDTO passengerDTO, BindingResult bindingResult)
+    public PassengerResponseDto update(long id, PassengerDto passengerDTO, BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
         Passenger passengerData = passengersRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
@@ -150,11 +150,11 @@ public class PassengersService {
 
         passengersRepository.save(passengerData);
 
-        return new PassengerResponseDTO(id);
+        return new PassengerResponseDto(id);
     }
 
     @Transactional
-    public PassengerResponseDTO deactivate(long id) throws EntityNotFoundException {
+    public PassengerResponseDto deactivate(long id) throws EntityNotFoundException {
         Passenger passenger = passengersRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id)));
@@ -163,7 +163,7 @@ public class PassengersService {
 
         passengersRepository.save(passenger);
 
-        return new PassengerResponseDTO(id);
+        return new PassengerResponseDto(id);
     }
 
     private void initPassengerRating(long passengerId) {
@@ -174,7 +174,7 @@ public class PassengersService {
 
         webClient.post()
                 .uri("/init")
-                .bodyValue(PassengerRatingRequestDTO.builder()
+                .bodyValue(PassengerRatingRequestDto.builder()
                         .taxiUserId(passengerId)
                         .role(PASSENGER_ROLE_NAME)
                         .build())
@@ -192,7 +192,7 @@ public class PassengersService {
                 .block();
     }
 
-    private RatingDTO getPassengerRating(long passengerId) throws EntityNotFoundException {
+    private RatingDto getPassengerRating(long passengerId) throws EntityNotFoundException {
         Passenger passenger = passengersRepository.findById(passengerId).orElseThrow(EntityNotFoundException
                 .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, passengerId)));
 
@@ -208,11 +208,11 @@ public class PassengersService {
                         .build())
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
+                        clientResponse.bodyToMono(ErrorResponseDto.class)
+                                .map(errorResponseDto -> new ExternalServiceRequestException(errorResponseDto.getMessage())))
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
-                .bodyToMono(RatingDTO.class)
+                .bodyToMono(RatingDto.class)
                 .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
                         .filter(throwable -> throwable instanceof ExternalServiceRequestException)
                         .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
@@ -223,10 +223,10 @@ public class PassengersService {
                 .block();
     }
 
-    public PassengerProfileDTO getPassengerProfile(long id) throws EntityNotFoundException {
-        PassengerDTO passenger = findById(id);
+    public PassengerProfileDto getPassengerProfile(long id) throws EntityNotFoundException {
+        PassengerDto passenger = findById(id);
 
-        return PassengerProfileDTO.builder()
+        return PassengerProfileDto.builder()
                 .passenger(passenger)
                 .rating(getPassengerRating(id).getValue())
                 .build();

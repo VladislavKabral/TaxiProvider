@@ -1,7 +1,7 @@
 package by.modsen.taxiprovider.driverservice.mapper;
 
-import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
 import by.modsen.taxiprovider.driverservice.model.Driver;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -16,15 +16,15 @@ public class DriverMapper {
 
     private final ModelMapper modelMapper;
 
-    public Driver toEntity(NewDriverDTO newDriverDTO) {
+    public Driver toEntity(NewDriverDto newDriverDTO) {
         return modelMapper.map(newDriverDTO, Driver.class);
     }
 
-    public DriverDTO toDTO(Driver driver) {
-        return modelMapper.map(driver, DriverDTO.class);
+    public DriverDto toDTO(Driver driver) {
+        return modelMapper.map(driver, DriverDto.class);
     }
 
-    public List<DriverDTO> toListDTO(List<Driver> drivers) {
+    public List<DriverDto> toListDTO(List<Driver> drivers) {
         return drivers.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

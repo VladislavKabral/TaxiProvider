@@ -1,9 +1,9 @@
 package by.modsen.taxiprovider.ratingservice.service;
 
-import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.ratingservice.dto.rating.TaxiUserRatingDTO;
-import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDTO;
-import by.modsen.taxiprovider.ratingservice.dto.response.RatingResponseDTO;
+import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.ratingservice.dto.rating.TaxiUserRatingDto;
+import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDto;
+import by.modsen.taxiprovider.ratingservice.dto.response.RatingResponseDto;
 import by.modsen.taxiprovider.ratingservice.mapper.RatingMapper;
 import by.modsen.taxiprovider.ratingservice.model.Rating;
 import by.modsen.taxiprovider.ratingservice.repository.RatingsRepository;
@@ -42,7 +42,7 @@ public class RatingsService {
 
     private static final int INIT_GRADE = 5;
 
-    public TaxiUserRatingDTO getTaxiUserRating(TaxiUserRequestDTO request)
+    public TaxiUserRatingDto getTaxiUserRating(TaxiUserRequestDto request)
             throws EntityNotFoundException {
         List<Rating> ratings = ratingsRepository.findByTaxiUserIdAndRole(request.getTaxiUserId(), request.getRole())
                 .stream()
@@ -56,7 +56,7 @@ public class RatingsService {
                     request.getRole()));
         }
 
-        return TaxiUserRatingDTO.builder()
+        return TaxiUserRatingDto.builder()
                 .taxiUserId(request.getTaxiUserId())
                 .role(request.getRole())
                 .value(new BigDecimal(Double.toString((double) ratings.stream()
@@ -69,7 +69,7 @@ public class RatingsService {
     }
 
     @Transactional
-    public RatingResponseDTO initTaxiUserRatings(TaxiUserRequestDTO request, BindingResult bindingResult)
+    public RatingResponseDto initTaxiUserRatings(TaxiUserRequestDto request, BindingResult bindingResult)
             throws EntityValidateException {
         taxiUserRequestValidator.validate(request, bindingResult);
         handleBindingResult(bindingResult);
@@ -84,7 +84,7 @@ public class RatingsService {
             ratingsRepository.save(rating);
         }
 
-        return RatingResponseDTO.builder()
+        return RatingResponseDto.builder()
                 .taxiUserid(request.getTaxiUserId())
                 .role(request.getRole())
                 .value(INIT_GRADE)
@@ -92,7 +92,7 @@ public class RatingsService {
     }
 
     @Transactional
-    public RatingResponseDTO save(RatingDTO ratingDTO, BindingResult bindingResult) throws EntityValidateException {
+    public RatingResponseDto save(RatingDto ratingDTO, BindingResult bindingResult) throws EntityValidateException {
         ratingValidator.validate(ratingDTO, bindingResult);
         handleBindingResult(bindingResult);
 
@@ -100,7 +100,7 @@ public class RatingsService {
         rating.setCreatedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         ratingsRepository.save(rating);
 
-        return RatingResponseDTO.builder()
+        return RatingResponseDto.builder()
                 .taxiUserid(rating.getTaxiUserId())
                 .role(rating.getRole())
                 .value(rating.getValue())

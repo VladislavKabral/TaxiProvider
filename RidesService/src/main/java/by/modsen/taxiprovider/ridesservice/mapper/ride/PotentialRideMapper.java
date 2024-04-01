@@ -1,6 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.mapper.ride;
 
-import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDTO;
+import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDto;
 import by.modsen.taxiprovider.ridesservice.model.ride.PotentialRide;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -12,7 +12,7 @@ public class PotentialRideMapper {
 
     private final ModelMapper modelMapper;
 
-    public PotentialRide toEntity(PotentialRideDTO potentialRideDTO) {
+    public PotentialRide toEntity(PotentialRideDto potentialRideDTO) {
         return modelMapper.map(potentialRideDTO, PotentialRide.class);
     }
 }

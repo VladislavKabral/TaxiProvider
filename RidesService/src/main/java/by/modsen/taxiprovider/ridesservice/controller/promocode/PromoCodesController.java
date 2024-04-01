@@ -1,7 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.controller.promocode;
 
-import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
-import by.modsen.taxiprovider.ridesservice.dto.response.PromoCodeResponseDTO;
+import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDto;
+import by.modsen.taxiprovider.ridesservice.dto.response.PromoCodeResponseDto;
 import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
@@ -30,32 +30,32 @@ public class PromoCodesController {
     private final PromoCodesService promoCodesService;
 
     @GetMapping
-    public ResponseEntity<List<PromoCodeDTO>> getPromoCodes() throws EntityNotFoundException {
+    public ResponseEntity<List<PromoCodeDto>> getPromoCodes() throws EntityNotFoundException {
         return new ResponseEntity<>(promoCodesService.findAll(), HttpStatus.OK);
     }
 
     @GetMapping(params = "value")
-    public ResponseEntity<PromoCodeDTO> getPromoCodeByValue(@RequestParam("value") String value)
+    public ResponseEntity<PromoCodeDto> getPromoCodeByValue(@RequestParam("value") String value)
             throws EntityNotFoundException {
         return new ResponseEntity<>(promoCodesService.findByValue(value), HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<PromoCodeResponseDTO> savePromoCode(@RequestBody @Valid PromoCodeDTO promoCodeDTO,
+    public ResponseEntity<PromoCodeResponseDto> savePromoCode(@RequestBody @Valid PromoCodeDto promoCodeDTO,
                                                               BindingResult bindingResult)
             throws EntityValidateException, EntityNotFoundException {
         return new ResponseEntity<>(promoCodesService.save(promoCodeDTO, bindingResult), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<PromoCodeResponseDTO> editPromoCode(@PathVariable("id") long id,
-                                                    @RequestBody @Valid PromoCodeDTO promoCodeDTO,
-                                                    BindingResult bindingResult) throws EntityValidateException {
+    public ResponseEntity<PromoCodeResponseDto> editPromoCode(@PathVariable("id") long id,
+                                                              @RequestBody @Valid PromoCodeDto promoCodeDTO,
+                                                              BindingResult bindingResult) throws EntityValidateException {
         return new ResponseEntity<>(promoCodesService.update(id, promoCodeDTO, bindingResult), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<PromoCodeResponseDTO> deletePromoCode(@PathVariable("id") long id)
+    public ResponseEntity<PromoCodeResponseDto> deletePromoCode(@PathVariable("id") long id)
             throws EntityNotFoundException {
         return new ResponseEntity<>(promoCodesService.delete(id), HttpStatus.OK);
     }

@@ -1,12 +1,12 @@
 package by.modsen.taxiprovider.driverservice.service;
 
-import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
-import by.modsen.taxiprovider.driverservice.dto.error.ErrorResponseDTO;
-import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.driverservice.dto.request.DriverRatingRequestDTO;
-import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDTO;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
+import by.modsen.taxiprovider.driverservice.dto.error.ErrorResponseDto;
+import by.modsen.taxiprovider.driverservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.driverservice.dto.request.DriverRatingRequestDto;
+import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDto;
 import by.modsen.taxiprovider.driverservice.mapper.DriverMapper;
 import by.modsen.taxiprovider.driverservice.model.Driver;
 import by.modsen.taxiprovider.driverservice.repository.DriversRepository;
@@ -63,7 +63,7 @@ public class DriversService {
 
     private static final int RETRY_DURATION_TIME = 5;
 
-    public List<DriverDTO> findAll() throws EntityNotFoundException {
+    public List<DriverDto> findAll() throws EntityNotFoundException {
         List<Driver> drivers = driversRepository.findByAccountStatus(DRIVER_ACCOUNT_STATUS_ACTIVE);
 
         if (drivers.isEmpty()) {
@@ -73,7 +73,7 @@ public class DriversService {
         return driverMapper.toListDTO(drivers);
     }
 
-    public Page<DriverDTO> findPageDrivers(int index, int count, String sortField)
+    public Page<DriverDto> findPageDrivers(int index, int count, String sortField)
             throws EntityNotFoundException, InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {
             throw new InvalidRequestDataException(INVALID_PAGE_REQUEST);
@@ -94,13 +94,13 @@ public class DriversService {
                 .toList());
     }
 
-    public DriverDTO findById(long id) throws EntityNotFoundException {
+    public DriverDto findById(long id) throws EntityNotFoundException {
         return driverMapper.toDTO(driversRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException(String.format(DRIVER_NOT_FOUND, id))));
     }
 
-    public List<DriverDTO> findFreeDrivers() throws EntityNotFoundException {
+    public List<DriverDto> findFreeDrivers() throws EntityNotFoundException {
         List<Driver> drivers = driversRepository.findByStatus(DRIVER_STATUS_FREE);
 
         if (drivers.isEmpty()) {
@@ -111,7 +111,7 @@ public class DriversService {
     }
 
     @Transactional
-    public DriverResponseDTO save(NewDriverDTO driverDTO, BindingResult bindingResult)
+    public DriverResponseDto save(NewDriverDto driverDTO, BindingResult bindingResult)
             throws EntityValidateException, EntityNotFoundException {
         Driver driver = driverMapper.toEntity(driverDTO);
         driversValidator.validate(driver, bindingResult);
@@ -130,11 +130,11 @@ public class DriversService {
 
         initDriverRating(createdDriver.getId());
 
-        return new DriverResponseDTO(createdDriver.getId());
+        return new DriverResponseDto(createdDriver.getId());
     }
 
     @Transactional
-    public DriverResponseDTO update(long id, DriverDTO driverDTO, BindingResult bindingResult)
+    public DriverResponseDto update(long id, DriverDto driverDTO, BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
         Driver driver = driversRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
@@ -176,11 +176,11 @@ public class DriversService {
         driver.setId(id);
         driversRepository.save(driver);
 
-        return new DriverResponseDTO(id);
+        return new DriverResponseDto(id);
     }
 
     @Transactional
-    public DriverResponseDTO deactivate(long id) throws EntityNotFoundException {
+    public DriverResponseDto deactivate(long id) throws EntityNotFoundException {
         Driver driver = driversRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException(String.format(DRIVER_NOT_FOUND, id)));
@@ -188,7 +188,7 @@ public class DriversService {
         driver.setAccountStatus(DRIVER_ACCOUNT_STATUS_INACTIVE);
         driversRepository.save(driver);
 
-        return new DriverResponseDTO(id);
+        return new DriverResponseDto(id);
     }
 
     private void initDriverRating(long driverId) {
@@ -199,7 +199,7 @@ public class DriversService {
 
         webClient.post()
                 .uri("/init")
-                .bodyValue(DriverRatingRequestDTO.builder()
+                .bodyValue(DriverRatingRequestDto.builder()
                         .taxiUserId(driverId)
                         .role(DRIVER_ROLE_NAME)
                         .build())
@@ -217,7 +217,7 @@ public class DriversService {
                 .block();
     }
 
-    private RatingDTO getDriverRating(long driverId) throws EntityNotFoundException {
+    private RatingDto getDriverRating(long driverId) throws EntityNotFoundException {
         Driver driver = driversRepository.findById(driverId).orElseThrow(EntityNotFoundException
                 .entityNotFoundException(String.format(DRIVER_NOT_FOUND, driverId)));
 
@@ -233,11 +233,11 @@ public class DriversService {
                         .build())
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
+                        clientResponse.bodyToMono(ErrorResponseDto.class)
+                                .map(errorResponseDto -> new ExternalServiceRequestException(errorResponseDto.getMessage())))
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
-                .bodyToMono(RatingDTO.class)
+                .bodyToMono(RatingDto.class)
                 .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
                         .filter(throwable -> throwable instanceof ExternalServiceRequestException)
                         .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
@@ -248,10 +248,10 @@ public class DriversService {
                 .block();
     }
 
-    public DriverProfileDTO getDriverProfile(long id) throws EntityNotFoundException {
-        DriverDTO driver = findById(id);
+    public DriverProfileDto getDriverProfile(long id) throws EntityNotFoundException {
+        DriverDto driver = findById(id);
 
-        return DriverProfileDTO.builder()
+        return DriverProfileDto.builder()
                 .driver(driver)
                 .rating(getDriverRating(id).getValue())
                 .build();

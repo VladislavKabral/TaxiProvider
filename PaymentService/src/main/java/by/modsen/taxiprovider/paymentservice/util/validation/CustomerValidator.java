@@ -1,6 +1,6 @@
 package by.modsen.taxiprovider.paymentservice.util.validation;
 
-import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
+import by.modsen.taxiprovider.paymentservice.dto.CustomerDto;
 import by.modsen.taxiprovider.paymentservice.service.user.UsersService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,12 +15,12 @@ public class CustomerValidator implements Validator {
 
     @Override
     public boolean supports(Class<?> clazz) {
-        return CustomerDTO.class.equals(clazz);
+        return CustomerDto.class.equals(clazz);
     }
 
     @Override
     public void validate(Object target, Errors errors) {
-        CustomerDTO customerDTO = (CustomerDTO) target;
+        CustomerDto customerDTO = (CustomerDto) target;
 
         if (usersService.isUserExists(customerDTO.getTaxiUserId(), customerDTO.getRole())) {
             errors.rejectValue("taxiUserId", "",

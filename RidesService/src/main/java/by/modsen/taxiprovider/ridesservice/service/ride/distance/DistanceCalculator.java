@@ -1,6 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.service.ride.distance;
 
-import by.modsen.taxiprovider.ridesservice.dto.ride.DistanceRequestDTO;
+import by.modsen.taxiprovider.ridesservice.dto.ride.DistanceRequestDto;
 import by.modsen.taxiprovider.ridesservice.mapper.ride.AddressMapper;
 import by.modsen.taxiprovider.ridesservice.model.ride.Address;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
@@ -63,7 +63,7 @@ public class DistanceCalculator {
 
     private String getRequestBody(Address source, Address target) throws JsonProcessingException {
         ObjectWriter objectWriter = new ObjectMapper().writer().withDefaultPrettyPrinter();
-        return objectWriter.writeValueAsString(DistanceRequestDTO.builder()
+        return objectWriter.writeValueAsString(DistanceRequestDto.builder()
                 .points(addressMapper.toListDTO(List.of(source, target)))
                 .sources(new int[]{0})
                 .targets(new int[]{1})
