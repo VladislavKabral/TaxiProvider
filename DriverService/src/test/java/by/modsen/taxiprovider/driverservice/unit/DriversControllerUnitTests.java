@@ -1,4 +1,4 @@
-package by.modsen.taxiprovider.driverservice.unit.drivers;
+package by.modsen.taxiprovider.driverservice.unit;
 
 import by.modsen.taxiprovider.driverservice.controller.driver.DriversController;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;

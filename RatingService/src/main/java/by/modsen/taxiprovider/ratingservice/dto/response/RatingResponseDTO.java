@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RatingResponseDTO {
 
-    private long taxiUserid;
+    private long taxiUserId;
 
     private String role;
 
