@@ -2,6 +2,7 @@ package by.modsen.taxiprovider.driverservice.service;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriversPageDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDTO;
 import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDTO;
@@ -14,8 +15,6 @@ import by.modsen.taxiprovider.driverservice.util.exception.InvalidRequestDataExc
 import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatusCode;
@@ -58,7 +57,7 @@ public class DriversService {
         return driverMapper.toListDTO(drivers);
     }
 
-    public Page<DriverDTO> findPageDrivers(int index, int count, String sortField)
+    public DriversPageDto findPageDrivers(int index, int count, String sortField)
             throws EntityNotFoundException, InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {
             throw new InvalidRequestDataException(INVALID_PAGE_REQUEST);
@@ -74,9 +73,11 @@ public class DriversService {
             throw new EntityNotFoundException(DRIVERS_ON_PAGE_NOT_FOUND);
         }
 
-        return new PageImpl<>(drivers.stream()
-                .map(driverMapper::toDTO)
-                .toList());
+        return DriversPageDto.builder()
+                .content(driverMapper.toListDTO(drivers))
+                .page(index)
+                .size(count)
+                .build();
     }
 
     public DriverDTO findById(long id) throws EntityNotFoundException {

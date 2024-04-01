@@ -3,6 +3,7 @@ package by.modsen.taxiprovider.passengerservice.service;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengersPageDto;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
 import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDTO;
 import by.modsen.taxiprovider.passengerservice.mapper.PassengerMapper;
@@ -14,8 +15,6 @@ import by.modsen.taxiprovider.passengerservice.util.exception.InvalidRequestData
 import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatusCode;
@@ -56,7 +55,7 @@ public class PassengersService {
         return passengerMapper.toListDTO(passengers);
     }
 
-    public Page<PassengerDTO> findPagePassengers(int index, int count, String sortField)
+    public PassengersPageDto findPagePassengers(int index, int count, String sortField)
             throws EntityNotFoundException, InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {
             throw new InvalidRequestDataException(INVALID_PAGE_REQUEST);
@@ -72,9 +71,11 @@ public class PassengersService {
             throw new EntityNotFoundException(PASSENGERS_ON_PAGE_NOT_FOUND);
         }
 
-        return new PageImpl<>(passengers.stream()
-                .map(passengerMapper::toDTO)
-                .toList());
+        return PassengersPageDto.builder()
+                .content(passengerMapper.toListDTO(passengers))
+                .page(index)
+                .size(count)
+                .build();
     }
 
     public PassengerDTO findById(long id) throws EntityNotFoundException {

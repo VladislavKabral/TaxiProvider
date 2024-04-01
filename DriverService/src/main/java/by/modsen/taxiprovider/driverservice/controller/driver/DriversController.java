@@ -2,6 +2,7 @@ package by.modsen.taxiprovider.driverservice.controller.driver;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriversPageDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
 import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDTO;
 import by.modsen.taxiprovider.driverservice.service.DriversService;
@@ -10,7 +11,6 @@ import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateExcepti
 import by.modsen.taxiprovider.driverservice.util.exception.InvalidRequestDataException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -39,9 +39,9 @@ public class DriversController {
     }
 
     @GetMapping(params = {"page", "size", "sort"})
-    public ResponseEntity<Page<DriverDTO>> getDriversPage(@RequestParam("page") int page,
-                                                          @RequestParam("size") int size,
-                                                          @RequestParam("sort") String sortField)
+    public ResponseEntity<DriversPageDto> getDriversPage(@RequestParam("page") int page,
+                                                         @RequestParam("size") int size,
+                                                         @RequestParam("sort") String sortField)
             throws EntityNotFoundException, InvalidRequestDataException {
         return new ResponseEntity<>(driversService.findPageDrivers(page, size, sortField), HttpStatus.OK);
     }
