@@ -79,9 +79,13 @@ public class DriversService {
     }
 
     public DriverDto findById(long id) throws EntityNotFoundException {
-        return driverMapper.toDTO(driversRepository.findById(id)
+        return driverMapper.toDTO(findDriver(id));
+    }
+
+    private Driver findDriver(long id) throws EntityNotFoundException {
+        return driversRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException(String.format(DRIVER_NOT_FOUND, id))));
+                        .entityNotFoundException(String.format(DRIVER_NOT_FOUND, id)));
     }
 
     public List<DriverDto> findFreeDrivers() throws EntityNotFoundException {
@@ -120,9 +124,7 @@ public class DriversService {
     @Transactional
     public DriverResponseDto update(long id, DriverDto driverDTO, BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
-        Driver driver = driversRepository.findById(id)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException(String.format(DRIVER_NOT_FOUND, id)));
+        Driver driver = findDriver(id);
 
         driversValidator.validate(driver, bindingResult);
         handleBindingResult(bindingResult);
@@ -165,9 +167,7 @@ public class DriversService {
 
     @Transactional
     public DriverResponseDto deactivate(long id) throws EntityNotFoundException {
-        Driver driver = driversRepository.findById(id)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException(String.format(DRIVER_NOT_FOUND, id)));
+        Driver driver = findDriver(id);
 
         driver.setAccountStatus(DRIVER_ACCOUNT_STATUS_INACTIVE);
         driversRepository.save(driver);

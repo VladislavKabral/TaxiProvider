@@ -80,6 +80,12 @@ public class PassengersService {
                 .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id))));
     }
 
+    private Passenger findPassenger(long id) throws EntityNotFoundException {
+        return passengersRepository.findById(id)
+                .orElseThrow(EntityNotFoundException
+                        .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id)));
+    }
+
     @Transactional
     public PassengerResponseDto save(NewPassengerDto passengerDTO, BindingResult bindingResult)
             throws EntityValidateException, EntityNotFoundException {
@@ -105,9 +111,7 @@ public class PassengersService {
     @Transactional
     public PassengerResponseDto update(long id, PassengerDto passengerDTO, BindingResult bindingResult)
             throws EntityNotFoundException, EntityValidateException {
-        Passenger passengerData = passengersRepository.findById(id)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id)));
+        Passenger passengerData = findPassenger(id);
 
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
         passenger.setId(id);
@@ -139,9 +143,7 @@ public class PassengersService {
 
     @Transactional
     public PassengerResponseDto deactivate(long id) throws EntityNotFoundException {
-        Passenger passenger = passengersRepository.findById(id)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id)));
+        Passenger passenger = findPassenger(id);
 
         passenger.setStatus(PASSENGER_ACCOUNT_STATUS_INACTIVE);
 
