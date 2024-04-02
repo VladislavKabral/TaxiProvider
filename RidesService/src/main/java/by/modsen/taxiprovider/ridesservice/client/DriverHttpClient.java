@@ -2,6 +2,7 @@ package by.modsen.taxiprovider.ridesservice.client;
 
 import by.modsen.taxiprovider.ridesservice.dto.driver.DriverDto;
 import by.modsen.taxiprovider.ridesservice.dto.error.ErrorResponseDto;
+import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.ExternalServiceRequestException;
 import by.modsen.taxiprovider.ridesservice.util.exception.ExternalServiceUnavailableException;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,13 +29,13 @@ public class DriverHttpClient {
 
     private static final int RETRY_DURATION_TIME = 5;
 
-    public List<DriverDto> getFreeDrivers() {
+    public List<DriverDto> getFreeDrivers() throws EntityNotFoundException {
         WebClient webClient = WebClient.builder()
                 .baseUrl(DRIVERS_SERVICE_HOST_URL)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
-        return webClient.get()
+        List<DriverDto> drivers =  webClient.get()
                 .uri("/free")
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
@@ -53,6 +54,12 @@ public class DriverHttpClient {
                         }))
                 .collect(Collectors.toList())
                 .block();
+
+        if ((drivers != null) && (drivers.isEmpty())) {
+            throw new EntityNotFoundException(NO_FREE_DRIVERS);
+        }
+
+        return drivers;
     }
 
     public DriverDto getDriverById(long driverId) {
