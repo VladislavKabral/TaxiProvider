@@ -68,7 +68,7 @@ public class DriversController {
         return new ResponseEntity<>(driversService.save(driverDTO, bindingResult), HttpStatus.CREATED);
     }
 
-    @PatchMapping(value = "/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<DriverResponseDTO> editDriver(@PathVariable("id") long id,
                                                  @RequestBody @Valid DriverDTO driverDTO,
                                                  BindingResult bindingResult)
