@@ -6,6 +6,7 @@ import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDto;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialCostDto;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDto;
 import by.modsen.taxiprovider.ridesservice.dto.ride.RideDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideListDto;
 import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.service.ride.RidesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
@@ -27,7 +28,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("/rides")
@@ -39,7 +39,7 @@ public class RidesController {
     private final PromoCodesService promoCodesService;
 
     @GetMapping
-    public ResponseEntity<List<RideDto>> getRides() throws EntityNotFoundException {
+    public ResponseEntity<RideListDto> getRides() {
         return new ResponseEntity<>(ridesService.findAll(), HttpStatus.OK);
     }
 
@@ -49,12 +49,12 @@ public class RidesController {
     }
 
     @GetMapping("/passenger/{id}")
-    public ResponseEntity<List<RideDto>> getPassengerRides(@PathVariable("id") long id) throws EntityNotFoundException {
+    public ResponseEntity<RideListDto> getPassengerRides(@PathVariable("id") long id) {
         return new ResponseEntity<>(ridesService.findByPassengerId(id), HttpStatus.OK);
     }
 
     @GetMapping("/driver/{id}")
-    public ResponseEntity<List<RideDto>> getDriverRides(@PathVariable("id") long id) throws EntityNotFoundException {
+    public ResponseEntity<RideListDto> getDriverRides(@PathVariable("id") long id) {
         return new ResponseEntity<>(ridesService.findByDriverId(id), HttpStatus.OK);
     }
 

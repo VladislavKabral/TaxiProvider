@@ -3,6 +3,7 @@ package by.modsen.taxiprovider.passengerservice.service;
 import by.modsen.taxiprovider.passengerservice.client.RatingHttpClient;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerListDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDto;
 import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDto;
 import by.modsen.taxiprovider.passengerservice.mapper.PassengerMapper;
@@ -44,14 +45,12 @@ public class PassengersService {
 
     private static final String KAFKA_TOPIC_NAME = "RIDE";
 
-    public List<PassengerDto> findAll() throws EntityNotFoundException {
+    public PassengerListDto findAll() {
         List<Passenger> passengers = passengersRepository.findByStatusOrderByLastname(PASSENGER_ACCOUNT_STATUS_ACTIVE);
 
-        if (passengers.isEmpty()) {
-            throw new EntityNotFoundException(PASSENGERS_NOT_FOUND);
-        }
-
-        return passengerMapper.toListDTO(passengers);
+        return PassengerListDto.builder()
+                .content(passengerMapper.toListDTO(passengers))
+                .build();
     }
 
     public Page<PassengerDto> findPagePassengers(int index, int count, String sortField)

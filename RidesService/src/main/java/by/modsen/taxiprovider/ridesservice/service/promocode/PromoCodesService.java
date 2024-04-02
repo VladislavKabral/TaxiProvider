@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.service.promocode;
 
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDto;
+import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodesListDto;
 import by.modsen.taxiprovider.ridesservice.dto.response.PromoCodeResponseDto;
 import by.modsen.taxiprovider.ridesservice.mapper.promocode.PromoCodeMapper;
 import by.modsen.taxiprovider.ridesservice.model.promocode.PromoCode;
@@ -29,14 +30,16 @@ public class PromoCodesService {
     private final PromoCodeValidator promoCodeValidator;
 
     @Transactional(readOnly = true)
-    public List<PromoCodeDto> findAll() throws EntityNotFoundException {
+    public PromoCodesListDto findAll() throws EntityNotFoundException {
         List<PromoCode> promoCodes = promoCodesRepository.findAll();
 
         if (promoCodes.isEmpty()) {
             throw new EntityNotFoundException(PROMO_CODES_NOT_FOUND);
         }
 
-        return promoCodeMapper.toListDTO(promoCodes);
+        return PromoCodesListDto.builder()
+                .content(promoCodeMapper.toListDTO(promoCodes))
+                .build();
     }
 
     @Transactional(readOnly = true)

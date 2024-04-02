@@ -2,6 +2,7 @@ package by.modsen.taxiprovider.passengerservice.controller.passenger;
 
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerListDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDto;
 import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDto;
 import by.modsen.taxiprovider.passengerservice.service.PassengersService;
@@ -24,8 +25,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/passengers")
 @AllArgsConstructor
@@ -34,7 +33,7 @@ public class PassengersController {
     private final PassengersService passengersService;
 
     @GetMapping
-    public ResponseEntity<List<PassengerDto>> getPassengers() throws EntityNotFoundException {
+    public ResponseEntity<PassengerListDto> getPassengers() {
         return new ResponseEntity<>(passengersService.findAll(), HttpStatus.OK);
     }
 

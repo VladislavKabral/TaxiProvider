@@ -10,6 +10,7 @@ import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDto;
 import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDto;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDto;
 import by.modsen.taxiprovider.ridesservice.dto.ride.RideDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideListDto;
 import by.modsen.taxiprovider.ridesservice.mapper.promocode.PromoCodeMapper;
 import by.modsen.taxiprovider.ridesservice.mapper.ride.PotentialRideMapper;
 import by.modsen.taxiprovider.ridesservice.mapper.ride.RideMapper;
@@ -93,14 +94,12 @@ public class RidesService {
     private static final String KAFKA_TOPIC_NAME = "RIDE";
 
     @Transactional(readOnly = true)
-    public List<RideDto> findAll() throws EntityNotFoundException {
+    public RideListDto findAll() {
         List<Ride> rides = ridesRepository.findAll();
 
-        if (rides.isEmpty()) {
-            throw new EntityNotFoundException(RIDES_NOT_FOUND);
-        }
-
-        return rideMapper.toListDTO(rides);
+        return RideListDto.builder()
+                .content(rideMapper.toListDTO(rides))
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -110,25 +109,21 @@ public class RidesService {
     }
 
     @Transactional(readOnly = true)
-    public List<RideDto> findByPassengerId(long passengerId) throws EntityNotFoundException {
+    public RideListDto findByPassengerId(long passengerId) {
         List<Ride> rides = ridesRepository.findByPassengerIdAndStatus(passengerId, RIDE_STATUS_COMPLETED);
 
-        if (rides.isEmpty()) {
-            throw new EntityNotFoundException(String.format(PASSENGER_RIDES_NOT_FOUND, passengerId));
-        }
-
-        return rideMapper.toListDTO(rides);
+        return RideListDto.builder()
+                .content(rideMapper.toListDTO(rides))
+                .build();
     }
 
     @Transactional(readOnly = true)
-    public List<RideDto> findByDriverId(long driverId) throws EntityNotFoundException {
+    public RideListDto findByDriverId(long driverId) {
         List<Ride> rides = ridesRepository.findByDriverIdAndStatus(driverId, RIDE_STATUS_COMPLETED);
 
-        if (rides.isEmpty()) {
-            throw new EntityNotFoundException(String.format(DRIVER_RIDES_NOT_FOUND, driverId));
-        }
-
-        return rideMapper.toListDTO(rides);
+        return RideListDto.builder()
+                .content(rideMapper.toListDTO(rides))
+                .build();
     }
 
     public Ride findDriverCurrentDrive(long driverId, String status) throws EntityNotFoundException {

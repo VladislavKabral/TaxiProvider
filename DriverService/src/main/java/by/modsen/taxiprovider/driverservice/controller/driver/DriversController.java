@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.driverservice.controller.driver;
 
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverListDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
 import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDto;
@@ -24,8 +25,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/drivers")
 @RequiredArgsConstructor
@@ -34,7 +33,7 @@ public class DriversController {
     private final DriversService driversService;
 
     @GetMapping
-    public ResponseEntity<List<DriverDto>> getDrivers() throws EntityNotFoundException {
+    public ResponseEntity<DriverListDto> getDrivers() {
         return new ResponseEntity<>(driversService.findAll(), HttpStatus.OK);
     }
 
@@ -57,7 +56,7 @@ public class DriversController {
     }
 
     @GetMapping("/free")
-    public ResponseEntity<List<DriverDto>> getFreeDrivers() throws EntityNotFoundException {
+    public ResponseEntity<DriverListDto> getFreeDrivers() {
         return new ResponseEntity<>(driversService.findFreeDrivers(), HttpStatus.OK);
     }
 

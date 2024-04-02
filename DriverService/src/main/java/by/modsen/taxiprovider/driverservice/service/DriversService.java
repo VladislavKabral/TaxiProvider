@@ -2,6 +2,7 @@ package by.modsen.taxiprovider.driverservice.service;
 
 import by.modsen.taxiprovider.driverservice.client.RatingHttpClient;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverListDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
 import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDto;
@@ -47,14 +48,12 @@ public class DriversService {
 
     private static final String KAFKA_TOPIC_NAME = "RIDE";
 
-    public List<DriverDto> findAll() throws EntityNotFoundException {
+    public DriverListDto findAll() {
         List<Driver> drivers = driversRepository.findByAccountStatus(DRIVER_ACCOUNT_STATUS_ACTIVE);
 
-        if (drivers.isEmpty()) {
-            throw new EntityNotFoundException(DRIVERS_NOT_FOUND);
-        }
-
-        return driverMapper.toListDTO(drivers);
+        return DriverListDto.builder()
+                .content(driverMapper.toListDTO(drivers))
+                .build();
     }
 
     public Page<DriverDto> findPageDrivers(int index, int count, String sortField)
@@ -88,14 +87,12 @@ public class DriversService {
                         .entityNotFoundException(String.format(DRIVER_NOT_FOUND, id)));
     }
 
-    public List<DriverDto> findFreeDrivers() throws EntityNotFoundException {
+    public DriverListDto findFreeDrivers() {
         List<Driver> drivers = driversRepository.findByStatus(DRIVER_STATUS_FREE);
 
-        if (drivers.isEmpty()) {
-            throw new EntityNotFoundException(FREE_DRIVERS_NOT_FOUND);
-        }
-
-        return driverMapper.toListDTO(drivers);
+        return DriverListDto.builder()
+                .content(driverMapper.toListDTO(drivers))
+                .build();
     }
 
     @Transactional

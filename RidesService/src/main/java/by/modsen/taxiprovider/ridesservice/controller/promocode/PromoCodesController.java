@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.controller.promocode;
 
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDto;
+import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodesListDto;
 import by.modsen.taxiprovider.ridesservice.dto.response.PromoCodeResponseDto;
 import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
@@ -20,8 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/promoCodes")
 @RequiredArgsConstructor
@@ -30,7 +29,7 @@ public class PromoCodesController {
     private final PromoCodesService promoCodesService;
 
     @GetMapping
-    public ResponseEntity<List<PromoCodeDto>> getPromoCodes() throws EntityNotFoundException {
+    public ResponseEntity<PromoCodesListDto> getPromoCodes() throws EntityNotFoundException {
         return new ResponseEntity<>(promoCodesService.findAll(), HttpStatus.OK);
     }
 
