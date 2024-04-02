@@ -6,7 +6,7 @@ import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundExceptio
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.ridesservice.util.exception.InvalidRequestDataException;
 
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 
@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -35,7 +36,7 @@ public class ExceptionAPIController {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage())
-                        .time(ZonedDateTime.now(ZoneOffset.UTC))
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
 
@@ -45,7 +46,7 @@ public class ExceptionAPIController {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
                         .message("Failed to convert value in request parameter")
-                        .time(ZonedDateTime.now(ZoneOffset.UTC))
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
 
@@ -55,7 +56,7 @@ public class ExceptionAPIController {
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage() + " for this endpoint")
-                        .time(ZonedDateTime.now(ZoneOffset.UTC))
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
 
@@ -65,7 +66,7 @@ public class ExceptionAPIController {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDTO.builder()
                         .message("Wrong ride's time format. Correct format is 'yyyy-MM-dd, HH-mm-ss'")
-                        .time(ZonedDateTime.now(ZoneOffset.UTC))
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
 
@@ -75,7 +76,23 @@ public class ExceptionAPIController {
                 .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponseDTO.builder()
                         .message("There aren't any free drivers now. Try again")
-                        .time(ZonedDateTime.now(ZoneOffset.UTC))
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
+                        .build());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDTO> methodArgumentNotValidException(MethodArgumentNotValidException exception) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        exception.getBindingResult()
+                .getAllErrors()
+                .forEach(error -> errorMessage.append(error.getDefaultMessage()).append(". "));
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDTO.builder()
+                        .message(errorMessage.toString().trim())
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
 }

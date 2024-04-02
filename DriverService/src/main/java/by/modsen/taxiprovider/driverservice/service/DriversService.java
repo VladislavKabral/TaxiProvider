@@ -12,7 +12,6 @@ import by.modsen.taxiprovider.driverservice.repository.DriversRepository;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.driverservice.util.exception.InvalidRequestDataException;
-import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -21,8 +20,6 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -39,8 +36,6 @@ public class DriversService {
     private final DriversRepository driversRepository;
 
     private final DriverMapper driverMapper;
-
-    private final DriversValidator driversValidator;
 
     @Value("${ratings-service-host-url}")
     private String RATINGS_SERVICE_HOST_URL;
@@ -97,11 +92,8 @@ public class DriversService {
     }
 
     @Transactional
-    public DriverResponseDTO save(NewDriverDTO driverDTO, BindingResult bindingResult)
-            throws EntityValidateException, EntityNotFoundException {
+    public DriverResponseDTO save(NewDriverDTO driverDTO) throws EntityNotFoundException {
         Driver driver = driverMapper.toEntity(driverDTO);
-        driversValidator.validate(driver, bindingResult);
-        handleBindingResult(bindingResult);
 
         driver.setRole(DRIVER_ROLE_NAME);
         driver.setAccountStatus(DRIVER_ACCOUNT_STATUS_ACTIVE);
@@ -117,14 +109,11 @@ public class DriversService {
     }
 
     @Transactional
-    public DriverResponseDTO update(long id, DriverDTO driverDTO, BindingResult bindingResult)
-            throws EntityNotFoundException, EntityValidateException {
+    public DriverResponseDTO update(long id, DriverDTO driverDTO) throws EntityNotFoundException,
+            EntityValidateException {
         Driver driver = driversRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException(String.format(DRIVER_NOT_FOUND, id)));
-
-        driversValidator.validate(driver, bindingResult);
-        handleBindingResult(bindingResult);
 
         String firstname = driverDTO.getFirstname();
         String lastname = driverDTO.getLastname();
@@ -202,17 +191,5 @@ public class DriversService {
                 .driver(driver)
                 .rating(getDriverRating(id).getValue())
                 .build();
-    }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
     }
 }

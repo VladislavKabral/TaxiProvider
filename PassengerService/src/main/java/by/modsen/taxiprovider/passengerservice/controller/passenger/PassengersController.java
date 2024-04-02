@@ -7,13 +7,11 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengersPageDto;
 import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDTO;
 import by.modsen.taxiprovider.passengerservice.service.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
-import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.passengerservice.util.exception.InvalidRequestDataException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,18 +57,16 @@ public class PassengersController {
     }
 
     @PostMapping
-    public ResponseEntity<PassengerResponseDTO> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO,
-                                                              BindingResult bindingResult)
-            throws EntityValidateException, EntityNotFoundException {
-        return new ResponseEntity<>(passengersService.save(passengerDTO, bindingResult), HttpStatus.OK);
+    public ResponseEntity<PassengerResponseDTO> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO)
+            throws EntityNotFoundException {
+        return new ResponseEntity<>(passengersService.save(passengerDTO), HttpStatus.OK);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<PassengerResponseDTO> editPassenger(@PathVariable("id") long id,
-                                                    @RequestBody @Valid PassengerDTO passengerDTO,
-                                                    BindingResult bindingResult)
-            throws EntityNotFoundException, EntityValidateException {
-        return new ResponseEntity<>(passengersService.update(id, passengerDTO, bindingResult), HttpStatus.OK);
+                                                    @RequestBody @Valid PassengerDTO passengerDTO)
+            throws EntityNotFoundException {
+        return new ResponseEntity<>(passengersService.update(id, passengerDTO), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

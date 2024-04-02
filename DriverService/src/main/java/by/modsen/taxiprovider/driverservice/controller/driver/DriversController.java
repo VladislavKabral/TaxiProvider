@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,22 +61,21 @@ public class DriversController {
     }
 
     @PostMapping
-    public ResponseEntity<DriverResponseDTO> saveDriver(@RequestBody @Valid NewDriverDTO driverDTO,
-                                                        BindingResult bindingResult)
-            throws EntityValidateException, EntityNotFoundException {
-        return new ResponseEntity<>(driversService.save(driverDTO, bindingResult), HttpStatus.CREATED);
+    public ResponseEntity<DriverResponseDTO> saveDriver(@RequestBody @Valid NewDriverDTO driverDTO)
+            throws EntityNotFoundException {
+        return new ResponseEntity<>(driversService.save(driverDTO), HttpStatus.CREATED);
     }
 
     @PatchMapping(value = "/{id}")
     public ResponseEntity<DriverResponseDTO> editDriver(@PathVariable("id") long id,
-                                                 @RequestBody @Valid DriverDTO driverDTO,
-                                                 BindingResult bindingResult)
+                                                 @RequestBody @Valid DriverDTO driverDTO)
             throws EntityNotFoundException, EntityValidateException {
-        return new ResponseEntity<>(driversService.update(id, driverDTO, bindingResult), HttpStatus.OK);
+        return new ResponseEntity<>(driversService.update(id, driverDTO), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<DriverResponseDTO> deactivateDriver(@PathVariable("id") long id) throws EntityNotFoundException {
+    public ResponseEntity<DriverResponseDTO> deactivateDriver(@PathVariable("id") long id)
+            throws EntityNotFoundException {
         return new ResponseEntity<>(driversService.deactivate(id), HttpStatus.OK);
     }
 }

@@ -18,7 +18,6 @@ import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.service.ride.distance.DistanceCalculator;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
-import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.ridesservice.util.exception.NotEnoughFreeDriversException;
 import by.modsen.taxiprovider.ridesservice.util.validation.ride.RideValidator;
 import lombok.RequiredArgsConstructor;
@@ -134,12 +133,10 @@ public class RidesService {
     }
 
     @Transactional
-    public RideResponseDTO save(NewRideDTO rideDTO, PromoCodeDTO promoCodeDTO, BindingResult bindingResult) throws IOException,
-            ParseException, DistanceCalculationException, EntityNotFoundException, InterruptedException,
-            EntityValidateException {
+    public RideResponseDTO save(NewRideDTO rideDTO, PromoCodeDTO promoCodeDTO) throws IOException,
+            ParseException, DistanceCalculationException, EntityNotFoundException, InterruptedException {
 
         Ride ride = rideMapper.toEntity(rideDTO);
-        handleBindingResult(bindingResult);
 
         PromoCode promoCode = null;
         if (promoCodeDTO != null) {
@@ -194,12 +191,7 @@ public class RidesService {
     }
 
     @Transactional
-    public RideResponseDTO update(RideDTO rideDTO, BindingResult bindingResult) throws EntityValidateException,
-            EntityNotFoundException {
-
-        rideValidator.validate(rideDTO, bindingResult);
-        handleBindingResult(bindingResult);
-
+    public RideResponseDTO update(RideDTO rideDTO) throws EntityNotFoundException {
         Ride ride = null;
         switch (rideDTO.getStatus()) {
             case RIDE_STATUS_IN_PROGRESS -> {
@@ -246,12 +238,11 @@ public class RidesService {
         return new RideResponseDTO(ride.getId());
     }
 
-    public BigDecimal getPotentialRideCost(PotentialRideDTO potentialRideDTO, BindingResult bindingResult)
+    public BigDecimal getPotentialRideCost(PotentialRideDTO potentialRideDTO)
             throws IOException, ParseException, DistanceCalculationException, InterruptedException,
-            EntityNotFoundException, EntityValidateException {
+            EntityNotFoundException {
 
         PotentialRide potentialRide = potentialRideMapper.toEntity(potentialRideDTO);
-        handleBindingResult(bindingResult);
 
         return calculatePotentialRideCost(potentialRide);
     }
@@ -333,17 +324,4 @@ public class RidesService {
                 .bodyToMono(String.class)
                 .block();
     }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
-    }
-
 }

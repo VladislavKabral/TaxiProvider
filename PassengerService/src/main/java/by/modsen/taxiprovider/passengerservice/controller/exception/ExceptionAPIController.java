@@ -4,6 +4,7 @@ import by.modsen.taxiprovider.passengerservice.dto.error.ErrorResponseDTO;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.passengerservice.util.exception.InvalidRequestDataException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -42,6 +43,22 @@ public class ExceptionAPIController {
                 .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage())
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
+                        .build());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDTO> methodArgumentNotValidException(MethodArgumentNotValidException exception) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        exception.getBindingResult()
+                .getAllErrors()
+                .forEach(error -> errorMessage.append(error.getDefaultMessage()).append(". "));
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDTO.builder()
+                        .message(errorMessage.toString().trim())
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }

@@ -10,9 +10,7 @@ import by.modsen.taxiprovider.passengerservice.mapper.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.model.Passenger;
 import by.modsen.taxiprovider.passengerservice.repository.PassengersRepository;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
-import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.passengerservice.util.exception.InvalidRequestDataException;
-import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -21,8 +19,6 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import static by.modsen.taxiprovider.passengerservice.util.Message.*;
@@ -37,8 +33,6 @@ public class PassengersService {
     private final PassengersRepository passengersRepository;
 
     private final PassengerMapper passengerMapper;
-
-    private final PassengersValidator passengersValidator;
 
     @Value("${ratings-service-host-url}")
     private String RATINGS_SERVICE_HOST_URL;
@@ -84,11 +78,8 @@ public class PassengersService {
     }
 
     @Transactional
-    public PassengerResponseDTO save(NewPassengerDTO passengerDTO, BindingResult bindingResult)
-            throws EntityValidateException, EntityNotFoundException {
+    public PassengerResponseDTO save(NewPassengerDTO passengerDTO) throws EntityNotFoundException {
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
-        passengersValidator.validate(passenger, bindingResult);
-        handleBindingResult(bindingResult);
 
         passenger.setRole(PASSENGER_ROLE_NAME);
         passenger.setStatus(PASSENGER_ACCOUNT_STATUS_ACTIVE);
@@ -103,16 +94,14 @@ public class PassengersService {
     }
 
     @Transactional
-    public PassengerResponseDTO update(long id, PassengerDTO passengerDTO, BindingResult bindingResult)
-            throws EntityNotFoundException, EntityValidateException {
+    public PassengerResponseDTO update(long id, PassengerDTO passengerDTO)
+            throws EntityNotFoundException {
         Passenger passengerData = passengersRepository.findById(id)
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id)));
 
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
         passenger.setId(id);
-        passengersValidator.validate(passenger, bindingResult);
-        handleBindingResult(bindingResult);
 
         String firstname = passenger.getFirstname();
         String lastname = passenger.getLastname();
@@ -178,17 +167,5 @@ public class PassengersService {
                 .passenger(passenger)
                 .rating(getPassengerRating(id).getValue())
                 .build();
-    }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
     }
 }

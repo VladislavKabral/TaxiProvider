@@ -8,14 +8,9 @@ import by.modsen.taxiprovider.ratingservice.mapper.RatingMapper;
 import by.modsen.taxiprovider.ratingservice.model.Rating;
 import by.modsen.taxiprovider.ratingservice.repository.RatingsRepository;
 import by.modsen.taxiprovider.ratingservice.util.exception.EntityNotFoundException;
-import by.modsen.taxiprovider.ratingservice.util.exception.EntityValidateException;
-import by.modsen.taxiprovider.ratingservice.util.validation.RatingValidator;
-import by.modsen.taxiprovider.ratingservice.util.validation.TaxiUserRequestValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,10 +28,6 @@ public class RatingsService {
     private final RatingsRepository ratingsRepository;
 
     private final RatingMapper ratingMapper;
-
-    private final TaxiUserRequestValidator taxiUserRequestValidator;
-
-    private final RatingValidator ratingValidator;
 
     private static final int GRADES_COUNT = 30;
 
@@ -69,11 +60,7 @@ public class RatingsService {
     }
 
     @Transactional
-    public RatingResponseDTO initTaxiUserRatings(TaxiUserRequestDTO request, BindingResult bindingResult)
-            throws EntityValidateException {
-        taxiUserRequestValidator.validate(request, bindingResult);
-        handleBindingResult(bindingResult);
-
+    public RatingResponseDTO initTaxiUserRatings(TaxiUserRequestDTO request) {
         for (int i = 0; i < GRADES_COUNT; i++) {
             Rating rating = Rating.builder()
                     .taxiUserId(request.getTaxiUserId())
@@ -92,10 +79,7 @@ public class RatingsService {
     }
 
     @Transactional
-    public RatingResponseDTO save(RatingDTO ratingDTO, BindingResult bindingResult) throws EntityValidateException {
-        ratingValidator.validate(ratingDTO, bindingResult);
-        handleBindingResult(bindingResult);
-
+    public RatingResponseDTO save(RatingDTO ratingDTO) {
         Rating rating = ratingMapper.toEntity(ratingDTO);
         rating.setCreatedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         ratingsRepository.save(rating);
@@ -105,17 +89,5 @@ public class RatingsService {
                 .role(rating.getRole())
                 .value(rating.getValue())
                 .build();
-    }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
     }
 }

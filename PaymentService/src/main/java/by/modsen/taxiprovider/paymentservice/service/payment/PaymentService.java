@@ -11,11 +11,8 @@ import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDTO;
 import by.modsen.taxiprovider.paymentservice.model.User;
 import by.modsen.taxiprovider.paymentservice.service.user.UsersService;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityNotFoundException;
-import by.modsen.taxiprovider.paymentservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.paymentservice.util.exception.NotEnoughMoneyException;
 import by.modsen.taxiprovider.paymentservice.util.exception.PaymentException;
-import by.modsen.taxiprovider.paymentservice.util.validation.CardRequestValidator;
-import by.modsen.taxiprovider.paymentservice.util.validation.CustomerValidator;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Token;
@@ -32,8 +29,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 
 import static by.modsen.taxiprovider.paymentservice.util.Message.*;
 
@@ -52,10 +47,6 @@ public class PaymentService {
     private String STRIPE_API_PUBLIC_KEY;
 
     private final UsersService usersService;
-
-    private final CardRequestValidator cardRequestValidator;
-
-    private final CustomerValidator customerValidator;
 
     private static final int CONVERT_COEFFICIENT = 100;
     private static final String SUCCEED_CHARGE_STATUS_NAME = "SUCCEED";
@@ -79,11 +70,7 @@ public class PaymentService {
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
     }
 
-    public ChargeResponseDTO charge(ChargeRequestDTO chargeRequestDTO, BindingResult bindingResult)
-            throws PaymentException, EntityValidateException {
-
-        handleBindingResult(bindingResult);
-
+    public ChargeResponseDTO charge(ChargeRequestDTO chargeRequestDTO) throws PaymentException {
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
@@ -106,12 +93,7 @@ public class PaymentService {
                 .build();
     }
 
-    public TokenResponseDTO createStripeToken(CardRequestDTO cardRequestDTO, BindingResult bindingResult)
-            throws PaymentException, EntityValidateException {
-
-        cardRequestValidator.validate(cardRequestDTO, bindingResult);
-        handleBindingResult(bindingResult);
-
+    public TokenResponseDTO createStripeToken(CardRequestDTO cardRequestDTO) throws PaymentException {
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PUBLIC_KEY)
                 .build();
@@ -135,12 +117,8 @@ public class PaymentService {
                 .build();
     }
 
-    public CustomerResponseDTO createCustomer(CustomerDTO customerDTO, BindingResult bindingResult)
-            throws PaymentException, EntityValidateException, EntityNotFoundException {
-
-        customerValidator.validate(customerDTO, bindingResult);
-        handleBindingResult(bindingResult);
-
+    public CustomerResponseDTO createCustomer(CustomerDTO customerDTO)
+            throws PaymentException, EntityNotFoundException {
         Stripe.apiKey = STRIPE_API_PUBLIC_KEY;
 
         CustomerCreateParams params =
@@ -161,11 +139,8 @@ public class PaymentService {
         return new CustomerResponseDTO(customer.getId());
     }
 
-    public CustomerResponseDTO updateCustomer(long id, CustomerDTO customerDTO, BindingResult bindingResult) throws PaymentException,
-            EntityNotFoundException, EntityValidateException {
-
-        handleBindingResult(bindingResult);
-
+    public CustomerResponseDTO updateCustomer(long id, CustomerDTO customerDTO) throws PaymentException,
+            EntityNotFoundException {
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
@@ -208,12 +183,8 @@ public class PaymentService {
         return new CustomerResponseDTO(customer.getId());
     }
 
-    public ChargeResponseDTO chargeFromCustomer(CustomerChargeRequestDTO customerChargeRequestDTO,
-                                                BindingResult bindingResult)
-            throws EntityNotFoundException, NotEnoughMoneyException, PaymentException, EntityValidateException {
-
-        handleBindingResult(bindingResult);
-
+    public ChargeResponseDTO chargeFromCustomer(CustomerChargeRequestDTO customerChargeRequestDTO)
+            throws EntityNotFoundException, NotEnoughMoneyException, PaymentException {
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
         User user = usersService.findByTaxiUserIdAndRole(customerChargeRequestDTO.getTaxiUserId(),
                 customerChargeRequestDTO.getRole());
@@ -280,12 +251,8 @@ public class PaymentService {
         }
     }
 
-    public CustomerResponseDTO updateDriverBalance(long driverId, DriverBalanceRequestDTO driverBalanceRequestDTO,
-                                    BindingResult bindingResult) throws PaymentException, EntityNotFoundException,
-            EntityValidateException {
-
-        handleBindingResult(bindingResult);
-
+    public CustomerResponseDTO updateDriverBalance(long driverId, DriverBalanceRequestDTO driverBalanceRequestDTO)
+            throws PaymentException, EntityNotFoundException {
         User driver = usersService.findByTaxiUserIdAndRole(driverId, DRIVER_ROLE_NAME);
         BigDecimal amount = driverBalanceRequestDTO.getAmount();
 
@@ -370,17 +337,5 @@ public class PaymentService {
 
     private long convertToStripeScale(float value) {
         return Math.round(value * CONVERT_COEFFICIENT);
-    }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
     }
 }
