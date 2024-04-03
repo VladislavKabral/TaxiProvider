@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -17,6 +18,7 @@ import static by.modsen.taxiprovider.ridesservice.util.Message.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class NewRideDTO {
 
     @Min(value = 1, message = PASSENGER_ID_MINIMAL_VALUE_IS_INVALID)

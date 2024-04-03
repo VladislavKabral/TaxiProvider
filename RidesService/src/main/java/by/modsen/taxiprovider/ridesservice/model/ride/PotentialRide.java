@@ -16,7 +16,7 @@ public class PotentialRide {
 
     private Address sourceAddress;
 
-    private List<Address> targetAddresses;
+    private List<Address> destinationAddresses;
 
     private PromoCode promoCode;
 }

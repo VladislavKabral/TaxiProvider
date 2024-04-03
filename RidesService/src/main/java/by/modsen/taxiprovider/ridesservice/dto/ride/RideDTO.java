@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -18,6 +19,7 @@ import static by.modsen.taxiprovider.ridesservice.util.Message.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class RideDTO {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd, HH-mm-ss";

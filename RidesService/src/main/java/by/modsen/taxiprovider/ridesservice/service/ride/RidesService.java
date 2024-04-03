@@ -156,9 +156,14 @@ public class RidesService {
     }
 
     @Transactional
-    public RideResponseDTO save(NewRideDTO rideDTO, PromoCodeDTO promoCodeDTO, BindingResult bindingResult) throws IOException,
+    public RideResponseDTO save(NewRideDTO rideDTO, BindingResult bindingResult) throws IOException,
             ParseException, DistanceCalculationException, EntityNotFoundException, InterruptedException,
             EntityValidateException {
+
+        PromoCodeDTO promoCodeDTO = null;
+        if (rideDTO.getPromoCode() != null) {
+            promoCodeDTO = promoCodesService.findByValue(rideDTO.getPromoCode().getValue());
+        }
 
         Ride ride = rideMapper.toEntity(rideDTO);
         handleBindingResult(bindingResult);
@@ -194,7 +199,7 @@ public class RidesService {
 
         BigDecimal rideCost = calculatePotentialRideCost(PotentialRide.builder()
                 .sourceAddress(sourceAddress)
-                .targetAddresses(destinationAddresses)
+                .destinationAddresses(destinationAddresses)
                 .promoCode(promoCode)
                 .build());
 
@@ -216,7 +221,7 @@ public class RidesService {
         kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(NEW_RIDE_WAS_CREATED,
                 createdRide.getPassengerId(),
                 createdRide.getDriverId(),
-                ZonedDateTime.now(ZoneId.of("UTC"))).toString());
+                ZonedDateTime.now(ZoneId.of("UTC"))));
 
         return new RideResponseDTO(createdRide.getId());
     }
@@ -230,18 +235,9 @@ public class RidesService {
 
         Ride ride = null;
         switch (rideDTO.getStatus()) {
-            case RIDE_STATUS_IN_PROGRESS -> {
-                ride = startRide(rideDTO);
-                break;
-            }
-            case RIDE_STATUS_COMPLETED -> {
-                ride = completeRide(rideDTO);
-                break;
-            }
-            case RIDE_STATUS_PAID -> {
-                ride = closeRide(rideDTO);
-                break;
-            }
+            case RIDE_STATUS_IN_PROGRESS -> ride = startRide(rideDTO);
+            case RIDE_STATUS_COMPLETED -> ride = completeRide(rideDTO);
+            case RIDE_STATUS_PAID -> ride = closeRide(rideDTO);
         }
 
         ridesRepository.save(ride);
@@ -270,7 +266,7 @@ public class RidesService {
         kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_CANCELLED,
                 ride.getPassengerId(),
                 ride.getDriverId(),
-                ZonedDateTime.now(ZoneId.of("UTC")).toString()));
+                ZonedDateTime.now(ZoneId.of("UTC"))));
 
         return new RideResponseDTO(ride.getId());
     }
@@ -362,7 +358,7 @@ public class RidesService {
     private int getRideDistance(PotentialRide potentialRide) throws IOException,
             ParseException, InterruptedException, DistanceCalculationException {
 
-        List<Address> targetAddresses = potentialRide.getTargetAddresses();
+        List<Address> targetAddresses = potentialRide.getDestinationAddresses();
 
         int rideDistance =  distanceCalculator.calculate(
                 potentialRide.getSourceAddress(),
@@ -454,7 +450,8 @@ public class RidesService {
                             throw new ExternalServiceUnavailableException(String.format(
                                     CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
                                     DRIVERS_SERVICE_HOST_URL));
-                        }));
+                        }))
+                .block();
     }
 
     private void payRide(CustomerChargeRequestDTO chargeRequest) {

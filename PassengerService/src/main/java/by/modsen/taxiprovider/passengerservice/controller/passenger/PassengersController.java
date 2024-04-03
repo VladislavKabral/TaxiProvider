@@ -68,7 +68,7 @@ public class PassengersController {
     public ResponseEntity<PassengerResponseDTO> savePassenger(@RequestBody @Valid NewPassengerDTO passengerDTO,
                                                               BindingResult bindingResult)
             throws EntityValidateException, EntityNotFoundException {
-        return new ResponseEntity<>(passengersService.save(passengerDTO, bindingResult), HttpStatus.OK);
+        return new ResponseEntity<>(passengersService.save(passengerDTO, bindingResult), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")

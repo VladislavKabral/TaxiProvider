@@ -29,8 +29,7 @@ import static by.modsen.taxiprovider.ridesservice.util.Message.*;
 @RestControllerAdvice
 public class ExceptionAPIController {
 
-    @ExceptionHandler(value = {EntityNotFoundException.class,
-            ExternalServiceRequestException.class,
+    @ExceptionHandler(value = {ExternalServiceRequestException.class,
             ExternalServiceUnavailableException.class,
             InvalidRequestDataException.class,
             EntityValidateException.class,
@@ -41,6 +40,16 @@ public class ExceptionAPIController {
     public ResponseEntity<ErrorResponseDTO> defaultMessageExceptionHandler(Exception exception) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDTO.builder()
+                        .message(exception.getMessage())
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
+                        .build());
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> entityNotFoundException(EntityNotFoundException exception) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponseDTO.builder()
                         .message(exception.getMessage())
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())

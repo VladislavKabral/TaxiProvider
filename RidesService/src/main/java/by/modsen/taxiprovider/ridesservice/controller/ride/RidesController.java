@@ -1,12 +1,10 @@
 package by.modsen.taxiprovider.ridesservice.controller.ride;
 
-import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
 import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialCostDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDTO;
 import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
-import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.service.ride.RidesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
@@ -36,8 +34,6 @@ public class RidesController {
 
     private final RidesService ridesService;
 
-    private final PromoCodesService promoCodesService;
-
     @GetMapping
     public ResponseEntity<List<RideDTO>> getRides() throws EntityNotFoundException {
         return new ResponseEntity<>(ridesService.findAll(), HttpStatus.OK);
@@ -62,13 +58,7 @@ public class RidesController {
     public ResponseEntity<RideResponseDTO> saveRide(@RequestBody @Valid NewRideDTO rideDTO, BindingResult bindingResult)
             throws EntityNotFoundException, IOException, ParseException, DistanceCalculationException,
             InterruptedException, EntityValidateException {
-
-        PromoCodeDTO promoCodeDTO = null;
-        if (rideDTO.getPromoCode() != null) {
-            promoCodeDTO = promoCodesService.findByValue(rideDTO.getPromoCode().getValue());
-        }
-
-        return new ResponseEntity<>(ridesService.save(rideDTO, promoCodeDTO, bindingResult), HttpStatus.CREATED);
+        return new ResponseEntity<>(ridesService.save(rideDTO, bindingResult), HttpStatus.CREATED);
     }
 
     @PatchMapping
