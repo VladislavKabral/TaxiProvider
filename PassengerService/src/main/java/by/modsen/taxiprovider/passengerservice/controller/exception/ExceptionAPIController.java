@@ -55,7 +55,7 @@ public class ExceptionAPIController {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> methodArgumentNotValidException(MethodArgumentNotValidException exception) {
+    public ResponseEntity<ErrorResponseDto> methodArgumentNotValidException(MethodArgumentNotValidException exception) {
         StringBuilder errorMessage = new StringBuilder();
 
         exception.getBindingResult()
@@ -64,7 +64,7 @@ public class ExceptionAPIController {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponseDTO.builder()
+                .body(ErrorResponseDto.builder()
                         .message(errorMessage.toString().trim())
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());

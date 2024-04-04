@@ -85,7 +85,7 @@ public class RatingsService {
         }
 
         return RatingResponseDto.builder()
-                .taxiUserid(request.getTaxiUserId())
+                .taxiUserId(request.getTaxiUserId())
                 .role(request.getRole())
                 .value(INIT_GRADE)
                 .build();
@@ -101,7 +101,7 @@ public class RatingsService {
         ratingsRepository.save(rating);
 
         return RatingResponseDto.builder()
-                .taxiUserid(rating.getTaxiUserId())
+                .taxiUserId(rating.getTaxiUserId())
                 .role(rating.getRole())
                 .value(rating.getValue())
                 .build();
