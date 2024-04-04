@@ -12,20 +12,26 @@ import java.util.List;
 public class DriversTestUtil {
 
     public final long DEFAULT_DRIVER_ID = 1;
+    public final long DEFAULT_INVALID_DRIVER_ID = 4;
     public final String DEFAULT_SORT_FIELD = "lastname";
     public final int DEFAULT_PAGE = 1;
+    public final int DEFAULT_INCORRECT_PAGE = 10;
     public final int DEFAULT_PAGE_SIZE = 3;
     public final int DEFAULT_INVALID_PAGE = -1;
     public final int DEFAULT_INVALID_PAGE_SIZE = 0;
     public final double DEFAULT_DRIVER_RATING = 5.0;
     public final String DEFAULT_DRIVER_LASTNAME = "Vasiliev";
+    public final String DEFAULT_NEW_DRIVER_LASTNAME = "Leonov";
     public final String DEFAULT_DRIVER_FIRSTNAME = "Platon";
+    public final String DEFAULT_NEW_DRIVER_FIRSTNAME = "Kiril";
     public final String DEFAULT_DRIVER_EMAIL = "mr.vasiliev@mail.ru";
+    public final String DEFAULT_NEW_DRIVER_EMAIL = "mr.leonov@mail.ru";
     public final String DEFAULT_DRIVER_PHONE_NUMBER = "+375293660893";
+    public final String DEFAULT_NEW_DRIVER_PHONE_NUMBER = "+375292796152";
     public final String DEFAULT_DRIVER_ACCOUNT_STATUS = "ACTIVE";
     public final String DEFAULT_DRIVER_STATUS = "FREE";
-    public final BigDecimal DEFAULT_DRIVER_BALANCE = BigDecimal.valueOf(28.00);
-    public final String DEFAULT_DRIVER_PASSWORD = "$2a$12$b7CcS8TDc.0Zjc2bZGAZPOfnOvJsR6EDC.PlDloRe3RevAC3jYLDS";
+    public final BigDecimal DEFAULT_DRIVER_BALANCE = BigDecimal.valueOf(0.0);
+    public final String DEFAULT_NEW_DRIVER_PASSWORD = "$2a$12$b7CcS8TDc.0Zjc2bZHYFPOfnOvJsR6EDC.PlDloRe3RevAC3jYLDS";
 
     public List<DriverDTO> getDrivers() {
         return List.of(DriverDTO.builder()
@@ -115,60 +121,60 @@ public class DriversTestUtil {
 
     public NewDriverDTO getRequestForSaveDriver() {
         return NewDriverDTO.builder()
-                .lastname(DEFAULT_DRIVER_LASTNAME)
-                .firstname(DEFAULT_DRIVER_FIRSTNAME)
-                .email(DEFAULT_DRIVER_EMAIL)
-                .phoneNumber(DEFAULT_DRIVER_PHONE_NUMBER)
-                .password(DEFAULT_DRIVER_PASSWORD)
+                .lastname(DEFAULT_NEW_DRIVER_LASTNAME)
+                .firstname(DEFAULT_NEW_DRIVER_FIRSTNAME)
+                .email(DEFAULT_NEW_DRIVER_EMAIL)
+                .phoneNumber(DEFAULT_NEW_DRIVER_PHONE_NUMBER)
+                .password(DEFAULT_NEW_DRIVER_PASSWORD)
                 .build();
     }
 
     public NewDriverDTO getRequestForSaveDriverWithInvalidLastName() {
         return NewDriverDTO.builder()
                 .lastname("Va42 siliev")
-                .firstname(DEFAULT_DRIVER_FIRSTNAME)
-                .email(DEFAULT_DRIVER_EMAIL)
-                .phoneNumber(DEFAULT_DRIVER_PHONE_NUMBER)
-                .password(DEFAULT_DRIVER_PASSWORD)
+                .firstname(DEFAULT_NEW_DRIVER_FIRSTNAME)
+                .email(DEFAULT_NEW_DRIVER_EMAIL)
+                .phoneNumber(DEFAULT_NEW_DRIVER_PHONE_NUMBER)
+                .password(DEFAULT_NEW_DRIVER_PASSWORD)
                 .build();
     }
 
     public NewDriverDTO getRequestForSaveDriverWithInvalidFirstName() {
         return NewDriverDTO.builder()
-                .lastname(DEFAULT_DRIVER_LASTNAME)
+                .lastname(DEFAULT_NEW_DRIVER_LASTNAME)
                 .firstname("Plat35on")
-                .email(DEFAULT_DRIVER_EMAIL)
-                .phoneNumber(DEFAULT_DRIVER_PHONE_NUMBER)
-                .password(DEFAULT_DRIVER_PASSWORD)
+                .email(DEFAULT_NEW_DRIVER_EMAIL)
+                .phoneNumber(DEFAULT_NEW_DRIVER_PHONE_NUMBER)
+                .password(DEFAULT_NEW_DRIVER_PASSWORD)
                 .build();
     }
 
     public NewDriverDTO getRequestForSaveDriverWithInvalidEmail() {
         return NewDriverDTO.builder()
-                .lastname(DEFAULT_DRIVER_LASTNAME)
-                .firstname(DEFAULT_DRIVER_FIRSTNAME)
+                .lastname(DEFAULT_NEW_DRIVER_LASTNAME)
+                .firstname(DEFAULT_NEW_DRIVER_FIRSTNAME)
                 .email("mr.vasiliev.ru")
-                .phoneNumber(DEFAULT_DRIVER_PHONE_NUMBER)
-                .password(DEFAULT_DRIVER_PASSWORD)
+                .phoneNumber(DEFAULT_NEW_DRIVER_PHONE_NUMBER)
+                .password(DEFAULT_NEW_DRIVER_PASSWORD)
                 .build();
     }
 
     public NewDriverDTO getRequestForSaveDriverWithInvalidPhoneNumber() {
         return NewDriverDTO.builder()
-                .lastname(DEFAULT_DRIVER_LASTNAME)
-                .firstname(DEFAULT_DRIVER_FIRSTNAME)
-                .email(DEFAULT_DRIVER_EMAIL)
+                .lastname(DEFAULT_NEW_DRIVER_LASTNAME)
+                .firstname(DEFAULT_NEW_DRIVER_FIRSTNAME)
+                .email(DEFAULT_NEW_DRIVER_EMAIL)
                 .phoneNumber("3752r93660893")
-                .password(DEFAULT_DRIVER_PASSWORD)
+                .password(DEFAULT_NEW_DRIVER_PASSWORD)
                 .build();
     }
 
     public NewDriverDTO getRequestForSaveDriverWithInvalidPassword() {
         return NewDriverDTO.builder()
-                .lastname(DEFAULT_DRIVER_LASTNAME)
-                .firstname(DEFAULT_DRIVER_FIRSTNAME)
-                .email(DEFAULT_DRIVER_EMAIL)
-                .phoneNumber(DEFAULT_DRIVER_PHONE_NUMBER)
+                .lastname(DEFAULT_NEW_DRIVER_LASTNAME)
+                .firstname(DEFAULT_NEW_DRIVER_FIRSTNAME)
+                .email(DEFAULT_NEW_DRIVER_EMAIL)
+                .phoneNumber(DEFAULT_NEW_DRIVER_PHONE_NUMBER)
                 .password("")
                 .build();
     }
