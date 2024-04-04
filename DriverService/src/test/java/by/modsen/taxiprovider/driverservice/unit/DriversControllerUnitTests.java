@@ -1,10 +1,12 @@
 package by.modsen.taxiprovider.driverservice.unit;
 
 import by.modsen.taxiprovider.driverservice.controller.driver.DriversController;
-import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
-import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDTO;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverListDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriversPageDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
+import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDto;
 import by.modsen.taxiprovider.driverservice.service.DriversService;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateException;
@@ -15,13 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.BindingResult;
-
-import java.util.List;
 
 import static by.modsen.taxiprovider.driverservice.utilily.DriversTestUtil.*;
 import static by.modsen.taxiprovider.driverservice.util.Message.*;
@@ -50,7 +48,7 @@ class DriversControllerUnitTests {
     @Test
     public void testGetDriversWhenDriversExistReturnListOfDrivers() throws Exception {
         //given
-        List<DriverDTO> drivers = getDrivers();
+        DriverListDto drivers = getDrivers();
 
         //when
         when(driversService.findAll()).thenReturn(drivers);
@@ -59,49 +57,31 @@ class DriversControllerUnitTests {
         mockMvc.perform(get("/drivers")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].lastname").value(drivers.get(0).getLastname()))
-                .andExpect(jsonPath("$[1].lastname").value(drivers.get(1).getLastname()))
-                .andExpect(jsonPath("$[2].lastname").value(drivers.get(2).getLastname()));
-    }
-
-    @Test
-    public void testGetSortedDriversByLastnameWhenDriversExistReturnListOfDrivers() throws Exception {
-        //given
-        List<DriverDTO> sortedDrivers = getSortedDrivers();
-
-        //when
-        when(driversService.findSortedDrivers(DEFAULT_SORT_FIELD)).thenReturn(sortedDrivers);
-
-        //then
-        mockMvc.perform(get("/drivers")
-                        .queryParam("sort", DEFAULT_SORT_FIELD)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].lastname").value(sortedDrivers.get(0).getLastname()))
-                .andExpect(jsonPath("$[1].lastname").value(sortedDrivers.get(1).getLastname()))
-                .andExpect(jsonPath("$[2].lastname").value(sortedDrivers.get(2).getLastname()));
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.content[0].lastname").value(drivers.getContent().get(0).getLastname()))
+                .andExpect(jsonPath("$.content[1].lastname").value(drivers.getContent().get(1).getLastname()))
+                .andExpect(jsonPath("$.content[2].lastname").value(drivers.getContent().get(2).getLastname()));
     }
 
     @Test
     public void testGetDriversWhenDriversDoNotExistReturnErrorResponse() throws Exception {
         //given
+        DriverListDto drivers = getEmptyDriverList();
 
         //when
-        when(driversService.findAll()).thenThrow(new EntityNotFoundException(DRIVERS_NOT_FOUND));
+        when(driversService.findAll()).thenReturn(drivers);
 
         //then
         mockMvc.perform(get("/drivers")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value(DRIVERS_NOT_FOUND));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 
     @Test
     public void testGetDriverWhenDriverExistsReturnDriverWithGivenId() throws Exception {
         //given
-        DriverDTO driver = getDriver();
+        DriverDto driver = getDriver();
 
         //when
         when(driversService.findById(DEFAULT_DRIVER_ID)).thenReturn(driver);
@@ -138,7 +118,11 @@ class DriversControllerUnitTests {
     @Test
     public void testGetDriversPageWhenPageAndSizeAreValidReturnDriversPage() throws Exception {
         //given
-        Page<DriverDTO> drivers = new PageImpl<>(getDrivers());
+        DriversPageDto drivers = DriversPageDto.builder()
+                .page(DEFAULT_PAGE)
+                .size(DEFAULT_PAGE_SIZE)
+                .content(getDrivers().getContent())
+                .build();
 
         //when
         when(driversService.findPageDrivers(DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD)).thenReturn(drivers);
@@ -195,7 +179,7 @@ class DriversControllerUnitTests {
     @Test
     public void testGetFreeDriversWhenFreeDriversExistReturnListOfFreeDrivers() throws Exception {
         //given
-        List<DriverDTO> drivers = getDrivers();
+        DriverListDto drivers = getDrivers();
 
         //when
         when(driversService.findFreeDrivers()).thenReturn(drivers);
@@ -204,30 +188,31 @@ class DriversControllerUnitTests {
         mockMvc.perform(get("/drivers/free")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].lastname").value(drivers.get(0).getLastname()))
-                .andExpect(jsonPath("$[1].lastname").value(drivers.get(1).getLastname()))
-                .andExpect(jsonPath("$[2].lastname").value(drivers.get(2).getLastname()));
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.content[0].lastname").value(drivers.getContent().get(0).getLastname()))
+                .andExpect(jsonPath("$.content[1].lastname").value(drivers.getContent().get(1).getLastname()))
+                .andExpect(jsonPath("$.content[2].lastname").value(drivers.getContent().get(2).getLastname()));
     }
 
     @Test
     public void testGetFreeDriversWhenThereAreNotAnyFreeDriversReturnErrorResponse() throws Exception {
         //given
+        DriverListDto drivers = getEmptyDriverList();
 
         //when
-        when(driversService.findFreeDrivers()).thenThrow(new EntityNotFoundException(FREE_DRIVERS_NOT_FOUND));
+        when(driversService.findFreeDrivers()).thenReturn(drivers);
 
         //then
         mockMvc.perform(get("/drivers/free")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value(FREE_DRIVERS_NOT_FOUND));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 
     @Test
     public void testGetDriverProfileWhenDriverExistsReturnDriverProfile() throws Exception {
         //given
-        DriverProfileDTO driverProfile = getDriverProfile();
+        DriverProfileDto driverProfile = getDriverProfile();
 
         //when
         when(driversService.getDriverProfile(DEFAULT_DRIVER_ID)).thenReturn(driverProfile);
@@ -260,11 +245,11 @@ class DriversControllerUnitTests {
     @Test
     public void testSaveDriverWhenRequestIsValidReturnIdOfCreatedDriver() throws Exception {
         //given
-        NewDriverDTO newDriverRequest = getRequestForSaveDriver();
+        NewDriverDto newDriverRequest = getRequestForSaveDriver();
 
         //when
         when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
-                .thenReturn(new DriverResponseDTO(DEFAULT_DRIVER_ID));
+                .thenReturn(new DriverResponseDto(DEFAULT_DRIVER_ID));
 
         //then
         mockMvc.perform(post("/drivers")
@@ -277,7 +262,7 @@ class DriversControllerUnitTests {
     @Test
     public void testSaveDriverWhenLastnameIsInvalidReturnErrorResponse() throws Exception {
         //given
-        NewDriverDTO newDriverRequest = getRequestForSaveDriverWithInvalidLastName();
+        NewDriverDto newDriverRequest = getRequestForSaveDriverWithInvalidLastName();
 
         //when
         when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
@@ -294,7 +279,7 @@ class DriversControllerUnitTests {
     @Test
     public void testSaveDriverWhenFirstnameIsInvalidReturnErrorResponse() throws Exception {
         //given
-        NewDriverDTO newDriverRequest = getRequestForSaveDriverWithInvalidFirstName();
+        NewDriverDto newDriverRequest = getRequestForSaveDriverWithInvalidFirstName();
 
         //when
         when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
@@ -311,7 +296,7 @@ class DriversControllerUnitTests {
     @Test
     public void testSaveDriverWhenEmailIsInvalidReturnErrorResponse() throws Exception {
         //given
-        NewDriverDTO newDriverRequest = getRequestForSaveDriverWithInvalidEmail();
+        NewDriverDto newDriverRequest = getRequestForSaveDriverWithInvalidEmail();
 
         //when
         when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
@@ -328,7 +313,7 @@ class DriversControllerUnitTests {
     @Test
     public void testSaveDriverWhenPhoneNumberIsInvalidReturnErrorResponse() throws Exception {
         //given
-        NewDriverDTO newDriverRequest = getRequestForSaveDriverWithInvalidPhoneNumber();
+        NewDriverDto newDriverRequest = getRequestForSaveDriverWithInvalidPhoneNumber();
 
         //when
         when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
@@ -345,7 +330,7 @@ class DriversControllerUnitTests {
     @Test
     public void testSaveDriverWhenPasswordIsInvalidReturnErrorResponse() throws Exception {
         //given
-        NewDriverDTO newDriverRequest = getRequestForSaveDriverWithInvalidPassword();
+        NewDriverDto newDriverRequest = getRequestForSaveDriverWithInvalidPassword();
 
         //when
         when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
@@ -362,11 +347,11 @@ class DriversControllerUnitTests {
     @Test
     public void testEditDriverWhenRequestIsValidReturnIdOfUpdatedDriver() throws Exception {
         //given
-        DriverDTO driverDTO = getDriver();
+        DriverDto driverDTO = getDriver();
 
         //when
         when(driversService.update(eq(DEFAULT_DRIVER_ID), eq(driverDTO), any(BindingResult.class)))
-                .thenReturn(new DriverResponseDTO(DEFAULT_DRIVER_ID));
+                .thenReturn(new DriverResponseDto(DEFAULT_DRIVER_ID));
 
         //then
         mockMvc.perform(patch("/drivers/1")
@@ -379,7 +364,7 @@ class DriversControllerUnitTests {
     @Test
     public void testEditDriverWhenStatusIsInvalidReturnErrorResponse() throws Exception {
         //given
-        DriverDTO driverDTO = getRequestForUpdateDriverWithInvalidStatus();
+        DriverDto driverDTO = getRequestForUpdateDriverWithInvalidStatus();
 
         //when
         when(driversService.update(eq(DEFAULT_DRIVER_ID), eq(driverDTO), any(BindingResult.class)))
@@ -398,7 +383,7 @@ class DriversControllerUnitTests {
         //given
 
         //when
-        when(driversService.deactivate(DEFAULT_DRIVER_ID)).thenReturn(new DriverResponseDTO(DEFAULT_DRIVER_ID));
+        when(driversService.deactivate(DEFAULT_DRIVER_ID)).thenReturn(new DriverResponseDto(DEFAULT_DRIVER_ID));
 
         //then
         mockMvc.perform(delete("/drivers/1")

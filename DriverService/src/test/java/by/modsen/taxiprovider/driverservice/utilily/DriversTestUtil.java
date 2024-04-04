@@ -1,11 +1,13 @@
 package by.modsen.taxiprovider.driverservice.utilily;
 
-import by.modsen.taxiprovider.driverservice.dto.driver.DriverDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDTO;
-import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDTO;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverListDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
+import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
 import lombok.experimental.UtilityClass;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @UtilityClass
@@ -27,74 +29,47 @@ public class DriversTestUtil {
     public final BigDecimal DEFAULT_DRIVER_BALANCE = BigDecimal.valueOf(28.00);
     public final String DEFAULT_DRIVER_PASSWORD = "$2a$12$b7CcS8TDc.0Zjc2bZGAZPOfnOvJsR6EDC.PlDloRe3RevAC3jYLDS";
 
-    public List<DriverDTO> getDrivers() {
-        return List.of(DriverDTO.builder()
-                        .id(1)
-                        .lastname("Vasiliev")
-                        .firstname("Platon")
-                        .email("mr.vasiliev@mail.ru")
-                        .phoneNumber("+375293660893")
-                        .accountStatus("ACTIVE")
-                        .status("FREE")
-                        .balance(BigDecimal.valueOf(28.00))
-                .build(),
-                DriverDTO.builder()
-                        .id(2)
-                        .lastname("Dybrovin")
-                        .firstname("Ilia")
-                        .email("mr.dybrovin@mail.ru")
-                        .phoneNumber("+375296499224")
-                        .accountStatus("ACTIVE")
-                        .status("FREE")
-                        .balance(BigDecimal.ZERO)
-                        .build(),
-                DriverDTO.builder()
-                        .id(3)
-                        .lastname("Smirnov")
-                        .firstname("Sergei")
-                        .email("mr.smirnov@mail.ru")
-                        .phoneNumber("+375298415692")
-                        .accountStatus("ACTIVE")
-                        .status("FREE")
-                        .balance(BigDecimal.valueOf(21.00))
-                        .build());
+    public DriverListDto getDrivers() {
+        return DriverListDto.builder()
+                .content(List.of(DriverDto.builder()
+                                .id(1)
+                                .lastname("Vasiliev")
+                                .firstname("Platon")
+                                .email("mr.vasiliev@mail.ru")
+                                .phoneNumber("+375293660893")
+                                .accountStatus("ACTIVE")
+                                .status("FREE")
+                                .balance(BigDecimal.valueOf(28.00))
+                                .build(),
+                        DriverDto.builder()
+                                .id(2)
+                                .lastname("Dybrovin")
+                                .firstname("Ilia")
+                                .email("mr.dybrovin@mail.ru")
+                                .phoneNumber("+375296499224")
+                                .accountStatus("ACTIVE")
+                                .status("FREE")
+                                .balance(BigDecimal.ZERO)
+                                .build(),
+                        DriverDto.builder()
+                                .id(3)
+                                .lastname("Smirnov")
+                                .firstname("Sergei")
+                                .email("mr.smirnov@mail.ru")
+                                .phoneNumber("+375298415692")
+                                .accountStatus("ACTIVE")
+                                .status("FREE")
+                                .balance(BigDecimal.valueOf(21.00))
+                                .build()))
+                .build();
     }
 
-    public List<DriverDTO> getSortedDrivers() {
-        return List.of(DriverDTO.builder()
-                        .id(2)
-                        .lastname("Dybrovin")
-                        .firstname("Ilia")
-                        .email("mr.dybrovin@mail.ru")
-                        .phoneNumber("+375296499224")
-                        .accountStatus("ACTIVE")
-                        .status("FREE")
-                        .balance(BigDecimal.ZERO)
-                        .build(),
-                DriverDTO.builder()
-                        .id(3)
-                        .lastname("Smirnov")
-                        .firstname("Sergei")
-                        .email("mr.smirnov@mail.ru")
-                        .phoneNumber("+375298415692")
-                        .accountStatus("ACTIVE")
-                        .status("FREE")
-                        .balance(BigDecimal.valueOf(21.00))
-                        .build(),
-                DriverDTO.builder()
-                        .id(1)
-                        .lastname("Vasiliev")
-                        .firstname("Platon")
-                        .email("mr.vasiliev@mail.ru")
-                        .phoneNumber("+375293660893")
-                        .accountStatus("ACTIVE")
-                        .status("FREE")
-                        .balance(BigDecimal.valueOf(28.00))
-                        .build());
+    public DriverListDto getEmptyDriverList() {
+        return new DriverListDto(new ArrayList<>());
     }
 
-    public DriverDTO getDriver() {
-        return DriverDTO.builder()
+    public DriverDto getDriver() {
+        return DriverDto.builder()
                 .id(DEFAULT_DRIVER_ID)
                 .lastname(DEFAULT_DRIVER_LASTNAME)
                 .firstname(DEFAULT_DRIVER_FIRSTNAME)
@@ -106,15 +81,15 @@ public class DriversTestUtil {
                 .build();
     }
 
-    public DriverProfileDTO getDriverProfile() {
-        return DriverProfileDTO.builder()
+    public DriverProfileDto getDriverProfile() {
+        return DriverProfileDto.builder()
                 .driver(getDriver())
                 .rating(DEFAULT_DRIVER_RATING)
                 .build();
     }
 
-    public NewDriverDTO getRequestForSaveDriver() {
-        return NewDriverDTO.builder()
+    public NewDriverDto getRequestForSaveDriver() {
+        return NewDriverDto.builder()
                 .lastname(DEFAULT_DRIVER_LASTNAME)
                 .firstname(DEFAULT_DRIVER_FIRSTNAME)
                 .email(DEFAULT_DRIVER_EMAIL)
@@ -123,8 +98,8 @@ public class DriversTestUtil {
                 .build();
     }
 
-    public NewDriverDTO getRequestForSaveDriverWithInvalidLastName() {
-        return NewDriverDTO.builder()
+    public NewDriverDto getRequestForSaveDriverWithInvalidLastName() {
+        return NewDriverDto.builder()
                 .lastname("Va42 siliev")
                 .firstname(DEFAULT_DRIVER_FIRSTNAME)
                 .email(DEFAULT_DRIVER_EMAIL)
@@ -133,8 +108,8 @@ public class DriversTestUtil {
                 .build();
     }
 
-    public NewDriverDTO getRequestForSaveDriverWithInvalidFirstName() {
-        return NewDriverDTO.builder()
+    public NewDriverDto getRequestForSaveDriverWithInvalidFirstName() {
+        return NewDriverDto.builder()
                 .lastname(DEFAULT_DRIVER_LASTNAME)
                 .firstname("Plat35on")
                 .email(DEFAULT_DRIVER_EMAIL)
@@ -143,8 +118,8 @@ public class DriversTestUtil {
                 .build();
     }
 
-    public NewDriverDTO getRequestForSaveDriverWithInvalidEmail() {
-        return NewDriverDTO.builder()
+    public NewDriverDto getRequestForSaveDriverWithInvalidEmail() {
+        return NewDriverDto.builder()
                 .lastname(DEFAULT_DRIVER_LASTNAME)
                 .firstname(DEFAULT_DRIVER_FIRSTNAME)
                 .email("mr.vasiliev.ru")
@@ -153,8 +128,8 @@ public class DriversTestUtil {
                 .build();
     }
 
-    public NewDriverDTO getRequestForSaveDriverWithInvalidPhoneNumber() {
-        return NewDriverDTO.builder()
+    public NewDriverDto getRequestForSaveDriverWithInvalidPhoneNumber() {
+        return NewDriverDto.builder()
                 .lastname(DEFAULT_DRIVER_LASTNAME)
                 .firstname(DEFAULT_DRIVER_FIRSTNAME)
                 .email(DEFAULT_DRIVER_EMAIL)
@@ -163,8 +138,8 @@ public class DriversTestUtil {
                 .build();
     }
 
-    public NewDriverDTO getRequestForSaveDriverWithInvalidPassword() {
-        return NewDriverDTO.builder()
+    public NewDriverDto getRequestForSaveDriverWithInvalidPassword() {
+        return NewDriverDto.builder()
                 .lastname(DEFAULT_DRIVER_LASTNAME)
                 .firstname(DEFAULT_DRIVER_FIRSTNAME)
                 .email(DEFAULT_DRIVER_EMAIL)
@@ -173,8 +148,8 @@ public class DriversTestUtil {
                 .build();
     }
 
-    public DriverDTO getRequestForUpdateDriverWithInvalidStatus() {
-        return DriverDTO.builder()
+    public DriverDto getRequestForUpdateDriverWithInvalidStatus() {
+        return DriverDto.builder()
                 .id(DEFAULT_DRIVER_ID)
                 .lastname(DEFAULT_DRIVER_LASTNAME)
                 .firstname(DEFAULT_DRIVER_FIRSTNAME)

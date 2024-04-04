@@ -1,6 +1,6 @@
 package by.modsen.taxiprovider.ratingservice.util.validation;
 
-import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDTO;
+import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDto;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -18,12 +18,12 @@ public class RatingValidator implements Validator {
 
     @Override
     public boolean supports(Class<?> clazz) {
-        return RatingDTO.class.equals(clazz);
+        return RatingDto.class.equals(clazz);
     }
 
     @Override
     public void validate(Object target, Errors errors) {
-        RatingDTO ratingDTO = (RatingDTO) target;
+        RatingDto ratingDTO = (RatingDto) target;
 
         if ((!ratingDTO.getRole().equals(DRIVER_ROLE_NAME)) && (!ratingDTO.getRole().equals(PASSENGER_ROLE_NAME))) {
             errors.rejectValue(ROLE_FIELD_NAME, "", String.format(ROLE_IS_INVALID, ratingDTO.getRole()));

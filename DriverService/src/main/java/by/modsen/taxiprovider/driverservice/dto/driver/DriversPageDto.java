@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 public class DriversPageDto {
 
-    private List<DriverDTO> content;
+    private List<DriverDto> content;
 
     private int page;
 

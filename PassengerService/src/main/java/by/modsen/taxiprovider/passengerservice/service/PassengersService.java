@@ -1,26 +1,29 @@
 package by.modsen.taxiprovider.passengerservice.service;
 
-import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengersPageDto;
-import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDTO;
+import by.modsen.taxiprovider.passengerservice.client.RatingHttpClient;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerListDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDto;
+import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDto;
 import by.modsen.taxiprovider.passengerservice.mapper.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.model.Passenger;
 import by.modsen.taxiprovider.passengerservice.repository.PassengersRepository;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
+import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.passengerservice.util.exception.InvalidRequestDataException;
+import by.modsen.taxiprovider.passengerservice.util.validation.PassengersValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+
 import static by.modsen.taxiprovider.passengerservice.util.Message.*;
 import static by.modsen.taxiprovider.passengerservice.util.Status.*;
 
@@ -34,22 +37,23 @@ public class PassengersService {
 
     private final PassengerMapper passengerMapper;
 
-    @Value("${ratings-service-host-url}")
-    private String RATINGS_SERVICE_HOST_URL;
+    private final PassengersValidator passengersValidator;
+
+    private final RatingHttpClient ratingHttpClient;
 
     private static final String PASSENGER_ROLE_NAME = "PASSENGER";
 
-    public List<PassengerDTO> findAll() throws EntityNotFoundException {
+    private static final String KAFKA_TOPIC_NAME = "RIDE";
+
+    public PassengerListDto findAll() {
         List<Passenger> passengers = passengersRepository.findByStatusOrderByLastname(PASSENGER_ACCOUNT_STATUS_ACTIVE);
 
-        if (passengers.isEmpty()) {
-            throw new EntityNotFoundException(PASSENGERS_NOT_FOUND);
-        }
-
-        return passengerMapper.toListDTO(passengers);
+        return PassengerListDto.builder()
+                .content(passengerMapper.toListDTO(passengers))
+                .build();
     }
 
-    public PassengersPageDto findPagePassengers(int index, int count, String sortField)
+    public Page<PassengerDto> findPagePassengers(int index, int count, String sortField)
             throws EntityNotFoundException, InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {
             throw new InvalidRequestDataException(INVALID_PAGE_REQUEST);
@@ -65,43 +69,53 @@ public class PassengersService {
             throw new EntityNotFoundException(PASSENGERS_ON_PAGE_NOT_FOUND);
         }
 
-        return PassengersPageDto.builder()
-                .content(passengerMapper.toListDTO(passengers))
-                .page(index)
-                .size(count)
-                .build();
+        return new PageImpl<>(passengers.stream()
+                .map(passengerMapper::toDTO)
+                .toList());
     }
 
-    public PassengerDTO findById(long id) throws EntityNotFoundException {
+    public PassengerDto findById(long id) throws EntityNotFoundException {
         return passengerMapper.toDTO(passengersRepository.findById(id).orElseThrow(EntityNotFoundException
                 .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id))));
     }
 
+    private Passenger findPassenger(long id) throws EntityNotFoundException {
+        return passengersRepository.findById(id)
+                .orElseThrow(EntityNotFoundException
+                        .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id)));
+    }
+
     @Transactional
-    public PassengerResponseDTO save(NewPassengerDTO passengerDTO) throws EntityNotFoundException {
+    public PassengerResponseDto save(NewPassengerDto passengerDTO, BindingResult bindingResult)
+            throws EntityValidateException, EntityNotFoundException {
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
+        passengersValidator.validate(passenger, bindingResult);
+        handleBindingResult(bindingResult);
 
         passenger.setRole(PASSENGER_ROLE_NAME);
         passenger.setStatus(PASSENGER_ACCOUNT_STATUS_ACTIVE);
 
         passengersRepository.save(passenger);
 
-        return new PassengerResponseDTO(passengersRepository
+        Passenger createdPassenger = passengersRepository
                 .findByEmail(passenger.getEmail())
                 .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException(String.format(PASSENGER_NOT_CREATED, passenger.getEmail())))
-                .getId());
+                        .entityNotFoundException(String.format(PASSENGER_NOT_CREATED, passenger.getEmail())));
+
+        ratingHttpClient.initPassengerRating(createdPassenger.getId());
+
+        return new PassengerResponseDto(createdPassenger.getId());
     }
 
     @Transactional
-    public PassengerResponseDTO update(long id, PassengerDTO passengerDTO)
-            throws EntityNotFoundException {
-        Passenger passengerData = passengersRepository.findById(id)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id)));
+    public PassengerResponseDto update(long id, PassengerDto passengerDTO, BindingResult bindingResult)
+            throws EntityNotFoundException, EntityValidateException {
+        Passenger passengerData = findPassenger(id);
 
         Passenger passenger = passengerMapper.toEntity(passengerDTO);
         passenger.setId(id);
+        passengersValidator.validate(passenger, bindingResult);
+        handleBindingResult(bindingResult);
 
         String firstname = passenger.getFirstname();
         String lastname = passenger.getLastname();
@@ -123,49 +137,44 @@ public class PassengersService {
 
         passengersRepository.save(passengerData);
 
-        return new PassengerResponseDTO(id);
+        return new PassengerResponseDto(id);
     }
 
     @Transactional
-    public PassengerResponseDTO deactivate(long id) throws EntityNotFoundException {
-        Passenger passenger = passengersRepository.findById(id)
-                .orElseThrow(EntityNotFoundException
-                        .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, id)));
+    public PassengerResponseDto deactivate(long id) throws EntityNotFoundException {
+        Passenger passenger = findPassenger(id);
 
         passenger.setStatus(PASSENGER_ACCOUNT_STATUS_INACTIVE);
 
         passengersRepository.save(passenger);
 
-        return new PassengerResponseDTO(id);
+        return new PassengerResponseDto(id);
     }
 
-    private RatingDTO getPassengerRating(long passengerId) throws EntityNotFoundException {
-        Passenger passenger = passengersRepository.findById(passengerId).orElseThrow(EntityNotFoundException
-                .entityNotFoundException(String.format(PASSENGER_NOT_FOUND, passengerId)));
+    public PassengerProfileDto getPassengerProfile(long id) throws EntityNotFoundException {
+        PassengerDto passenger = findById(id);
 
-        WebClient webClient = WebClient.builder()
-                .baseUrl(RATINGS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .queryParam("taxiUserId", passenger.getId())
-                        .queryParam("role", passenger.getRole())
-                        .build())
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        Mono.error(new EntityNotFoundException(String.format(PASSENGER_NOT_FOUND, passenger.getId()))))
-                .bodyToMono(RatingDTO.class)
-                .block();
-    }
-
-    public PassengerProfileDTO getPassengerProfile(long id) throws EntityNotFoundException {
-        PassengerDTO passenger = findById(id);
-
-        return PassengerProfileDTO.builder()
+        return PassengerProfileDto.builder()
                 .passenger(passenger)
-                .rating(getPassengerRating(id).getValue())
+                .rating(ratingHttpClient.getPassengerRating(id).getValue())
                 .build();
+    }
+
+    @KafkaListener(topics = KAFKA_TOPIC_NAME)
+    private void messageListener(String message) {
+        //TODO: change to log
+        System.out.println(message);
+    }
+
+    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
+        if (bindingResult.hasErrors()) {
+            StringBuilder message = new StringBuilder();
+
+            for (FieldError error: bindingResult.getFieldErrors()) {
+                message.append(error.getDefaultMessage()).append(". ");
+            }
+
+            throw new EntityValidateException(message.toString());
+        }
     }
 }

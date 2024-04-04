@@ -1,6 +1,6 @@
 package by.modsen.taxiprovider.ratingservice.mapper;
 
-import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDTO;
+import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDto;
 import by.modsen.taxiprovider.ratingservice.model.Rating;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -12,7 +12,7 @@ public class RatingMapper {
 
     private final ModelMapper modelMapper;
 
-    public Rating toEntity(RatingDTO ratingDTO) {
+    public Rating toEntity(RatingDto ratingDTO) {
         return modelMapper.map(ratingDTO, Rating.class);
     }
 }
