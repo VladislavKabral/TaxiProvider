@@ -4,12 +4,10 @@ import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
 import by.modsen.taxiprovider.ridesservice.dto.response.PromoCodeResponseDTO;
 import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
-import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,17 +39,15 @@ public class PromoCodesController {
     }
 
     @PostMapping
-    public ResponseEntity<PromoCodeResponseDTO> savePromoCode(@RequestBody @Valid PromoCodeDTO promoCodeDTO,
-                                                              BindingResult bindingResult)
-            throws EntityValidateException, EntityNotFoundException {
-        return new ResponseEntity<>(promoCodesService.save(promoCodeDTO, bindingResult), HttpStatus.CREATED);
+    public ResponseEntity<PromoCodeResponseDTO> savePromoCode(@RequestBody @Valid PromoCodeDTO promoCodeDTO)
+            throws EntityNotFoundException {
+        return new ResponseEntity<>(promoCodesService.save(promoCodeDTO), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<PromoCodeResponseDTO> editPromoCode(@PathVariable("id") long id,
-                                                    @RequestBody @Valid PromoCodeDTO promoCodeDTO,
-                                                    BindingResult bindingResult) throws EntityValidateException {
-        return new ResponseEntity<>(promoCodesService.update(id, promoCodeDTO, bindingResult), HttpStatus.OK);
+                                                    @RequestBody @Valid PromoCodeDTO promoCodeDTO) {
+        return new ResponseEntity<>(promoCodesService.update(id, promoCodeDTO), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

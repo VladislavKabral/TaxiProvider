@@ -1,36 +1,26 @@
 package by.modsen.taxiprovider.paymentservice.service.payment;
 
-import by.modsen.taxiprovider.paymentservice.dto.error.ErrorResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
 import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.RideDTO;
-import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDTO;
+import by.modsen.taxiprovider.paymentservice.dto.request.DriverBalanceRequestDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.CustomerResponseDTO;
-import by.modsen.taxiprovider.paymentservice.dto.response.DriverDTO;
 import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDTO;
 import by.modsen.taxiprovider.paymentservice.model.User;
 import by.modsen.taxiprovider.paymentservice.service.user.UsersService;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityNotFoundException;
-import by.modsen.taxiprovider.paymentservice.util.exception.EntityValidateException;
-import by.modsen.taxiprovider.paymentservice.util.exception.ExternalServiceRequestException;
-import by.modsen.taxiprovider.paymentservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.paymentservice.util.exception.NotEnoughMoneyException;
 import by.modsen.taxiprovider.paymentservice.util.exception.PaymentException;
-import by.modsen.taxiprovider.paymentservice.util.validation.CardRequestValidator;
-import by.modsen.taxiprovider.paymentservice.util.validation.CustomerValidator;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
-import com.stripe.model.CustomerBalanceTransactionCollection;
 import com.stripe.model.Token;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.Charge;
 import com.stripe.model.Customer;
 import com.stripe.model.PaymentMethod;
 import com.stripe.net.RequestOptions;
-import com.stripe.param.CustomerBalanceTransactionsParams;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.CustomerUpdateParams;
 import com.stripe.param.PaymentIntentConfirmParams;
@@ -38,19 +28,11 @@ import com.stripe.param.PaymentIntentCreateParams;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
 import static by.modsen.taxiprovider.paymentservice.util.Message.*;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,40 +48,29 @@ public class PaymentService {
 
     private final UsersService usersService;
 
-    private final CardRequestValidator cardRequestValidator;
-
-    private final CustomerValidator customerValidator;
-
     private static final int CONVERT_COEFFICIENT = 100;
-
-    private static final double DRIVER_COMMISSION = 0.74;
-
-    private static final int MAX_RETRY_ATTEMPTS = 3;
-
-    private static final int RETRY_DURATION_TIME = 5;
-
     private static final String SUCCEED_CHARGE_STATUS_NAME = "SUCCEED";
-
     private static final String DRIVER_ROLE_NAME = "DRIVER";
-
-    private static final String RIDE_STATUS_PAID = "PAID";
-
-    @Value("${drivers-service-host-url}")
-    private String DRIVERS_SERVICE_HOST_URL;
-
-    @Value("${rides-service-host-url}")
-    private String RIDES_SERVICE_HOST_URL;
+    private static final String AMOUNT_PROPERTY_NAME = "amount";
+    private static final String CURRENCY_PROPERTY_NAME = "currency";
+    private static final String SOURCE_PROPERTY_NAME = "source";
+    private static final String PAYMENT_METHOD_PROPERTY_NAME = "pm_card_visa";
+    private static final String CARD_NUMBER_PROPERTY_NAME = "number";
+    private static final String EXPIRATION_MONTH_PROPERTY_NAME = "exp_month";
+    private static final String EXPIRATION_YEAR_PROPERTY_NAME = "exp_year";
+    private static final String CVC_PROPERTY_NAME = "cvc";
+    private static final String CARD_PROPERTY_NAME = "card";
+    private static final String PAYMENT_TYPE_PROPERTY_NAME = "type";
+    private static final String TOKEN_PROPERTY_NAME = "token";
+    private static final String TEST_TOKEN_VALUE = "tok_visa";
+    private static final String CUSTOMER_PROPERTY_NAME = "customer";
 
     @PostConstruct
     public void init(){
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
     }
 
-    public ChargeResponseDTO charge(ChargeRequestDTO chargeRequestDTO, BindingResult bindingResult)
-            throws PaymentException, EntityValidateException {
-
-        handleBindingResult(bindingResult);
-
+    public ChargeResponseDTO charge(ChargeRequestDTO chargeRequestDTO) throws PaymentException {
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
@@ -107,19 +78,13 @@ public class PaymentService {
         Charge charge;
         try {
             Map<String, Object> params = new HashMap<>();
-            params.put("amount", Math.round(chargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
-            params.put("currency", chargeRequestDTO.getCurrency());
-            params.put("source", chargeRequestDTO.getCardToken());
+            params.put(AMOUNT_PROPERTY_NAME, convertToStripeScale(chargeRequestDTO.getAmount().floatValue()));
+            params.put(CURRENCY_PROPERTY_NAME, chargeRequestDTO.getCurrency());
+            params.put(SOURCE_PROPERTY_NAME, chargeRequestDTO.getCardToken());
             charge = Charge.create(params, requestOptions);
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
         }
-
-        sendRequestForClosingRide(RideDTO.builder()
-                .driverId(chargeRequestDTO.getDriverId())
-                .passengerId(chargeRequestDTO.getPassengerId())
-                .status(RIDE_STATUS_PAID)
-                .build());
 
         return ChargeResponseDTO.builder()
                 .currency(charge.getCurrency())
@@ -128,12 +93,7 @@ public class PaymentService {
                 .build();
     }
 
-    public TokenResponseDTO createStripeToken(CardRequestDTO cardRequestDTO, BindingResult bindingResult)
-            throws PaymentException, EntityValidateException {
-
-        cardRequestValidator.validate(cardRequestDTO, bindingResult);
-        handleBindingResult(bindingResult);
-
+    public TokenResponseDTO createStripeToken(CardRequestDTO cardRequestDTO) throws PaymentException {
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PUBLIC_KEY)
                 .build();
@@ -141,12 +101,12 @@ public class PaymentService {
         Token token;
         try {
             Map<String, Object> card = new HashMap<>();
-            card.put("number", cardRequestDTO.getNumber());
-            card.put("exp_month", cardRequestDTO.getMonth());
-            card.put("exp_year", cardRequestDTO.getYear());
-            card.put("cvc", cardRequestDTO.getCvc());
+            card.put(CARD_NUMBER_PROPERTY_NAME, cardRequestDTO.getNumber());
+            card.put(EXPIRATION_MONTH_PROPERTY_NAME, cardRequestDTO.getMonth());
+            card.put(EXPIRATION_YEAR_PROPERTY_NAME, cardRequestDTO.getYear());
+            card.put(CVC_PROPERTY_NAME, cardRequestDTO.getCvc());
             Map<String, Object> params = new HashMap<>();
-            params.put("card", card);
+            params.put(CARD_PROPERTY_NAME, card);
             token = Token.create(params, requestOptions);
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
@@ -157,12 +117,8 @@ public class PaymentService {
                 .build();
     }
 
-    public CustomerResponseDTO createCustomer(CustomerDTO customerDTO, BindingResult bindingResult)
-            throws PaymentException, EntityValidateException, EntityNotFoundException {
-
-        customerValidator.validate(customerDTO, bindingResult);
-        handleBindingResult(bindingResult);
-
+    public CustomerResponseDTO createCustomer(CustomerDTO customerDTO)
+            throws PaymentException, EntityNotFoundException {
         Stripe.apiKey = STRIPE_API_PUBLIC_KEY;
 
         CustomerCreateParams params =
@@ -170,7 +126,7 @@ public class PaymentService {
                         .setName(customerDTO.getName())
                         .setEmail(customerDTO.getEmail())
                         .setPhone(customerDTO.getPhone())
-                        .setBalance((long) Math.round(customerDTO.getBalance().floatValue() * CONVERT_COEFFICIENT))
+                        .setBalance(convertToStripeScale(customerDTO.getBalance().floatValue()))
                         .build();
 
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
@@ -183,11 +139,8 @@ public class PaymentService {
         return new CustomerResponseDTO(customer.getId());
     }
 
-    public CustomerResponseDTO updateCustomer(long id, CustomerDTO customerDTO, BindingResult bindingResult) throws PaymentException,
-            EntityNotFoundException, EntityValidateException {
-
-        handleBindingResult(bindingResult);
-
+    public CustomerResponseDTO updateCustomer(long id, CustomerDTO customerDTO) throws PaymentException,
+            EntityNotFoundException {
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
@@ -201,7 +154,7 @@ public class PaymentService {
                     .setName(customerDTO.getName())
                     .setEmail(customerDTO.getEmail())
                     .setPhone(customerDTO.getPhone())
-                    .setBalance((long) Math.round(customerDTO.getBalance().floatValue() * CONVERT_COEFFICIENT))
+                    .setBalance(convertToStripeScale(customerDTO.getBalance().floatValue()))
                     .build();
             resource.update(params, requestOptions);
         } catch (StripeException stripeException) {
@@ -230,23 +183,19 @@ public class PaymentService {
         return new CustomerResponseDTO(customer.getId());
     }
 
-    public ChargeResponseDTO chargeFromCustomer(CustomerChargeRequestDTO customerChargeRequestDTO,
-                                                BindingResult bindingResult)
-            throws EntityNotFoundException, NotEnoughMoneyException, PaymentException, EntityValidateException {
-
-        handleBindingResult(bindingResult);
-
+    public ChargeResponseDTO chargeFromCustomer(CustomerChargeRequestDTO customerChargeRequestDTO)
+            throws EntityNotFoundException, NotEnoughMoneyException, PaymentException {
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
         User user = usersService.findByTaxiUserIdAndRole(customerChargeRequestDTO.getTaxiUserId(),
                 customerChargeRequestDTO.getRole());
         String customerId = user.getCustomerId();
-        checkBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
-        updateBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
+        checkBalance(customerId, convertToStripeScale(customerChargeRequestDTO.getAmount().floatValue()));
+        updateBalance(customerId, convertToStripeScale(customerChargeRequestDTO.getAmount().floatValue()));
 
         PaymentIntent intent;
         try {
             PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                    .setAmount((long) Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT))
+                    .setAmount(convertToStripeScale(customerChargeRequestDTO.getAmount().floatValue()))
                     .setCurrency(customerChargeRequestDTO.getCurrency())
                     .setCustomer(customerId)
                     .setAutomaticPaymentMethods(
@@ -274,7 +223,7 @@ public class PaymentService {
     private void confirmPaymentIntent(PaymentIntent resource) throws StripeException {
         PaymentIntentConfirmParams params =
                 PaymentIntentConfirmParams.builder()
-                        .setPaymentMethod("pm_card_visa")
+                        .setPaymentMethod(PAYMENT_METHOD_PROPERTY_NAME)
                         .build();
         resource.confirm(params);
     }
@@ -302,22 +251,20 @@ public class PaymentService {
         }
     }
 
-    public CustomerResponseDTO updateDriverBalance(long driverId) throws PaymentException, EntityNotFoundException {
-
-        DriverDTO driverDTO = getDriver(driverId);
-
-        User user = usersService.findByTaxiUserIdAndRole(driverId, DRIVER_ROLE_NAME);
-        BigDecimal amount = BigDecimal.valueOf(driverDTO.getBalance().floatValue() * DRIVER_COMMISSION);
+    public CustomerResponseDTO updateDriverBalance(long driverId, DriverBalanceRequestDTO driverBalanceRequestDTO)
+            throws PaymentException, EntityNotFoundException {
+        User driver = usersService.findByTaxiUserIdAndRole(driverId, DRIVER_ROLE_NAME);
+        BigDecimal amount = driverBalanceRequestDTO.getAmount();
 
         Customer customer;
         try {
-            customer = Customer.retrieve(user.getCustomerId());
+            customer = Customer.retrieve(driver.getCustomerId());
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
         }
 
         CustomerUpdateParams params = CustomerUpdateParams.builder()
-                .setBalance(customer.getBalance() + (long)(amount.floatValue() * CONVERT_COEFFICIENT))
+                .setBalance(customer.getBalance() + convertToStripeScale(amount.floatValue()))
                 .build();
 
         RequestOptions requestOptions = RequestOptions.builder()
@@ -329,9 +276,6 @@ public class PaymentService {
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
         }
-
-        driverDTO.setBalance(BigDecimal.ZERO);
-        updateDriver(driverDTO);
 
         return new CustomerResponseDTO(customer.getId());
     }
@@ -377,135 +321,21 @@ public class PaymentService {
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
         Map<String, Object> paymentMethodParams = new HashMap<>();
-        paymentMethodParams.put("type", "card");
+        paymentMethodParams.put(PAYMENT_TYPE_PROPERTY_NAME, CARD_PROPERTY_NAME);
         Map<String, Object> cardParams = new HashMap<>();
-        cardParams.put("token", "tok_visa");
-        paymentMethodParams.put("card", cardParams);
+        cardParams.put(TOKEN_PROPERTY_NAME, TEST_TOKEN_VALUE);
+        paymentMethodParams.put(CARD_PROPERTY_NAME, cardParams);
         try {
             PaymentMethod paymentMethod = PaymentMethod.create(paymentMethodParams);
             Map<String, Object> attachParams = new HashMap<>();
-            attachParams.put("customer", customerId);
+            attachParams.put(CUSTOMER_PROPERTY_NAME, customerId);
             paymentMethod.attach(attachParams, requestOptions);
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
         }
     }
 
-    private DriverDTO getDriver(long driverId) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        return webClient.get()
-                .uri(String.format("/%d", driverId))
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
-                .bodyToMono(DriverDTO.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    DRIVERS_SERVICE_HOST_URL));
-                        }))
-                .block();
-    }
-
-    private void updateDriver(DriverDTO driverDTO) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        webClient.patch()
-                .uri(String.format("/%d", driverDTO.getId()))
-                .bodyValue(driverDTO)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
-                .bodyToMono(String.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    DRIVERS_SERVICE_HOST_URL));
-                        }))
-                .block();
-    }
-
-    public BalanceResponseDTO getCustomerBalance(String customerId)
-            throws PaymentException{
-        Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
-
-        Customer resource;
-        try {
-            resource = Customer.retrieve(customerId);
-        } catch (StripeException exception) {
-            throw new PaymentException(exception.getMessage());
-        }
-
-        CustomerBalanceTransactionsParams params =
-                CustomerBalanceTransactionsParams.builder().setLimit(1L).build();
-
-        CustomerBalanceTransactionCollection customerBalanceTransactions;
-        try {
-            customerBalanceTransactions =
-                    resource.balanceTransactions(params);
-        } catch (StripeException exception) {
-            throw new PaymentException(exception.getMessage());
-        }
-
-        return BalanceResponseDTO
-                .builder()
-                .amount(BigDecimal.valueOf(customerBalanceTransactions.getData().get(0).getAmount() / CONVERT_COEFFICIENT))
-                .currency(customerBalanceTransactions.getData().get(0).getCurrency())
-                .build();
-
-    }
-
-    private void sendRequestForClosingRide(RideDTO rideDTO) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(RIDES_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        webClient.patch()
-                .bodyValue(rideDTO)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
-                .bodyToMono(String.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    RIDES_SERVICE_HOST_URL));
-                        }))
-                .block();
-    }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
+    private long convertToStripeScale(float value) {
+        return Math.round(value * CONVERT_COEFFICIENT);
     }
 }

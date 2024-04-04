@@ -6,12 +6,10 @@ import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDTO;
 import by.modsen.taxiprovider.ratingservice.dto.response.RatingResponseDTO;
 import by.modsen.taxiprovider.ratingservice.service.RatingsService;
 import by.modsen.taxiprovider.ratingservice.util.exception.EntityNotFoundException;
-import by.modsen.taxiprovider.ratingservice.util.exception.EntityValidateException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,14 +33,12 @@ public class RatingsController {
     }
 
     @PostMapping("/init")
-    public ResponseEntity<RatingResponseDTO> initTaxiUser(@RequestBody @Valid TaxiUserRequestDTO requestDTO,
-                                                          BindingResult bindingResult) throws EntityValidateException {
-        return new ResponseEntity<>(ratingsService.initTaxiUserRatings(requestDTO, bindingResult), HttpStatus.CREATED);
+    public ResponseEntity<RatingResponseDTO> initTaxiUser(@RequestBody @Valid TaxiUserRequestDTO requestDTO) {
+        return new ResponseEntity<>(ratingsService.initTaxiUserRatings(requestDTO), HttpStatus.CREATED);
     }
 
     @PostMapping
-    public ResponseEntity<RatingResponseDTO> rateTaxiUser(@RequestBody @Valid RatingDTO ratingDTO,
-                                                   BindingResult bindingResult) throws EntityValidateException {
-        return new ResponseEntity<>(ratingsService.save(ratingDTO, bindingResult), HttpStatus.CREATED);
+    public ResponseEntity<RatingResponseDTO> rateTaxiUser(@RequestBody @Valid RatingDTO ratingDTO) {
+        return new ResponseEntity<>(ratingsService.save(ratingDTO), HttpStatus.CREATED);
     }
 }
