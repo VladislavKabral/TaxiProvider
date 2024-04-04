@@ -1,6 +1,6 @@
 package by.modsen.taxiprovider.paymentservice.controller.exception;
 
-import by.modsen.taxiprovider.paymentservice.dto.error.ErrorResponseDTO;
+import by.modsen.taxiprovider.paymentservice.dto.error.ErrorResponseDto;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.paymentservice.util.exception.ExternalServiceRequestException;
@@ -30,30 +30,30 @@ public class ExceptionApiController {
             HttpMessageNotReadableException.class,
             EntityValidateException.class
     })
-    public ResponseEntity<ErrorResponseDTO> exceptionHandler(Exception exception) {
+    public ResponseEntity<ErrorResponseDto> exceptionHandler(Exception exception) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponseDTO.builder()
+                .body(ErrorResponseDto.builder()
                         .message(exception.getMessage())
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> entityNotFoundException(EntityNotFoundException exception) {
+    public ResponseEntity<ErrorResponseDto> entityNotFoundException(EntityNotFoundException exception) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponseDTO.builder()
+                .body(ErrorResponseDto.builder()
                         .message(exception.getMessage())
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
 
     @ExceptionHandler(ConnectException.class)
-    public ResponseEntity<ErrorResponseDTO> connectException() {
+    public ResponseEntity<ErrorResponseDto> connectException() {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponseDTO.builder()
+                .body(ErrorResponseDto.builder()
                         .message(EXTERNAL_SERVICE_IS_UNAVAILABLE)
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());

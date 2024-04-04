@@ -1,22 +1,21 @@
 package by.modsen.taxiprovider.paymentservice.service.payment;
 
-import by.modsen.taxiprovider.paymentservice.dto.error.ErrorResponseDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
-import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.RideDTO;
-import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDTO;
-import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
-import by.modsen.taxiprovider.paymentservice.dto.response.CustomerResponseDTO;
-import by.modsen.taxiprovider.paymentservice.dto.response.DriverDTO;
-import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDTO;
+import by.modsen.taxiprovider.paymentservice.client.DriverHttpClient;
+import by.modsen.taxiprovider.paymentservice.client.RideHttpClient;
+import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDto;
+import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDto;
+import by.modsen.taxiprovider.paymentservice.dto.CustomerDto;
+import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDto;
+import by.modsen.taxiprovider.paymentservice.dto.request.RideDto;
+import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDto;
+import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDto;
+import by.modsen.taxiprovider.paymentservice.dto.response.CustomerResponseDto;
+import by.modsen.taxiprovider.paymentservice.dto.response.DriverDto;
+import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDto;
 import by.modsen.taxiprovider.paymentservice.model.User;
 import by.modsen.taxiprovider.paymentservice.service.user.UsersService;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.paymentservice.util.exception.EntityValidateException;
-import by.modsen.taxiprovider.paymentservice.util.exception.ExternalServiceRequestException;
-import by.modsen.taxiprovider.paymentservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.paymentservice.util.exception.NotEnoughMoneyException;
 import by.modsen.taxiprovider.paymentservice.util.exception.PaymentException;
 import by.modsen.taxiprovider.paymentservice.util.validation.CardRequestValidator;
@@ -38,19 +37,13 @@ import com.stripe.param.PaymentIntentCreateParams;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
 import static by.modsen.taxiprovider.paymentservice.util.Message.*;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,13 +63,13 @@ public class PaymentService {
 
     private final CustomerValidator customerValidator;
 
+    private final DriverHttpClient driverHttpClient;
+
+    private final RideHttpClient rideHttpClient;
+
     private static final int CONVERT_COEFFICIENT = 100;
 
     private static final double DRIVER_COMMISSION = 0.74;
-
-    private static final int MAX_RETRY_ATTEMPTS = 3;
-
-    private static final int RETRY_DURATION_TIME = 5;
 
     private static final String SUCCEED_CHARGE_STATUS_NAME = "SUCCEED";
 
@@ -84,18 +77,12 @@ public class PaymentService {
 
     private static final String RIDE_STATUS_PAID = "PAID";
 
-    @Value("${drivers-service-host-url}")
-    private String DRIVERS_SERVICE_HOST_URL;
-
-    @Value("${rides-service-host-url}")
-    private String RIDES_SERVICE_HOST_URL;
-
     @PostConstruct
     public void init(){
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
     }
 
-    public ChargeResponseDTO charge(ChargeRequestDTO chargeRequestDTO, BindingResult bindingResult)
+    public ChargeResponseDto charge(ChargeRequestDto chargeRequestDTO, BindingResult bindingResult)
             throws PaymentException, EntityValidateException {
 
         handleBindingResult(bindingResult);
@@ -115,20 +102,20 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
-        sendRequestForClosingRide(RideDTO.builder()
+        rideHttpClient.sendRequestForClosingRide(RideDto.builder()
                 .driverId(chargeRequestDTO.getDriverId())
                 .passengerId(chargeRequestDTO.getPassengerId())
                 .status(RIDE_STATUS_PAID)
                 .build());
 
-        return ChargeResponseDTO.builder()
+        return ChargeResponseDto.builder()
                 .currency(charge.getCurrency())
                 .amount(BigDecimal.valueOf(charge.getAmount()))
                 .status(SUCCEED_CHARGE_STATUS_NAME)
                 .build();
     }
 
-    public TokenResponseDTO createStripeToken(CardRequestDTO cardRequestDTO, BindingResult bindingResult)
+    public TokenResponseDto createStripeToken(CardRequestDto cardRequestDTO, BindingResult bindingResult)
             throws PaymentException, EntityValidateException {
 
         cardRequestValidator.validate(cardRequestDTO, bindingResult);
@@ -152,12 +139,12 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
-        return TokenResponseDTO.builder()
+        return TokenResponseDto.builder()
                 .token(token.getId())
                 .build();
     }
 
-    public CustomerResponseDTO createCustomer(CustomerDTO customerDTO, BindingResult bindingResult)
+    public CustomerResponseDto createCustomer(CustomerDto customerDTO, BindingResult bindingResult)
             throws PaymentException, EntityValidateException, EntityNotFoundException {
 
         customerValidator.validate(customerDTO, bindingResult);
@@ -180,10 +167,10 @@ public class PaymentService {
         if (customer == null) {
             throw new EntityNotFoundException(String.format(CUSTOMER_NOT_FOUND, customerDTO.getEmail()));
         }
-        return new CustomerResponseDTO(customer.getId());
+        return new CustomerResponseDto(customer.getId());
     }
 
-    public CustomerResponseDTO updateCustomer(long id, CustomerDTO customerDTO, BindingResult bindingResult) throws PaymentException,
+    public CustomerResponseDto updateCustomer(long id, CustomerDto customerDTO, BindingResult bindingResult) throws PaymentException,
             EntityNotFoundException, EntityValidateException {
 
         handleBindingResult(bindingResult);
@@ -208,10 +195,10 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
-        return new CustomerResponseDTO(resource.getId());
+        return new CustomerResponseDto(resource.getId());
     }
 
-    public CustomerResponseDTO deleteCustomer(long id, String role) throws EntityNotFoundException, PaymentException {
+    public CustomerResponseDto deleteCustomer(long id, String role) throws EntityNotFoundException, PaymentException {
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
@@ -227,10 +214,10 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
-        return new CustomerResponseDTO(customer.getId());
+        return new CustomerResponseDto(customer.getId());
     }
 
-    public ChargeResponseDTO chargeFromCustomer(CustomerChargeRequestDTO customerChargeRequestDTO,
+    public ChargeResponseDto chargeFromCustomer(CustomerChargeRequestDto customerChargeRequestDTO,
                                                 BindingResult bindingResult)
             throws EntityNotFoundException, NotEnoughMoneyException, PaymentException, EntityValidateException {
 
@@ -264,7 +251,7 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
-        return ChargeResponseDTO.builder()
+        return ChargeResponseDto.builder()
                 .currency(intent.getCurrency())
                 .amount(BigDecimal.valueOf(intent.getAmount()))
                 .status(SUCCEED_CHARGE_STATUS_NAME)
@@ -302,9 +289,9 @@ public class PaymentService {
         }
     }
 
-    public CustomerResponseDTO updateDriverBalance(long driverId) throws PaymentException, EntityNotFoundException {
+    public CustomerResponseDto updateDriverBalance(long driverId) throws PaymentException, EntityNotFoundException {
 
-        DriverDTO driverDTO = getDriver(driverId);
+        DriverDto driverDTO = driverHttpClient.getDriver(driverId);
 
         User user = usersService.findByTaxiUserIdAndRole(driverId, DRIVER_ROLE_NAME);
         BigDecimal amount = BigDecimal.valueOf(driverDTO.getBalance().floatValue() * DRIVER_COMMISSION);
@@ -331,9 +318,9 @@ public class PaymentService {
         }
 
         driverDTO.setBalance(BigDecimal.ZERO);
-        updateDriver(driverDTO);
+        driverHttpClient.updateDriver(driverDTO);
 
-        return new CustomerResponseDTO(customer.getId());
+        return new CustomerResponseDto(customer.getId());
     }
 
     private void checkBalance(String customerId, long amount) throws NotEnoughMoneyException, PaymentException {
@@ -391,58 +378,7 @@ public class PaymentService {
         }
     }
 
-    private DriverDTO getDriver(long driverId) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        return webClient.get()
-                .uri(String.format("/%d", driverId))
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
-                .bodyToMono(DriverDTO.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    DRIVERS_SERVICE_HOST_URL));
-                        }))
-                .block();
-    }
-
-    private void updateDriver(DriverDTO driverDTO) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        webClient.patch()
-                .uri(String.format("/%d", driverDTO.getId()))
-                .bodyValue(driverDTO)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
-                .bodyToMono(String.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    DRIVERS_SERVICE_HOST_URL));
-                        }))
-                .block();
-    }
-
-    public BalanceResponseDTO getCustomerBalance(String customerId)
+    public BalanceResponseDto getCustomerBalance(String customerId)
             throws PaymentException{
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
 
@@ -464,37 +400,12 @@ public class PaymentService {
             throw new PaymentException(exception.getMessage());
         }
 
-        return BalanceResponseDTO
+        return BalanceResponseDto
                 .builder()
                 .amount(BigDecimal.valueOf(customerBalanceTransactions.getData().get(0).getAmount() / CONVERT_COEFFICIENT))
                 .currency(customerBalanceTransactions.getData().get(0).getCurrency())
                 .build();
 
-    }
-
-    private void sendRequestForClosingRide(RideDTO rideDTO) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(RIDES_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        webClient.patch()
-                .bodyValue(rideDTO)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(errorResponseDTO -> new ExternalServiceRequestException(errorResponseDTO.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(EXTERNAL_SERVICE_ERROR)))
-                .bodyToMono(String.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    RIDES_SERVICE_HOST_URL));
-                        }))
-                .block();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {

@@ -1,7 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.mapper.ride;
 
-import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
+import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideDto;
 import by.modsen.taxiprovider.ridesservice.model.ride.Ride;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -16,15 +16,15 @@ public class RideMapper {
 
     private final ModelMapper modelMapper;
 
-    public Ride toEntity(NewRideDTO rideDTO) {
+    public Ride toEntity(NewRideDto rideDTO) {
         return modelMapper.map(rideDTO, Ride.class);
     }
 
-    public RideDTO toDTO(Ride ride) {
-        return modelMapper.map(ride, RideDTO.class);
+    public RideDto toDTO(Ride ride) {
+        return modelMapper.map(ride, RideDto.class);
     }
 
-    public List<RideDTO> toListDTO(List<Ride> rides) {
+    public List<RideDto> toListDTO(List<Ride> rides) {
         return rides.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

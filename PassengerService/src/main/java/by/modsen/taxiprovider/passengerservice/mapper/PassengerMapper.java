@@ -1,7 +1,7 @@
 package by.modsen.taxiprovider.passengerservice.mapper;
 
-import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
 import by.modsen.taxiprovider.passengerservice.model.Passenger;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -16,19 +16,19 @@ public class PassengerMapper {
 
     private final ModelMapper modelMapper;
 
-    public Passenger toEntity(PassengerDTO passengerDTO) {
+    public Passenger toEntity(PassengerDto passengerDTO) {
         return modelMapper.map(passengerDTO, Passenger.class);
     }
 
-    public Passenger toEntity(NewPassengerDTO passengerDTO) {
+    public Passenger toEntity(NewPassengerDto passengerDTO) {
         return modelMapper.map(passengerDTO, Passenger.class);
     }
 
-    public PassengerDTO toDTO(Passenger passenger) {
-        return modelMapper.map(passenger, PassengerDTO.class);
+    public PassengerDto toDTO(Passenger passenger) {
+        return modelMapper.map(passenger, PassengerDto.class);
     }
 
-    public List<PassengerDTO> toListDTO(List<Passenger> passengers) {
+    public List<PassengerDto> toListDTO(List<Passenger> passengers) {
         return passengers.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

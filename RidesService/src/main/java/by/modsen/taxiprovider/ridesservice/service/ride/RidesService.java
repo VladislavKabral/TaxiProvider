@@ -1,13 +1,16 @@
 package by.modsen.taxiprovider.ridesservice.service.ride;
 
-import by.modsen.taxiprovider.ridesservice.dto.driver.DriverDTO;
-import by.modsen.taxiprovider.ridesservice.dto.error.ErrorResponseDTO;
-import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
-import by.modsen.taxiprovider.ridesservice.dto.request.CustomerChargeRequestDTO;
-import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
+import by.modsen.taxiprovider.ridesservice.client.DriverHttpClient;
+import by.modsen.taxiprovider.ridesservice.client.PaymentHttpClient;
+import by.modsen.taxiprovider.ridesservice.dto.driver.DriverDto;
+import by.modsen.taxiprovider.ridesservice.dto.error.ErrorResponseDto;
+import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDto;
+import by.modsen.taxiprovider.ridesservice.dto.request.CustomerChargeRequestDto;
+import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.PotentialRideDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideListDto;
 import by.modsen.taxiprovider.ridesservice.mapper.promocode.PromoCodeMapper;
 import by.modsen.taxiprovider.ridesservice.mapper.ride.PotentialRideMapper;
 import by.modsen.taxiprovider.ridesservice.mapper.ride.RideMapper;
@@ -70,13 +73,11 @@ public class RidesService {
 
     private final RideValidator rideValidator;
 
+    private final DriverHttpClient driverHttpClient;
+
+    private final PaymentHttpClient paymentHttpClient;
+
     private final KafkaTemplate<String, String> kafkaTemplate;
-
-    @Value("${drivers-service-host-url}")
-    private String DRIVERS_SERVICE_HOST_URL;
-
-    @Value("${payment-service-host-url}")
-    private String PAYMENT_SERVICE_HOST_URL;
 
     private static final int MINIMAL_COUNT_OF_TARGET_ADDRESSES = 1;
 
@@ -86,10 +87,6 @@ public class RidesService {
 
     private static final int METERS_IN_KILOMETER = 1000;
 
-    private static final int MAX_RETRY_ATTEMPTS = 3;
-
-    private static final int RETRY_DURATION_TIME = 5;
-
     private static final String RIDE_CURRENCY = "USD";
 
     private static final String PASSENGER_ROLE_NAME = "PASSENGER";
@@ -97,42 +94,36 @@ public class RidesService {
     private static final String KAFKA_TOPIC_NAME = "RIDE";
 
     @Transactional(readOnly = true)
-    public List<RideDTO> findAll() throws EntityNotFoundException {
+    public RideListDto findAll() {
         List<Ride> rides = ridesRepository.findAll();
 
-        if (rides.isEmpty()) {
-            throw new EntityNotFoundException(RIDES_NOT_FOUND);
-        }
-
-        return rideMapper.toListDTO(rides);
+        return RideListDto.builder()
+                .content(rideMapper.toListDTO(rides))
+                .build();
     }
 
     @Transactional(readOnly = true)
-    public RideDTO findById(long id) throws EntityNotFoundException {
+    public RideDto findById(long id) throws EntityNotFoundException {
         return rideMapper.toDTO(ridesRepository.findById(id).orElseThrow(EntityNotFoundException
                 .entityNotFoundException(String.format(RIDE_NOT_FOUND, id))));
     }
 
     @Transactional(readOnly = true)
-    public List<RideDTO> findByPassengerId(long passengerId) throws EntityNotFoundException {
+    public RideListDto findByPassengerId(long passengerId) {
         List<Ride> rides = ridesRepository.findByPassengerIdAndStatus(passengerId, RIDE_STATUS_COMPLETED);
 
-        if (rides.isEmpty()) {
-            throw new EntityNotFoundException(String.format(PASSENGER_RIDES_NOT_FOUND, passengerId));
-        }
-
-        return rideMapper.toListDTO(rides);
+        return RideListDto.builder()
+                .content(rideMapper.toListDTO(rides))
+                .build();
     }
 
     @Transactional(readOnly = true)
-    public List<RideDTO> findByDriverId(long driverId) throws EntityNotFoundException {
+    public RideListDto findByDriverId(long driverId) {
         List<Ride> rides = ridesRepository.findByDriverIdAndStatus(driverId, RIDE_STATUS_COMPLETED);
 
-        if (rides.isEmpty()) {
-            throw new EntityNotFoundException(String.format(DRIVER_RIDES_NOT_FOUND, driverId));
-        }
-
-        return rideMapper.toListDTO(rides);
+        return RideListDto.builder()
+                .content(rideMapper.toListDTO(rides))
+                .build();
     }
 
     public Ride findDriverCurrentDrive(long driverId, String status) throws EntityNotFoundException {
@@ -156,14 +147,9 @@ public class RidesService {
     }
 
     @Transactional
-    public RideResponseDTO save(NewRideDTO rideDTO, BindingResult bindingResult) throws IOException,
+    public RideResponseDto save(NewRideDto rideDTO, PromoCodeDto promoCodeDTO, BindingResult bindingResult) throws IOException,
             ParseException, DistanceCalculationException, EntityNotFoundException, InterruptedException,
             EntityValidateException {
-
-        PromoCodeDTO promoCodeDTO = null;
-        if (rideDTO.getPromoCode() != null) {
-            promoCodeDTO = promoCodesService.findByValue(rideDTO.getPromoCode().getValue());
-        }
 
         Ride ride = rideMapper.toEntity(rideDTO);
         handleBindingResult(bindingResult);
@@ -206,10 +192,10 @@ public class RidesService {
         ride.setStatus(RIDE_STATUS_WAITING);
         ride.setCost(rideCost);
 
-        DriverDTO driver = getFreeDrivers().get(0);
+        DriverDto driver = driverHttpClient.getFreeDrivers().get(0);
         driver.setStatus(DRIVER_STATUS_TAKEN);
 
-        updateDriver(driver);
+        driverHttpClient.updateDriver(driver);
         ride.setDriverId(driver.getId());
         ridesRepository.save(ride);
 
@@ -221,13 +207,13 @@ public class RidesService {
         kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(NEW_RIDE_WAS_CREATED,
                 createdRide.getPassengerId(),
                 createdRide.getDriverId(),
-                ZonedDateTime.now(ZoneId.of("UTC"))));
+                ZonedDateTime.now(ZoneId.of("UTC"))).toString());
 
-        return new RideResponseDTO(createdRide.getId());
+        return new RideResponseDto(createdRide.getId());
     }
 
     @Transactional
-    public RideResponseDTO update(RideDTO rideDTO, BindingResult bindingResult) throws EntityValidateException,
+    public RideResponseDto update(RideDto rideDTO, BindingResult bindingResult) throws EntityValidateException,
             EntityNotFoundException {
 
         rideValidator.validate(rideDTO, bindingResult);
@@ -235,43 +221,52 @@ public class RidesService {
 
         Ride ride = null;
         switch (rideDTO.getStatus()) {
-            case RIDE_STATUS_IN_PROGRESS -> ride = startRide(rideDTO);
-            case RIDE_STATUS_COMPLETED -> ride = completeRide(rideDTO);
-            case RIDE_STATUS_PAID -> ride = closeRide(rideDTO);
+            case RIDE_STATUS_IN_PROGRESS -> {
+                ride = startRide(rideDTO);
+                break;
+            }
+            case RIDE_STATUS_COMPLETED -> {
+                ride = completeRide(rideDTO);
+                break;
+            }
+            case RIDE_STATUS_PAID -> {
+                ride = closeRide(rideDTO);
+                break;
+            }
         }
 
         ridesRepository.save(ride);
 
-        return new RideResponseDTO(ride.getId());
+        return new RideResponseDto(ride.getId());
     }
 
     @Transactional
-    public RideResponseDTO delete(long id) throws EntityNotFoundException {
+    public RideResponseDto delete(long id) throws EntityNotFoundException {
         Ride ride = ridesRepository.findById(id)
                 .orElseThrow(EntityNotFoundException.entityNotFoundException(String.format(RIDE_NOT_FOUND, id)));
         ridesRepository.delete(ride);
-        return new RideResponseDTO(id);
+        return new RideResponseDto(id);
     }
 
     @Transactional
-    public RideResponseDTO cancel(long passengerId) throws EntityNotFoundException {
+    public RideResponseDto cancel(long passengerId) throws EntityNotFoundException {
         Ride ride = findPassengerCurrentDrive(passengerId);
         ride.setStatus(RIDE_STATUS_CANCELLED);
         ridesRepository.save(ride);
 
-        DriverDTO driver = getDriverById(ride.getDriverId());
+        DriverDto driver = driverHttpClient.getDriverById(ride.getDriverId());
         driver.setStatus(DRIVER_STATUS_FREE);
-        updateDriver(driver);
+        driverHttpClient.updateDriver(driver);
 
         kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_CANCELLED,
                 ride.getPassengerId(),
                 ride.getDriverId(),
-                ZonedDateTime.now(ZoneId.of("UTC"))));
+                ZonedDateTime.now(ZoneId.of("UTC")).toString()));
 
-        return new RideResponseDTO(ride.getId());
+        return new RideResponseDto(ride.getId());
     }
 
-    private Ride startRide(RideDTO rideDTO) throws EntityNotFoundException {
+    private Ride startRide(RideDto rideDTO) throws EntityNotFoundException {
         Ride ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_WAITING);
         ride.setStartedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         ride.setStatus(rideDTO.getStatus());
@@ -284,7 +279,7 @@ public class RidesService {
         return ride;
     }
 
-    private Ride completeRide(RideDTO rideDTO) throws EntityNotFoundException {
+    private Ride completeRide(RideDto rideDTO) throws EntityNotFoundException {
         Ride ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_IN_PROGRESS);
         ride.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
 
@@ -293,17 +288,17 @@ public class RidesService {
         }
 
         if (ride.getPaymentType().equals(PAYMENT_TYPE_CARD)) {
-            payRide(CustomerChargeRequestDTO.builder()
+            paymentHttpClient.payRide(CustomerChargeRequestDto.builder()
                     .taxiUserId(ride.getPassengerId())
                     .amount(ride.getCost())
                     .currency(RIDE_CURRENCY)
                     .role(PASSENGER_ROLE_NAME)
                     .build());
         }
-        DriverDTO driver = getDriverById(rideDTO.getDriverId());
+        DriverDto driver = driverHttpClient.getDriverById(rideDTO.getDriverId());
         driver.setStatus(DRIVER_STATUS_FREE);
         driver.setBalance(driver.getBalance().add(ride.getCost()));
-        updateDriver(driver);
+        driverHttpClient.updateDriver(driver);
         ride.setStatus(rideDTO.getStatus());
 
         kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_ENDED,
@@ -314,14 +309,14 @@ public class RidesService {
         return ride;
     }
 
-    private Ride closeRide(RideDTO rideDTO) throws EntityNotFoundException {
+    private Ride closeRide(RideDto rideDTO) throws EntityNotFoundException {
         Ride ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_IN_PROGRESS);
         ride.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
 
-        DriverDTO driver = getDriverById(rideDTO.getDriverId());
+        DriverDto driver = driverHttpClient.getDriverById(rideDTO.getDriverId());
         driver.setStatus(DRIVER_STATUS_FREE);
         driver.setBalance(driver.getBalance().add(ride.getCost()));
-        updateDriver(driver);
+        driverHttpClient.updateDriver(driver);
         ride.setStatus(RIDE_STATUS_COMPLETED);
 
         kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_ENDED,
@@ -332,7 +327,7 @@ public class RidesService {
         return ride;
     }
 
-    public BigDecimal getPotentialRideCost(PotentialRideDTO potentialRideDTO, BindingResult bindingResult)
+    public BigDecimal getPotentialRideCost(PotentialRideDto potentialRideDTO, BindingResult bindingResult)
             throws IOException, ParseException, DistanceCalculationException, InterruptedException,
             EntityNotFoundException, EntityValidateException {
 
@@ -372,113 +367,6 @@ public class RidesService {
         }
 
         return rideDistance;
-    }
-
-    private List<DriverDTO> getFreeDrivers() {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        return webClient.get()
-                .uri("/free")
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(String
-                                .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
-                .bodyToFlux(DriverDTO.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    DRIVERS_SERVICE_HOST_URL));
-                        }))
-                .collect(Collectors.toList())
-                .block();
-    }
-
-    private DriverDTO getDriverById(long driverId) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        return webClient.get()
-                .uri(String.format("/%d", driverId))
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(String
-                                        .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
-                .bodyToMono(DriverDTO.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    DRIVERS_SERVICE_HOST_URL));
-                        }))
-                .block();
-    }
-
-    private void updateDriver(DriverDTO driverDTO) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(DRIVERS_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        webClient.patch()
-                .uri(String.format("/%d", driverDTO.getId()))
-                .bodyValue(driverDTO)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(String
-                                .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
-                .bodyToMono(String.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    DRIVERS_SERVICE_HOST_URL));
-                        }))
-                .block();
-    }
-
-    private void payRide(CustomerChargeRequestDTO chargeRequest) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(PAYMENT_SERVICE_HOST_URL)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        webClient.post()
-                .uri("/customerCharge")
-                .bodyValue(chargeRequest)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(ErrorResponseDTO.class)
-                                .map(body -> new ExternalServiceRequestException(body.getMessage())))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
-                        Mono.error(new ExternalServiceRequestException(String
-                                .format(EXTERNAL_SERVICE_ERROR, PAYMENT_SERVICE_HOST_URL))))
-                .bodyToMono(String.class)
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
-                        .filter(throwable -> throwable instanceof ExternalServiceRequestException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                            throw new ExternalServiceUnavailableException(String.format(
-                                    CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
-                                    PAYMENT_SERVICE_HOST_URL));
-                        }))
-                .block();
     }
 
     private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {

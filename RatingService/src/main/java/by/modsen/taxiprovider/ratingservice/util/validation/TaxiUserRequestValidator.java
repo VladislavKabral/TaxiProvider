@@ -1,6 +1,6 @@
 package by.modsen.taxiprovider.ratingservice.util.validation;
 
-import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDTO;
+import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDto;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -18,12 +18,12 @@ public class TaxiUserRequestValidator implements Validator {
 
     @Override
     public boolean supports(Class<?> clazz) {
-        return TaxiUserRequestDTO.class.equals(clazz);
+        return TaxiUserRequestDto.class.equals(clazz);
     }
 
     @Override
     public void validate(Object target, Errors errors) {
-        TaxiUserRequestDTO initRequestDTO = (TaxiUserRequestDTO) target;
+        TaxiUserRequestDto initRequestDTO = (TaxiUserRequestDto) target;
 
         if ((!initRequestDTO.getRole().equals(DRIVER_ROLE_NAME))
                 && (!initRequestDTO.getRole().equals(PASSENGER_ROLE_NAME))) {

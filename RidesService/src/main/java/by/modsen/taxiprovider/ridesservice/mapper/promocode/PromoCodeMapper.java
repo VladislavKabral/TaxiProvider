@@ -1,6 +1,6 @@
 package by.modsen.taxiprovider.ridesservice.mapper.promocode;
 
-import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
+import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDto;
 import by.modsen.taxiprovider.ridesservice.model.promocode.PromoCode;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -15,15 +15,15 @@ public class PromoCodeMapper {
 
     private final ModelMapper modelMapper;
 
-    public PromoCode toEntity(PromoCodeDTO promoCodeDTO) {
+    public PromoCode toEntity(PromoCodeDto promoCodeDTO) {
         return modelMapper.map(promoCodeDTO, PromoCode.class);
     }
 
-    public PromoCodeDTO toDTO(PromoCode promoCode) {
-        return modelMapper.map(promoCode, PromoCodeDTO.class);
+    public PromoCodeDto toDTO(PromoCode promoCode) {
+        return modelMapper.map(promoCode, PromoCodeDto.class);
     }
 
-    public List<PromoCodeDTO> toListDTO(List<PromoCode> promoCodes) {
+    public List<PromoCodeDto> toListDTO(List<PromoCode> promoCodes) {
         return promoCodes.stream().map(this::toDTO).collect(Collectors.toList());
     }
 }

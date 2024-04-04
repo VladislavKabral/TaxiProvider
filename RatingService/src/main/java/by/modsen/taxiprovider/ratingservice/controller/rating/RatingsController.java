@@ -1,9 +1,9 @@
 package by.modsen.taxiprovider.ratingservice.controller.rating;
 
-import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.ratingservice.dto.rating.TaxiUserRatingDTO;
-import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDTO;
-import by.modsen.taxiprovider.ratingservice.dto.response.RatingResponseDTO;
+import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.ratingservice.dto.rating.TaxiUserRatingDto;
+import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDto;
+import by.modsen.taxiprovider.ratingservice.dto.response.RatingResponseDto;
 import by.modsen.taxiprovider.ratingservice.service.RatingsService;
 import by.modsen.taxiprovider.ratingservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ratingservice.util.exception.EntityValidateException;
@@ -27,22 +27,22 @@ public class RatingsController {
     private final RatingsService ratingsService;
 
     @GetMapping(params = {"taxiUserId", "role"})
-    public ResponseEntity<TaxiUserRatingDTO> getTaxiUserRating(@RequestParam("taxiUserId")  long taxiUserId,
+    public ResponseEntity<TaxiUserRatingDto> getTaxiUserRating(@RequestParam("taxiUserId")  long taxiUserId,
                                                                @RequestParam("role") String role)
             throws EntityNotFoundException {
-        TaxiUserRequestDTO requestDTO = new TaxiUserRequestDTO(taxiUserId, role);
+        TaxiUserRequestDto requestDTO = new TaxiUserRequestDto(taxiUserId, role);
         return new ResponseEntity<>(ratingsService.getTaxiUserRating(requestDTO), HttpStatus.OK);
     }
 
     @PostMapping("/init")
-    public ResponseEntity<RatingResponseDTO> initTaxiUser(@RequestBody @Valid TaxiUserRequestDTO requestDTO,
+    public ResponseEntity<RatingResponseDto> initTaxiUser(@RequestBody @Valid TaxiUserRequestDto requestDTO,
                                                           BindingResult bindingResult) throws EntityValidateException {
         return new ResponseEntity<>(ratingsService.initTaxiUserRatings(requestDTO, bindingResult), HttpStatus.CREATED);
     }
 
     @PostMapping
-    public ResponseEntity<RatingResponseDTO> rateTaxiUser(@RequestBody @Valid RatingDTO ratingDTO,
-                                                   BindingResult bindingResult) throws EntityValidateException {
+    public ResponseEntity<RatingResponseDto> rateTaxiUser(@RequestBody @Valid RatingDto ratingDTO,
+                                                          BindingResult bindingResult) throws EntityValidateException {
         return new ResponseEntity<>(ratingsService.save(ratingDTO, bindingResult), HttpStatus.CREATED);
     }
 }
