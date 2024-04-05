@@ -14,6 +14,7 @@ import java.util.List;
 public class DriversTestUtil {
 
     public final String GET_DRIVERS_PATH = "/drivers";
+    public final String GET_FREE_DRIVERS_PATH = "/drivers/free";
     public final String GET_DEFAULT_DRIVER_PATH = "/drivers/1";
     public final String GET_NON_EXISTENT_DRIVER_PATH = "/drivers/4";
     public final String INIT_DRIVER_RATING_PATH = "/ratings/init";

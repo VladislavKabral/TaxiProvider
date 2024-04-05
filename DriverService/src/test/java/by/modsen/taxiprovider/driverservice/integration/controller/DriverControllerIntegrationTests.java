@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlGroup;
 
 import java.util.List;
 
@@ -29,7 +30,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource("/application-test.properties")
-@Sql(value = {"classpath:clean-changes-after-tests.sql"}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+@SqlGroup({
+        @Sql(value = {"classpath:db/init-drivers-schema.sql"},
+                executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS),
+        @Sql(value = {"classpath:db/clean-changes-after-tests.sql"},
+                executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+})
 public class DriverControllerIntegrationTests {
 
     @LocalServerPort
@@ -44,7 +50,7 @@ public class DriverControllerIntegrationTests {
     @Test
     public void testGetDriversWhenDriversExistReturnListOfDrivers() {
         List<Driver> drivers = driversRepository.findAll();
-        DriverListDto expectedResponse = new DriverListDto(mapper.toListDTO(drivers));
+        DriverListDto expectedResponse = new DriverListDto(mapper.toListDto(drivers));
 
         DriverListDto actualResponse = given()
                 .port(port)
@@ -62,7 +68,7 @@ public class DriverControllerIntegrationTests {
     @Test
     public void testGetDriverWhenDriverExistsReturnDriverWithGivenId() {
         Driver driver = driversRepository.findById(DEFAULT_DRIVER_ID).get();
-        DriverDto expectedResponse = mapper.toDTO(driver);
+        DriverDto expectedResponse = mapper.toDto(driver);
 
         DriverDto actualResponse = given()
                 .port(port)
@@ -104,7 +110,7 @@ public class DriverControllerIntegrationTests {
         DriversPageDto expectedResponse = DriversPageDto.builder()
                 .page(DEFAULT_PAGE)
                 .size(DEFAULT_PAGE_SIZE)
-                .content(mapper.toListDTO(drivers))
+                .content(mapper.toListDto(drivers))
                 .build();
 
         DriversPageDto actualResponse = given()
@@ -124,18 +130,76 @@ public class DriverControllerIntegrationTests {
     }
 
     @Test
-    public void testGetDriversPageWhenThereAreNotAnyDriversOnThePageReturnErrorResponse() {
+    public void testGetDriversPageWhenThereAreNotAnyDriversOnThePageReturnEmptyList() {
+        List<Driver> drivers = driversRepository
+                .findAll(PageRequest.of(DEFAULT_INCORRECT_PAGE - 1, DEFAULT_PAGE_SIZE, Sort.by(DEFAULT_SORT_FIELD)))
+                .getContent();
 
+        DriversPageDto expectedResponse = DriversPageDto.builder()
+                .page(DEFAULT_INCORRECT_PAGE)
+                .size(DEFAULT_PAGE_SIZE)
+                .content(mapper.toListDto(drivers))
+                .build();
+
+        DriversPageDto actualResponse = given()
+                .port(port)
+                .queryParam(PAGE_PARAM_NAME, DEFAULT_INCORRECT_PAGE)
+                .queryParam(SIZE_PARAM_NAME, DEFAULT_PAGE_SIZE)
+                .queryParam(SORT_PARAM_NAME, DEFAULT_SORT_FIELD)
+                .contentType(ContentType.JSON)
+                .when()
+                .get(GET_DRIVERS_PATH)
+                .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract()
+                .as(DriversPageDto.class);
+
+        assertThat(actualResponse).isEqualTo(expectedResponse);
     }
 
     @Test
     public void testGetDriversPageWhenPageAndSizeAreInvalidReturnErrorResponse() {
+        ErrorResponseDto expectedResponse = ErrorResponseDto.builder()
+                .message(INVALID_PAGE_REQUEST)
+                .build();
 
+        ErrorResponseDto actualResponse = given()
+                .port(port)
+                .queryParam(PAGE_PARAM_NAME, DEFAULT_INVALID_PAGE)
+                .queryParam(SIZE_PARAM_NAME, DEFAULT_INVALID_PAGE_SIZE)
+                .queryParam(SORT_PARAM_NAME, DEFAULT_SORT_FIELD)
+                .contentType(ContentType.JSON)
+                .when()
+                .get(GET_DRIVERS_PATH)
+                .then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .extract()
+                .as(ErrorResponseDto.class);
+
+        assertThat(actualResponse.getMessage()).isEqualTo(expectedResponse.getMessage());
     }
 
     @Test
     public void testGetFreeDriversWhenFreeDriversExistReturnListOfFreeDrivers() {
+        DriverListDto expectedResponse = getDrivers();
 
+        DriverListDto actualResponse = given()
+                .port(port)
+                .contentType(ContentType.JSON)
+                .when()
+                .get(GET_FREE_DRIVERS_PATH)
+                .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract()
+                .as(DriverListDto.class);
+
+        assertThat(actualResponse.getContent().size()).isEqualTo(expectedResponse.getContent().size());
+        assertThat(actualResponse.getContent().get(0).getLastname())
+                .isEqualTo(expectedResponse.getContent().get(0).getLastname());
+        assertThat(actualResponse.getContent().get(1).getLastname())
+                .isEqualTo(expectedResponse.getContent().get(1).getLastname());
+        assertThat(actualResponse.getContent().get(2).getLastname())
+                .isEqualTo(expectedResponse.getContent().get(2).getLastname());
     }
 
     @Test
