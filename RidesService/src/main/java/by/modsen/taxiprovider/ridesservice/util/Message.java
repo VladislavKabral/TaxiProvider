@@ -28,7 +28,6 @@ public class Message {
     public final String DESTINATION_ADDRESSES_COUNT_IS_INVALID = "Must be at least one destination address.";
     public final String PASSENGER_ID_IS_INVALID = "Passenger's id must be a number and can't be less than one.";
     public final String DRIVER_ID_IS_INVALID = "Driver's id must be a number and can't be less than one.";
-    public final String PROMO_CODES_NOT_FOUND = "There aren't any promo codes.";
     public final String PROMO_CODE_WITH_VALUE_NOT_FOUND = "Promo code '%s' wasn't found.";
     public final String PROMO_CODE_WITH_ID_NOT_FOUND = "Promo code with id '%d' wasn't found.";
     public final String PROMO_CODE_NOT_CREATED = "Promo code with id '%s' wasn't created.";
