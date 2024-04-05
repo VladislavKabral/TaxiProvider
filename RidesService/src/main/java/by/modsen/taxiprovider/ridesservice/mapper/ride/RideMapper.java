@@ -16,17 +16,21 @@ public class RideMapper {
 
     private final ModelMapper modelMapper;
 
-    public Ride toEntity(NewRideDto rideDTO) {
-        return modelMapper.map(rideDTO, Ride.class);
+    public Ride toEntity(NewRideDto rideDto) {
+        return modelMapper.map(rideDto, Ride.class);
     }
 
-    public RideDto toDTO(Ride ride) {
+    public Ride toEntity(RideDto rideDto) {
+        return modelMapper.map(rideDto, Ride.class);
+    }
+
+    public RideDto toDto(Ride ride) {
         return modelMapper.map(ride, RideDto.class);
     }
 
-    public List<RideDto> toListDTO(List<Ride> rides) {
+    public List<RideDto> toListDto(List<Ride> rides) {
         return rides.stream()
-                .map(this::toDTO)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 }

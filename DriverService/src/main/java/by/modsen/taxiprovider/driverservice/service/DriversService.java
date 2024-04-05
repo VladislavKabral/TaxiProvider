@@ -21,8 +21,6 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 
 import static by.modsen.taxiprovider.driverservice.util.Status.*;
 import static by.modsen.taxiprovider.driverservice.util.Message.*;
@@ -39,9 +37,9 @@ public class DriversService {
 
     private final DriverMapper driverMapper;
 
-    private final DriversValidator driversValidator;
-
     private final RatingHttpClient ratingHttpClient;
+
+    private final DriversValidator driversValidator;
 
     private static final String DRIVER_ROLE_NAME = "DRIVER";
 
@@ -51,12 +49,12 @@ public class DriversService {
         List<Driver> drivers = driversRepository.findByAccountStatus(DRIVER_ACCOUNT_STATUS_ACTIVE);
 
         return DriverListDto.builder()
-                .content(driverMapper.toListDTO(drivers))
+                .content(driverMapper.toListDto(drivers))
                 .build();
     }
 
     public DriversPageDto findPageDrivers(int index, int count, String sortField)
-            throws EntityNotFoundException, InvalidRequestDataException {
+            throws InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {
             throw new InvalidRequestDataException(INVALID_PAGE_REQUEST);
         }
@@ -67,19 +65,15 @@ public class DriversService {
                 .filter(driver -> driver.getStatus().equals(DRIVER_ACCOUNT_STATUS_ACTIVE))
                 .toList();
 
-        if (drivers.isEmpty()) {
-            throw new EntityNotFoundException(DRIVERS_ON_PAGE_NOT_FOUND);
-        }
-
         return DriversPageDto.builder()
                 .page(index)
                 .size(count)
-                .content(driverMapper.toListDTO(drivers))
+                .content(driverMapper.toListDto(drivers))
                 .build();
     }
 
     public DriverDto findById(long id) throws EntityNotFoundException {
-        return driverMapper.toDTO(findDriver(id));
+        return driverMapper.toDto(findDriver(id));
     }
 
     private Driver findDriver(long id) throws EntityNotFoundException {
@@ -92,16 +86,15 @@ public class DriversService {
         List<Driver> drivers = driversRepository.findByStatus(DRIVER_STATUS_FREE);
 
         return DriverListDto.builder()
-                .content(driverMapper.toListDTO(drivers))
+                .content(driverMapper.toListDto(drivers))
                 .build();
     }
 
     @Transactional
-    public DriverResponseDto save(NewDriverDto driverDTO, BindingResult bindingResult)
-            throws EntityValidateException, EntityNotFoundException {
+    public DriverResponseDto save(NewDriverDto driverDTO) throws EntityNotFoundException, EntityValidateException {
         Driver driver = driverMapper.toEntity(driverDTO);
-        driversValidator.validate(driver, bindingResult);
-        handleBindingResult(bindingResult);
+
+        driversValidator.validate(driver);
 
         driver.setRole(DRIVER_ROLE_NAME);
         driver.setAccountStatus(DRIVER_ACCOUNT_STATUS_ACTIVE);
@@ -120,12 +113,9 @@ public class DriversService {
     }
 
     @Transactional
-    public DriverResponseDto update(long id, DriverDto driverDTO, BindingResult bindingResult)
-            throws EntityNotFoundException, EntityValidateException {
+    public DriverResponseDto update(long id, DriverDto driverDTO) throws EntityNotFoundException,
+            EntityValidateException {
         Driver driver = findDriver(id);
-
-        driversValidator.validate(driver, bindingResult);
-        handleBindingResult(bindingResult);
 
         String firstname = driverDTO.getFirstname();
         String lastname = driverDTO.getLastname();
@@ -157,6 +147,8 @@ public class DriversService {
             driver.setBalance(balance);
         }
 
+        driversValidator.validate(driver);
+
         driver.setId(id);
         driversRepository.save(driver);
 
@@ -186,17 +178,5 @@ public class DriversService {
     private void messageListener(String message) {
         //TODO: change to log
         System.out.println(message);
-    }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
     }
 }

@@ -1,12 +1,12 @@
 package by.modsen.taxiprovider.paymentservice.utility;
 
-import by.modsen.taxiprovider.paymentservice.dto.CustomerDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDTO;
-import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDTO;
-import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDTO;
-import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDTO;
-import by.modsen.taxiprovider.paymentservice.dto.response.CustomerResponseDTO;
+import by.modsen.taxiprovider.paymentservice.dto.CustomerDto;
+import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDto;
+import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDto;
+import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDto;
+import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDto;
+import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDto;
+import by.modsen.taxiprovider.paymentservice.dto.response.CustomerResponseDto;
 import lombok.experimental.UtilityClass;
 
 import java.math.BigDecimal;
@@ -32,8 +32,8 @@ public class PaymentTestUtil {
     public final String DEFAULT_CUSTOMER_ROLE = "PASSENGER";
     public final String CUSTOMER_WAS_NOT_FOUND_MESSAGE = "No such customer: '%s'; code: resource_missing; request-id: req_BJrTochHEYdE88";
 
-    public CardRequestDTO getCardRequest() {
-        return CardRequestDTO.builder()
+    public CardRequestDto getCardRequest() {
+        return CardRequestDto.builder()
                 .number(DEFAULT_CARD_NUMBER)
                 .month(DEFAULT_EXPIRATION_MONTH)
                 .year(DEFAULT_EXPIRATION_YEAR)
@@ -41,8 +41,8 @@ public class PaymentTestUtil {
                 .build();
     }
 
-    public CardRequestDTO getInvalidCardRequest() {
-        return CardRequestDTO.builder()
+    public CardRequestDto getInvalidCardRequest() {
+        return CardRequestDto.builder()
                 .number(DEFAULT_CARD_NUMBER)
                 .month(DEFAULT_EXPIRATION_MONTH)
                 .year(2020)
@@ -50,8 +50,8 @@ public class PaymentTestUtil {
                 .build();
     }
 
-    public ChargeRequestDTO getChargeRequest() {
-        return ChargeRequestDTO.builder()
+    public ChargeRequestDto getChargeRequest() {
+        return ChargeRequestDto.builder()
                 .amount(DEFAULT_CHARGE_AMOUNT)
                 .cardToken(DEFAULT_CARD_TOKEN)
                 .currency(DEFAULT_CURRENCY)
@@ -60,8 +60,8 @@ public class PaymentTestUtil {
                 .build();
     }
 
-    public ChargeRequestDTO getInvalidChargeRequest() {
-        return ChargeRequestDTO.builder()
+    public ChargeRequestDto getInvalidChargeRequest() {
+        return ChargeRequestDto.builder()
                 .amount(BigDecimal.valueOf(-1.0))
                 .cardToken(DEFAULT_CARD_TOKEN)
                 .currency(DEFAULT_CURRENCY)
@@ -70,20 +70,20 @@ public class PaymentTestUtil {
                 .build();
     }
 
-    public ChargeResponseDTO getChargeResponse() {
-        return ChargeResponseDTO.builder()
+    public ChargeResponseDto getChargeResponse() {
+        return ChargeResponseDto.builder()
                 .amount(DEFAULT_CHARGE_AMOUNT)
                 .currency(DEFAULT_CURRENCY)
                 .status(DEFAULT_CHARGE_STATUS)
                 .build();
     }
 
-    public CustomerResponseDTO getCustomerResponse() {
-        return new CustomerResponseDTO(DEFAULT_CUSTOMER_ID);
+    public CustomerResponseDto getCustomerResponse() {
+        return new CustomerResponseDto(DEFAULT_CUSTOMER_ID);
     }
 
-    public CustomerDTO getRequestForCustomer() {
-        return CustomerDTO.builder()
+    public CustomerDto getRequestForCustomer() {
+        return CustomerDto.builder()
                 .name(DEFAULT_CUSTOMER_NAME)
                 .email(DEFAULT_CUSTOMER_EMAIL)
                 .phone(DEFAULT_CUSTOMER_PHONE_NUMBER)
@@ -93,8 +93,8 @@ public class PaymentTestUtil {
                 .build();
     }
 
-    public CustomerDTO getInvalidRequestForCustomer() {
-        return CustomerDTO.builder()
+    public CustomerDto getInvalidRequestForCustomer() {
+        return CustomerDto.builder()
                 .name(DEFAULT_CUSTOMER_NAME)
                 .email("mr.ivanovmail.ru")
                 .phone(DEFAULT_CUSTOMER_PHONE_NUMBER)
@@ -104,15 +104,15 @@ public class PaymentTestUtil {
                 .build();
     }
 
-    public BalanceResponseDTO getBalanceResponse() {
-        return BalanceResponseDTO.builder()
+    public BalanceResponseDto getBalanceResponse() {
+        return BalanceResponseDto.builder()
                 .amount(DEFAULT_CHARGE_AMOUNT)
                 .currency(DEFAULT_CURRENCY)
                 .build();
     }
 
-    public CustomerChargeRequestDTO getRequestForChargeByCustomer() {
-        return CustomerChargeRequestDTO.builder()
+    public CustomerChargeRequestDto getRequestForChargeByCustomer() {
+        return CustomerChargeRequestDto.builder()
                 .taxiUserId(DEFAULT_PASSENGER_ID)
                 .amount(DEFAULT_CHARGE_AMOUNT)
                 .currency(DEFAULT_CURRENCY)
@@ -120,8 +120,8 @@ public class PaymentTestUtil {
                 .build();
     }
 
-    public CustomerChargeRequestDTO getInvalidRequestForChargeByCustomer() {
-        return CustomerChargeRequestDTO.builder()
+    public CustomerChargeRequestDto getInvalidRequestForChargeByCustomer() {
+        return CustomerChargeRequestDto.builder()
                 .taxiUserId(DEFAULT_PASSENGER_ID)
                 .amount(DEFAULT_CHARGE_AMOUNT)
                 .currency(DEFAULT_CURRENCY)

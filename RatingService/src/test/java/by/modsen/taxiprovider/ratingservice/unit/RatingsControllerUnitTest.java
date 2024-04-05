@@ -1,10 +1,10 @@
 package by.modsen.taxiprovider.ratingservice.unit;
 
 import by.modsen.taxiprovider.ratingservice.controller.rating.RatingsController;
-import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.ratingservice.dto.rating.TaxiUserRatingDTO;
-import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDTO;
-import by.modsen.taxiprovider.ratingservice.dto.response.RatingResponseDTO;
+import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.ratingservice.dto.rating.TaxiUserRatingDto;
+import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDto;
+import by.modsen.taxiprovider.ratingservice.dto.response.RatingResponseDto;
 import by.modsen.taxiprovider.ratingservice.service.RatingsService;
 import by.modsen.taxiprovider.ratingservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ratingservice.util.exception.EntityValidateException;
@@ -16,14 +16,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.validation.BindingResult;
 
 import static by.modsen.taxiprovider.ratingservice.util.Message.RATING_MAXIMUM_VALUE_IS_INVALID;
 import static by.modsen.taxiprovider.ratingservice.util.Message.ROLE_IS_INVALID;
 import static by.modsen.taxiprovider.ratingservice.util.Message.TAXI_USER_NOT_FOUND;
 import static by.modsen.taxiprovider.ratingservice.utility.RatingsTestUtil.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -45,8 +42,8 @@ public class RatingsControllerUnitTest {
     @Test
     public void testGetDriverRatingWhenDriverExistsReturnDriverRating() throws Exception {
         //given
-        TaxiUserRequestDTO request = getRequestForDriverRating();
-        TaxiUserRatingDTO rating = getDriversRating();
+        TaxiUserRequestDto request = getRequestForDriverRating();
+        TaxiUserRatingDto rating = getDriversRating();
 
         //when
         when(ratingsService.getTaxiUserRating(request)).thenReturn(rating);
@@ -65,8 +62,8 @@ public class RatingsControllerUnitTest {
     @Test
     public void testGetPassengerRatingWhenPassengerExistsReturnPassengerRating() throws Exception {
         //given
-        TaxiUserRequestDTO request = getRequestForPassengerRating();
-        TaxiUserRatingDTO rating = getPassengerRating();
+        TaxiUserRequestDto request = getRequestForPassengerRating();
+        TaxiUserRatingDto rating = getPassengerRating();
 
         //when
         when(ratingsService.getTaxiUserRating(request)).thenReturn(rating);
@@ -85,7 +82,7 @@ public class RatingsControllerUnitTest {
     @Test
     public void testGetDriverRatingWhenDriverDoesNotExistReturnErrorResponse() throws Exception {
         //given
-        TaxiUserRequestDTO request = getIncorrectRequestForDriverRating();
+        TaxiUserRequestDto request = getIncorrectRequestForDriverRating();
 
         //when
         when(ratingsService.getTaxiUserRating(request)).thenThrow(new EntityNotFoundException(String.format(TAXI_USER_NOT_FOUND,
@@ -106,7 +103,7 @@ public class RatingsControllerUnitTest {
     @Test
     public void testGetPassengerRatingWhenPassengerDoesNotExistReturnErrorResponse() throws Exception {
         //given
-        TaxiUserRequestDTO request = getIncorrectRequestForPassengerRating();
+        TaxiUserRequestDto request = getIncorrectRequestForPassengerRating();
 
         //when
         when(ratingsService.getTaxiUserRating(request)).thenThrow(new EntityNotFoundException(String.format(TAXI_USER_NOT_FOUND,
@@ -127,11 +124,11 @@ public class RatingsControllerUnitTest {
     @Test
     public void testInitDriverRatingWhenDriverRequestIsValidReturnRatingResponse() throws Exception {
         //given
-        TaxiUserRequestDTO request = getRequestForDriverRating();
+        TaxiUserRequestDto request = getRequestForDriverRating();
 
         //when
-        when(ratingsService.initTaxiUserRatings(eq(request), any(BindingResult.class)))
-                .thenReturn(RatingResponseDTO.builder()
+        when(ratingsService.initTaxiUserRatings(request))
+                .thenReturn(RatingResponseDto.builder()
                         .taxiUserId(request.getTaxiUserId())
                         .role(request.getRole())
                         .value(DEFAULT_RATING_VALUE)
@@ -150,11 +147,11 @@ public class RatingsControllerUnitTest {
     @Test
     public void testInitPassengerRatingWhenPassengerRequestIsValidReturnRatingResponse() throws Exception {
         //given
-        TaxiUserRequestDTO request = getRequestForPassengerRating();
+        TaxiUserRequestDto request = getRequestForPassengerRating();
 
         //when
-        when(ratingsService.initTaxiUserRatings(eq(request), any(BindingResult.class)))
-                .thenReturn(RatingResponseDTO.builder()
+        when(ratingsService.initTaxiUserRatings(request))
+                .thenReturn(RatingResponseDto.builder()
                         .taxiUserId(request.getTaxiUserId())
                         .role(request.getRole())
                         .value(DEFAULT_RATING_VALUE)
@@ -173,10 +170,10 @@ public class RatingsControllerUnitTest {
     @Test
     public void testInitTaxiUserRatingWhenTaxiUserRoleIsInvalidReturnErrorResponse() throws Exception {
         //given
-        TaxiUserRequestDTO request = getIncorrectRequestForInitRating();
+        TaxiUserRequestDto request = getIncorrectRequestForInitRating();
 
         //when
-        when(ratingsService.initTaxiUserRatings(eq(request), any(BindingResult.class)))
+        when(ratingsService.initTaxiUserRatings(request))
                 .thenThrow(new EntityValidateException(String.format(ROLE_IS_INVALID, request.getRole())));
 
         //then
@@ -190,11 +187,11 @@ public class RatingsControllerUnitTest {
     @Test
     public void testRateDriverWhenRateRequestIsValidReturnRatingResponse() throws Exception {
         //given
-        RatingDTO request = getRequestForRateDriver();
+        RatingDto request = getRequestForRateDriver();
 
         //when
-        when(ratingsService.save(eq(request), any(BindingResult.class)))
-                .thenReturn(RatingResponseDTO.builder()
+        when(ratingsService.save(request))
+                .thenReturn(RatingResponseDto.builder()
                         .taxiUserId(request.getTaxiUserId())
                         .role(request.getRole())
                         .value(request.getValue())
@@ -213,10 +210,10 @@ public class RatingsControllerUnitTest {
     @Test
     public void testRateDriverWhenRoleInRateRequestIsInvalidReturnErrorResponse() throws Exception {
         //given
-        RatingDTO request = getInvalidRequestWithInvalidRoleForRateDriver();
+        RatingDto request = getInvalidRequestWithInvalidRoleForRateDriver();
 
         //when
-        when(ratingsService.save(eq(request), any(BindingResult.class)))
+        when(ratingsService.save(request))
                 .thenThrow(new EntityValidateException(String.format(ROLE_IS_INVALID, request.getRole())));
 
         //then
@@ -230,10 +227,10 @@ public class RatingsControllerUnitTest {
     @Test
     public void testRateDriverWhenRatingValueInRateRequestIsInvalidReturnErrorResponse() throws Exception {
         //given
-        RatingDTO request = getInvalidRequestWithInvalidRatingValueForRateDriver();
+        RatingDto request = getInvalidRequestWithInvalidRatingValueForRateDriver();
 
         //when
-        when(ratingsService.save(eq(request), any(BindingResult.class)))
+        when(ratingsService.save(request))
                 .thenThrow(new EntityValidateException(RATING_MAXIMUM_VALUE_IS_INVALID));
 
         //then

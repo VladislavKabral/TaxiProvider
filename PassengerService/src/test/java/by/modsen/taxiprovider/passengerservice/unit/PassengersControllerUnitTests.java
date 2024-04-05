@@ -1,10 +1,12 @@
 package by.modsen.taxiprovider.passengerservice.unit;
 
 import by.modsen.taxiprovider.passengerservice.controller.passenger.PassengersController;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
-import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDTO;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerListDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengersPageDto;
+import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDto;
 import by.modsen.taxiprovider.passengerservice.service.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateException;
@@ -15,18 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.validation.BindingResult;
 
 import java.util.List;
 
 import static by.modsen.taxiprovider.passengerservice.utility.PassengersTestUtil.*;
 import static by.modsen.taxiprovider.passengerservice.util.Message.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -51,7 +48,25 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testGetPassengersWhenPassengersExistReturnListOfPassengers() throws Exception {
 		//given
-		List<PassengerDTO> passengers = getPassengers();
+		List<PassengerDto> passengers = getPassengers();
+
+		//when
+		when(passengersService.findAll()).thenReturn(new PassengerListDto(passengers));
+
+		//then
+		mockMvc.perform(get("/passengers")
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content.length()").value(3))
+				.andExpect(jsonPath("$.content[0].lastname").value(passengers.get(0).getLastname()))
+				.andExpect(jsonPath("$.content[1].lastname").value(passengers.get(1).getLastname()))
+				.andExpect(jsonPath("$.content[2].lastname").value(passengers.get(2).getLastname()));
+	}
+
+	@Test
+	public void testGetPassengersWhenPassengersDoNotExistReturnErrorResponse() throws Exception {
+		//given
+		PassengerListDto passengers = getEmptyPassengersList();
 
 		//when
 		when(passengersService.findAll()).thenReturn(passengers);
@@ -60,49 +75,13 @@ class PassengersControllerUnitTests {
 		mockMvc.perform(get("/passengers")
 						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.length()").value(3))
-				.andExpect(jsonPath("$[0].lastname").value(passengers.get(0).getLastname()))
-				.andExpect(jsonPath("$[1].lastname").value(passengers.get(1).getLastname()))
-				.andExpect(jsonPath("$[2].lastname").value(passengers.get(2).getLastname()));
-	}
-
-	@Test
-	public void testGetSortedPassengersByLastnameWhenPassengersExistReturnListOfPassengers() throws Exception {
-		//given
-		List<PassengerDTO> sortedPassengers = getSortedPassengers();
-
-		//when
-		when(passengersService.findSortedPassengers(DEFAULT_SORT_FIELD)).thenReturn(sortedPassengers);
-
-		//then
-		mockMvc.perform(get("/passengers")
-						.queryParam("sort", DEFAULT_SORT_FIELD)
-						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.length()").value(3))
-				.andExpect(jsonPath("$[0].lastname").value(sortedPassengers.get(0).getLastname()))
-				.andExpect(jsonPath("$[1].lastname").value(sortedPassengers.get(1).getLastname()))
-				.andExpect(jsonPath("$[2].lastname").value(sortedPassengers.get(2).getLastname()));
-	}
-
-	@Test
-	public void testGetPassengersWhenPassengersDoNotExistReturnErrorResponse() throws Exception {
-		//given
-
-		//when
-		when(passengersService.findAll()).thenThrow(new EntityNotFoundException(PASSENGERS_NOT_FOUND));
-
-		//then
-		mockMvc.perform(get("/passengers")
-						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.message").value(PASSENGERS_NOT_FOUND));
+				.andExpect(jsonPath("$.content.length()").value(0));
 	}
 
 	@Test
 	public void testGetPassengerWhenPassengerExistsReturnPassengerWithGivenId() throws Exception {
 		//given
-		PassengerDTO passenger = getPassenger();
+		PassengerDto passenger = getPassenger();
 
 		//when
 		when(passengersService.findById(DEFAULT_PASSENGER_ID)).thenReturn(passenger);
@@ -136,7 +115,37 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testGetPassengerPageWhenPageAndSizeAreValidReturnPassengersPage() throws Exception {
 		//given
-		Page<PassengerDTO> passengers = new PageImpl<>(getPassengers());
+		List<PassengerDto> passengers = getPassengers();
+
+		//when
+		when(passengersService.findPagePassengers(DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD))
+				.thenReturn(PassengersPageDto.builder()
+						.content(passengers)
+						.page(DEFAULT_PAGE)
+						.size(DEFAULT_PAGE_SIZE)
+						.build());
+
+		//then
+		mockMvc.perform(get("/passengers")
+						.queryParam("page", String.valueOf(DEFAULT_PAGE))
+						.queryParam("size", String.valueOf(DEFAULT_PAGE_SIZE))
+						.queryParam("sort", DEFAULT_SORT_FIELD)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content.length()").value(3))
+				.andExpect(jsonPath("$.content[0].lastname").value(passengers.get(0).getLastname()))
+				.andExpect(jsonPath("$.content[1].lastname").value(passengers.get(1).getLastname()))
+				.andExpect(jsonPath("$.content[2].lastname").value(passengers.get(2).getLastname()));
+	}
+
+	@Test
+	public void testGetPassengerPageWhenThereAreNotAnyPassengersOnThePageReturnErrorResponse() throws Exception {
+		//given
+		PassengersPageDto passengers = PassengersPageDto.builder()
+				.page(DEFAULT_PAGE)
+				.size(DEFAULT_PAGE_SIZE)
+				.content(getEmptyPassengersList().getContent())
+				.build();
 
 		//when
 		when(passengersService.findPagePassengers(DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD))
@@ -149,28 +158,7 @@ class PassengersControllerUnitTests {
 						.queryParam("sort", DEFAULT_SORT_FIELD)
 						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.content.length()").value(3))
-				.andExpect(jsonPath("$.content[0].lastname").value(passengers.getContent().get(0).getLastname()))
-				.andExpect(jsonPath("$.content[1].lastname").value(passengers.getContent().get(1).getLastname()))
-				.andExpect(jsonPath("$.content[2].lastname").value(passengers.getContent().get(2).getLastname()));
-	}
-
-	@Test
-	public void testGetPassengerPageWhenThereAreNotAnyPassengersOnThePageReturnErrorResponse() throws Exception {
-		//given
-
-		//when
-		when(passengersService.findPagePassengers(DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD))
-				.thenThrow(new EntityNotFoundException(PASSENGERS_ON_PAGE_NOT_FOUND));
-
-		//then
-		mockMvc.perform(get("/passengers")
-						.queryParam("page", String.valueOf(DEFAULT_PAGE))
-						.queryParam("size", String.valueOf(DEFAULT_PAGE_SIZE))
-						.queryParam("sort", DEFAULT_SORT_FIELD)
-						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.message").value(PASSENGERS_ON_PAGE_NOT_FOUND));
+				.andExpect(jsonPath("$.content.length()").value(0));
 	}
 
 	@Test
@@ -194,7 +182,7 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testGetPassengerProfileWhenPassengerExistsReturnPassengerProfile() throws Exception {
 		//given
-		PassengerProfileDTO passengerProfile = getPassengerProfile();
+		PassengerProfileDto passengerProfile = getPassengerProfile();
 
 		//when
 		when(passengersService.getPassengerProfile(DEFAULT_PASSENGER_ID)).thenReturn(passengerProfile);
@@ -227,11 +215,11 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testSavePassengerWhenRequestIsValidReturnIdOfCreatedPassenger() throws Exception {
 		//given
-		NewPassengerDTO newPassengerRequest = getRequestForSavePassenger();
+		NewPassengerDto newPassengerRequest = getRequestForSavePassenger();
 
 		//when
-		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
-				.thenReturn(new PassengerResponseDTO(DEFAULT_PASSENGER_ID));
+		when(passengersService.save(newPassengerRequest))
+				.thenReturn(new PassengerResponseDto(DEFAULT_PASSENGER_ID));
 
 		//then
 		mockMvc.perform(post("/passengers")
@@ -244,11 +232,9 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testSavePassengerWhenLastnameIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		NewPassengerDTO newPassengerRequest = getRequestForSavePassengerWithInvalidLastName();
+		NewPassengerDto newPassengerRequest = getRequestForSavePassengerWithInvalidLastName();
 
 		//when
-		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
-				.thenThrow(new EntityValidateException(PASSENGER_LASTNAME_BODY_IS_INVALID));
 
 		//then
 		mockMvc.perform(post("/passengers")
@@ -261,11 +247,9 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testSavePassengerWhenFirstnameIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		NewPassengerDTO newPassengerRequest = getRequestForSavePassengerWithInvalidFirstName();
+		NewPassengerDto newPassengerRequest = getRequestForSavePassengerWithInvalidFirstName();
 
 		//when
-		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
-				.thenThrow(new EntityValidateException(PASSENGER_FIRSTNAME_BODY_IS_INVALID));
 
 		//then
 		mockMvc.perform(post("/passengers")
@@ -278,11 +262,9 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testSavePassengerWhenEmailIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		NewPassengerDTO newPassengerRequest = getRequestForSavePassengerWithInvalidEmail();
+		NewPassengerDto newPassengerRequest = getRequestForSavePassengerWithInvalidEmail();
 
 		//when
-		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
-				.thenThrow(new EntityValidateException(PASSENGER_EMAIL_WRONG_FORMAT));
 
 		//then
 		mockMvc.perform(post("/passengers")
@@ -295,11 +277,9 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testSavePassengerWhenPhoneNumberIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		NewPassengerDTO newPassengerRequest = getRequestForSavePassengerWithInvalidPhoneNumber();
+		NewPassengerDto newPassengerRequest = getRequestForSavePassengerWithInvalidPhoneNumber();
 
 		//when
-		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
-				.thenThrow(new EntityValidateException(PASSENGER_PHONE_NUMBER_FORMAT_IS_WRONG));
 
 		//then
 		mockMvc.perform(post("/passengers")
@@ -312,11 +292,9 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testSavePassengerWhenPasswordIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		NewPassengerDTO newPassengerRequest = getRequestForSavePassengerWithInvalidPassword();
+		NewPassengerDto newPassengerRequest = getRequestForSavePassengerWithInvalidPassword();
 
 		//when
-		when(passengersService.save(eq(newPassengerRequest), any(BindingResult.class)))
-				.thenThrow(new EntityValidateException(PASSENGER_PASSWORD_IS_EMPTY));
 
 		//then
 		mockMvc.perform(post("/passengers")
@@ -329,16 +307,16 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testEditPassengerWhenRequestIsValidReturnIdOfUpdatedPassenger() throws Exception {
 		//given
-		PassengerDTO passengerDTO = getRequestForEditPassenger();
+		PassengerDto passengerDto = getRequestForEditPassenger();
 
 		//when
-		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
-				.thenReturn(new PassengerResponseDTO(DEFAULT_PASSENGER_ID));
+		when(passengersService.update(DEFAULT_PASSENGER_ID, passengerDto))
+				.thenReturn(new PassengerResponseDto(DEFAULT_PASSENGER_ID));
 
 		//then
 		mockMvc.perform(patch("/passengers/1")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(passengerDTO)))
+						.content(objectMapper.writeValueAsString(passengerDto)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(DEFAULT_PASSENGER_ID));
 	}
@@ -346,16 +324,16 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testEditPassengerWhenPassengerWasNotFoundReturnErrorResponse() throws Exception {
 		//given
-		PassengerDTO passengerDTO = getRequestForEditPassenger();
+		PassengerDto passengerDto = getRequestForEditPassenger();
 
 		//when
-		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
+		when(passengersService.update(DEFAULT_PASSENGER_ID, passengerDto))
 				.thenThrow(new EntityNotFoundException(String.format(PASSENGER_NOT_FOUND, DEFAULT_PASSENGER_ID)));
 
 		//then
 		mockMvc.perform(patch("/passengers/1")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(passengerDTO)))
+						.content(objectMapper.writeValueAsString(passengerDto)))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message").value(String.format(PASSENGER_NOT_FOUND, DEFAULT_PASSENGER_ID)));
 	}
@@ -363,16 +341,16 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testEditPassengerWhenLastnameIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		PassengerDTO passengerDTO = getRequestForEditPassengerWithInvalidLastname();
+		PassengerDto passengerDto = getRequestForEditPassengerWithInvalidLastname();
 
 		//when
-		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
+		when(passengersService.update(DEFAULT_PASSENGER_ID, passengerDto))
 				.thenThrow(new EntityValidateException(PASSENGER_LASTNAME_BODY_IS_INVALID));
 
 		//then
 		mockMvc.perform(patch("/passengers/1")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(passengerDTO)))
+						.content(objectMapper.writeValueAsString(passengerDto)))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message").value(PASSENGER_LASTNAME_BODY_IS_INVALID));
 	}
@@ -380,16 +358,16 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testEditPassengerWhenFirstnameIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		PassengerDTO passengerDTO = getRequestForEditPassengerWithInvalidFirstname();
+		PassengerDto passengerDto = getRequestForEditPassengerWithInvalidFirstname();
 
 		//when
-		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
+		when(passengersService.update(DEFAULT_PASSENGER_ID, passengerDto))
 				.thenThrow(new EntityValidateException(PASSENGER_FIRSTNAME_BODY_IS_INVALID));
 
 		//then
 		mockMvc.perform(patch("/passengers/1")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(passengerDTO)))
+						.content(objectMapper.writeValueAsString(passengerDto)))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message").value(PASSENGER_FIRSTNAME_BODY_IS_INVALID));
 	}
@@ -397,16 +375,16 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testEditPassengerWhenEmailIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		PassengerDTO passengerDTO = getRequestForEditPassengerWithInvalidEmail();
+		PassengerDto passengerDto = getRequestForEditPassengerWithInvalidEmail();
 
 		//when
-		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
+		when(passengersService.update(DEFAULT_PASSENGER_ID, passengerDto))
 				.thenThrow(new EntityValidateException(PASSENGER_EMAIL_WRONG_FORMAT));
 
 		//then
 		mockMvc.perform(patch("/passengers/1")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(passengerDTO)))
+						.content(objectMapper.writeValueAsString(passengerDto)))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message").value(PASSENGER_EMAIL_WRONG_FORMAT));
 	}
@@ -414,16 +392,16 @@ class PassengersControllerUnitTests {
 	@Test
 	public void testEditPassengerWhenPhoneNumberIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		PassengerDTO passengerDTO = getRequestForEditPassengerWithInvalidPhoneNumber();
+		PassengerDto passengerDto = getRequestForEditPassengerWithInvalidPhoneNumber();
 
 		//when
-		when(passengersService.update(eq(DEFAULT_PASSENGER_ID), eq(passengerDTO), any(BindingResult.class)))
+		when(passengersService.update(DEFAULT_PASSENGER_ID, passengerDto))
 				.thenThrow(new EntityValidateException(PASSENGER_PHONE_NUMBER_FORMAT_IS_WRONG));
 
 		//then
 		mockMvc.perform(patch("/passengers/1")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(passengerDTO)))
+						.content(objectMapper.writeValueAsString(passengerDto)))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message").value(PASSENGER_PHONE_NUMBER_FORMAT_IS_WRONG));
 	}
@@ -433,7 +411,7 @@ class PassengersControllerUnitTests {
 		//given
 
 		//when
-		when(passengersService.deactivate(DEFAULT_PASSENGER_ID)).thenReturn(new PassengerResponseDTO(DEFAULT_PASSENGER_ID));
+		when(passengersService.deactivate(DEFAULT_PASSENGER_ID)).thenReturn(new PassengerResponseDto(DEFAULT_PASSENGER_ID));
 
 		//then
 		mockMvc.perform(delete("/passengers/1")

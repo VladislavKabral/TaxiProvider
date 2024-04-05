@@ -7,10 +7,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import static by.modsen.taxiprovider.ratingservice.util.Message.*;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -45,7 +48,23 @@ public class ExceptionAPIController {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDto.builder()
-                        .message("Failed to convert value in request parameter")
+                        .message(REQUEST_PARAM_IS_INVALID)
+                        .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
+                        .build());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDto> methodArgumentNotValidException(MethodArgumentNotValidException exception) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        exception.getBindingResult()
+                .getAllErrors()
+                .forEach(error -> errorMessage.append(error.getDefaultMessage()).append(" "));
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponseDto.builder()
+                        .message(errorMessage.toString().trim())
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }
@@ -55,7 +74,7 @@ public class ExceptionAPIController {
         return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ErrorResponseDto.builder()
-                        .message(exception.getMessage() + " for this endpoint")
+                        .message(String.format(METHOD_NOT_ALLOWED, exception.getMessage()))
                         .time(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime())
                         .build());
     }

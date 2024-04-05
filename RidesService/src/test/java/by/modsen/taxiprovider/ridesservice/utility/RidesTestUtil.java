@@ -1,14 +1,16 @@
 package by.modsen.taxiprovider.ridesservice.utility;
 
-import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
-import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.AddressDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
+import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDto;
+import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.AddressDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideListDto;
 import lombok.experimental.UtilityClass;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @UtilityClass
@@ -19,15 +21,15 @@ public class RidesTestUtil {
     public final long DEFAULT_DRIVER_ID = 1;
     public final LocalDateTime DEFAULT_STARTED_TIME = LocalDateTime.of(2024, 3, 29, 21, 50);
     public final LocalDateTime DEFAULT_ENDED_TIME = LocalDateTime.of(2024, 3, 29, 22, 30);
-    public final AddressDTO DEFAULT_SOURCE_ADDRESS = AddressDTO.builder()
+    public final AddressDto DEFAULT_SOURCE_ADDRESS = AddressDto.builder()
                 .latitude(53.1234567)
                 .longitude(90.1234567)
             .build();
-    public final List<AddressDTO> DEFAULT_DESTINATION_ADDRESSES = List.of(AddressDTO.builder()
-            .longitude(53.3456789)
-            .latitude(90.3456789)
+    public final List<AddressDto> DEFAULT_DESTINATION_ADDRESSES = List.of(AddressDto.builder()
+            .latitude(53.3456789)
+            .longitude(90.3456789)
             .build());
-    public final PromoCodeDTO DEFAULT_PROMO_CODE = PromoCodeDTO.builder()
+    public final PromoCodeDto DEFAULT_PROMO_CODE = PromoCodeDto.builder()
             .id(1)
             .value("JAVA")
             .discount(0.5)
@@ -36,8 +38,8 @@ public class RidesTestUtil {
     public final String DEFAULT_RIDE_STATUS = "COMPLETED";
     public final String DEFAULT_PAYMENT_TYPE = "CARD";
 
-    public List<RideDTO> getRides() {
-        return List.of(RideDTO.builder()
+    public List<RideDto> getRides() {
+        return List.of(RideDto.builder()
                         .id(DEFAULT_RIDE_ID)
                         .passengerId(DEFAULT_PASSENGER_ID)
                         .driverId(DEFAULT_DRIVER_ID)
@@ -52,8 +54,12 @@ public class RidesTestUtil {
                 .build());
     }
 
-    public RideDTO getRide() {
-        return RideDTO.builder()
+    public RideListDto getEmptyRideList() {
+        return new RideListDto(new ArrayList<>());
+    }
+
+    public RideDto getRide() {
+        return RideDto.builder()
                 .id(DEFAULT_RIDE_ID)
                 .passengerId(DEFAULT_PASSENGER_ID)
                 .driverId(DEFAULT_DRIVER_ID)
@@ -68,8 +74,8 @@ public class RidesTestUtil {
                 .build();
     }
 
-    public NewRideDTO getRequestForSaveRide() {
-        return NewRideDTO.builder()
+    public NewRideDto getRequestForSaveRide() {
+        return NewRideDto.builder()
                 .passengerId(DEFAULT_PASSENGER_ID)
                 .sourceAddress(DEFAULT_SOURCE_ADDRESS)
                 .destinationAddresses(DEFAULT_DESTINATION_ADDRESSES)
@@ -78,8 +84,8 @@ public class RidesTestUtil {
                 .build();
     }
 
-    public NewRideDTO getInvalidRequestForSaveRide() {
-        return NewRideDTO.builder()
+    public NewRideDto getInvalidRequestForSaveRide() {
+        return NewRideDto.builder()
                 .passengerId(DEFAULT_PASSENGER_ID)
                 .sourceAddress(null)
                 .destinationAddresses(DEFAULT_DESTINATION_ADDRESSES)
@@ -88,12 +94,12 @@ public class RidesTestUtil {
                 .build();
     }
 
-    public RideDTO getRequestForEditDrive() {
+    public RideDto getRequestForEditDrive() {
         return getRide();
     }
 
-    public RideDTO getInvalidRequestForEditDrive() {
-        return RideDTO.builder()
+    public RideDto getInvalidRequestForEditDrive() {
+        return RideDto.builder()
                 .id(DEFAULT_RIDE_ID)
                 .passengerId(DEFAULT_PASSENGER_ID)
                 .driverId(DEFAULT_DRIVER_ID)
@@ -108,7 +114,7 @@ public class RidesTestUtil {
                 .build();
     }
 
-    public RideResponseDTO getResponse() {
-        return new RideResponseDTO(DEFAULT_RIDE_ID);
+    public RideResponseDto getResponse() {
+        return new RideResponseDto(DEFAULT_RIDE_ID);
     }
 }

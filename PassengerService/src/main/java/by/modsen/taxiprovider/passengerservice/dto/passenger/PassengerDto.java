@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import static by.modsen.taxiprovider.passengerservice.util.Message.*;
@@ -12,6 +13,7 @@ import static by.modsen.taxiprovider.passengerservice.util.Regex.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PassengerDto {
 
     private long id;

@@ -1,8 +1,8 @@
 package by.modsen.taxiprovider.ratingservice.utility;
 
-import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDTO;
-import by.modsen.taxiprovider.ratingservice.dto.rating.TaxiUserRatingDTO;
-import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDTO;
+import by.modsen.taxiprovider.ratingservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.ratingservice.dto.rating.TaxiUserRatingDto;
+import by.modsen.taxiprovider.ratingservice.dto.request.TaxiUserRequestDto;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -19,75 +19,75 @@ public class RatingsTestUtil {
     public final int NOT_DEFAULT_RATING_VALUE = 4;
     public final int NOT_DEFAULT_INVALID_RATING_VALUE = 9;
 
-    public TaxiUserRatingDTO getDriversRating() {
-        return TaxiUserRatingDTO.builder()
+    public TaxiUserRatingDto getDriversRating() {
+        return TaxiUserRatingDto.builder()
                 .taxiUserId(DEFAULT_TAXI_USER_ID)
                 .role(DRIVER_ROLE_NAME)
                 .value(DEFAULT_RATING_VALUE)
                 .build();
     }
 
-    public TaxiUserRatingDTO getPassengerRating() {
-        return TaxiUserRatingDTO.builder()
+    public TaxiUserRatingDto getPassengerRating() {
+        return TaxiUserRatingDto.builder()
                 .taxiUserId(DEFAULT_TAXI_USER_ID)
                 .role(PASSENGER_ROLE_NAME)
                 .value(DEFAULT_RATING_VALUE)
                 .build();
     }
 
-    public TaxiUserRequestDTO getRequestForDriverRating() {
-        return TaxiUserRequestDTO.builder()
+    public TaxiUserRequestDto getRequestForDriverRating() {
+        return TaxiUserRequestDto.builder()
                 .taxiUserId(DEFAULT_TAXI_USER_ID)
                 .role(DRIVER_ROLE_NAME)
                 .build();
     }
 
-    public TaxiUserRequestDTO getRequestForPassengerRating() {
-        return TaxiUserRequestDTO.builder()
+    public TaxiUserRequestDto getRequestForPassengerRating() {
+        return TaxiUserRequestDto.builder()
                 .taxiUserId(DEFAULT_TAXI_USER_ID)
                 .role(PASSENGER_ROLE_NAME)
                 .build();
     }
 
-    public TaxiUserRequestDTO getIncorrectRequestForDriverRating() {
-        return TaxiUserRequestDTO.builder()
+    public TaxiUserRequestDto getIncorrectRequestForDriverRating() {
+        return TaxiUserRequestDto.builder()
                 .taxiUserId(INCORRECT_TAXI_USER_ID)
                 .role(DRIVER_ROLE_NAME)
                 .build();
     }
 
-    public TaxiUserRequestDTO getIncorrectRequestForPassengerRating() {
-        return TaxiUserRequestDTO.builder()
+    public TaxiUserRequestDto getIncorrectRequestForPassengerRating() {
+        return TaxiUserRequestDto.builder()
                 .taxiUserId(INCORRECT_TAXI_USER_ID)
                 .role(PASSENGER_ROLE_NAME)
                 .build();
     }
 
-    public TaxiUserRequestDTO getIncorrectRequestForInitRating() {
-        return TaxiUserRequestDTO.builder()
+    public TaxiUserRequestDto getIncorrectRequestForInitRating() {
+        return TaxiUserRequestDto.builder()
                 .taxiUserId(DEFAULT_TAXI_USER_ID)
                 .role(INCORRECT_TAXI_USER_ROLE)
                 .build();
     }
 
-    public RatingDTO getRequestForRateDriver() {
-        return RatingDTO.builder()
+    public RatingDto getRequestForRateDriver() {
+        return RatingDto.builder()
                 .taxiUserId(DEFAULT_TAXI_USER_ID)
                 .role(DRIVER_ROLE_NAME)
                 .value(NOT_DEFAULT_RATING_VALUE)
                 .build();
     }
 
-    public RatingDTO getInvalidRequestWithInvalidRoleForRateDriver() {
-        return RatingDTO.builder()
+    public RatingDto getInvalidRequestWithInvalidRoleForRateDriver() {
+        return RatingDto.builder()
                 .taxiUserId(DEFAULT_TAXI_USER_ID)
                 .role(INCORRECT_TAXI_USER_ROLE)
                 .value(NOT_DEFAULT_RATING_VALUE)
                 .build();
     }
 
-    public RatingDTO getInvalidRequestWithInvalidRatingValueForRateDriver() {
-        return RatingDTO.builder()
+    public RatingDto getInvalidRequestWithInvalidRatingValueForRateDriver() {
+        return RatingDto.builder()
                 .taxiUserId(DEFAULT_TAXI_USER_ID)
                 .role(DRIVER_ROLE_NAME)
                 .value(NOT_DEFAULT_INVALID_RATING_VALUE)

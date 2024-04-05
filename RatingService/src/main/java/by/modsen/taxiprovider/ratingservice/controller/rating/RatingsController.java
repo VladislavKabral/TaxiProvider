@@ -11,7 +11,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,14 +34,14 @@ public class RatingsController {
     }
 
     @PostMapping("/init")
-    public ResponseEntity<RatingResponseDto> initTaxiUser(@RequestBody @Valid TaxiUserRequestDto requestDTO,
-                                                          BindingResult bindingResult) throws EntityValidateException {
-        return new ResponseEntity<>(ratingsService.initTaxiUserRatings(requestDTO, bindingResult), HttpStatus.CREATED);
+    public ResponseEntity<RatingResponseDto> initTaxiUser(@RequestBody @Valid TaxiUserRequestDto requestDTO)
+            throws EntityValidateException {
+        return new ResponseEntity<>(ratingsService.initTaxiUserRatings(requestDTO), HttpStatus.CREATED);
     }
 
     @PostMapping
-    public ResponseEntity<RatingResponseDto> rateTaxiUser(@RequestBody @Valid RatingDto ratingDTO,
-                                                          BindingResult bindingResult) throws EntityValidateException {
-        return new ResponseEntity<>(ratingsService.save(ratingDTO, bindingResult), HttpStatus.CREATED);
+    public ResponseEntity<RatingResponseDto> rateTaxiUser(@RequestBody @Valid RatingDto ratingDTO)
+            throws EntityValidateException {
+        return new ResponseEntity<>(ratingsService.save(ratingDTO), HttpStatus.CREATED);
     }
 }

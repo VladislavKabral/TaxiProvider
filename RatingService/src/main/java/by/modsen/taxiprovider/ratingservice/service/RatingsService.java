@@ -14,8 +14,6 @@ import by.modsen.taxiprovider.ratingservice.util.validation.TaxiUserRequestValid
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -69,10 +67,8 @@ public class RatingsService {
     }
 
     @Transactional
-    public RatingResponseDto initTaxiUserRatings(TaxiUserRequestDto request, BindingResult bindingResult)
-            throws EntityValidateException {
-        taxiUserRequestValidator.validate(request, bindingResult);
-        handleBindingResult(bindingResult);
+    public RatingResponseDto initTaxiUserRatings(TaxiUserRequestDto request) throws EntityValidateException {
+        taxiUserRequestValidator.validate(request);
 
         for (int i = 0; i < GRADES_COUNT; i++) {
             Rating rating = Rating.builder()
@@ -92,9 +88,8 @@ public class RatingsService {
     }
 
     @Transactional
-    public RatingResponseDto save(RatingDto ratingDTO, BindingResult bindingResult) throws EntityValidateException {
-        ratingValidator.validate(ratingDTO, bindingResult);
-        handleBindingResult(bindingResult);
+    public RatingResponseDto save(RatingDto ratingDTO) throws EntityValidateException {
+        ratingValidator.validate(ratingDTO);
 
         Rating rating = ratingMapper.toEntity(ratingDTO);
         rating.setCreatedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
@@ -105,17 +100,5 @@ public class RatingsService {
                 .role(rating.getRole())
                 .value(rating.getValue())
                 .build();
-    }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
     }
 }

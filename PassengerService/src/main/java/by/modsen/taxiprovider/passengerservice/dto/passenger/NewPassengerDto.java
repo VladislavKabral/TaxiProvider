@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import static by.modsen.taxiprovider.passengerservice.util.Message.*;
@@ -13,6 +14,7 @@ import static by.modsen.taxiprovider.passengerservice.util.Regex.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class NewPassengerDto {
 
     @NotBlank(message = PASSENGER_LASTNAME_IS_EMPTY)

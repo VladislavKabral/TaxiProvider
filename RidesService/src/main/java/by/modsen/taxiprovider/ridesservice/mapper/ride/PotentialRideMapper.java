@@ -12,7 +12,7 @@ public class PotentialRideMapper {
 
     private final ModelMapper modelMapper;
 
-    public PotentialRide toEntity(PotentialRideDto potentialRideDTO) {
-        return modelMapper.map(potentialRideDTO, PotentialRide.class);
+    public PotentialRide toEntity(PotentialRideDto potentialRideDto) {
+        return modelMapper.map(potentialRideDto, PotentialRide.class);
     }
 }

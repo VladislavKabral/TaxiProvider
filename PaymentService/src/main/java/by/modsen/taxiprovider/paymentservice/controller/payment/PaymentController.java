@@ -17,7 +17,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,22 +27,21 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/charge")
-    public ResponseEntity<ChargeResponseDto> charge(@RequestBody @Valid ChargeRequestDto chargeRequestDTO,
-                                                    BindingResult bindingResult) throws PaymentException, EntityValidateException {
-        return new ResponseEntity<>(paymentService.charge(chargeRequestDTO, bindingResult), HttpStatus.OK);
+    public ResponseEntity<ChargeResponseDto> charge(@RequestBody @Valid ChargeRequestDto chargeRequestDTO)
+            throws PaymentException {
+        return new ResponseEntity<>(paymentService.charge(chargeRequestDTO), HttpStatus.OK);
     }
 
     @PostMapping("/token")
-    public ResponseEntity<TokenResponseDto> getToken(@RequestBody @Valid CardRequestDto cardRequestDTO,
-                                                     BindingResult bindingResult) throws PaymentException, EntityValidateException {
-        return new ResponseEntity<>(paymentService.createStripeToken(cardRequestDTO, bindingResult), HttpStatus.OK);
+    public ResponseEntity<TokenResponseDto> getToken(@RequestBody @Valid CardRequestDto cardRequestDTO)
+            throws PaymentException, EntityValidateException {
+        return new ResponseEntity<>(paymentService.createStripeToken(cardRequestDTO), HttpStatus.OK);
     }
 
     @PostMapping("/customers")
-    public ResponseEntity<CustomerResponseDto> saveCustomer(@RequestBody @Valid CustomerDto customerDTO,
-                                                            BindingResult bindingResult) throws PaymentException,
-            EntityValidateException, EntityNotFoundException {
-        return new ResponseEntity<>(paymentService.createCustomer(customerDTO, bindingResult), HttpStatus.CREATED);
+    public ResponseEntity<CustomerResponseDto> saveCustomer(@RequestBody @Valid CustomerDto customerDTO)
+            throws PaymentException, EntityValidateException, EntityNotFoundException {
+        return new ResponseEntity<>(paymentService.createCustomer(customerDTO), HttpStatus.CREATED);
     }
 
     @GetMapping("/customers/{id}/balance")
@@ -54,10 +52,9 @@ public class PaymentController {
 
     @PatchMapping("/customers/{id}")
     public ResponseEntity<CustomerResponseDto> editCustomer(@PathVariable("id") long id,
-                                                            @RequestBody @Valid CustomerDto customerDTO,
-                                                            BindingResult bindingResult)
-            throws PaymentException, EntityNotFoundException, EntityValidateException {
-        return new ResponseEntity<>(paymentService.updateCustomer(id, customerDTO, bindingResult), HttpStatus.OK);
+                                                            @RequestBody @Valid CustomerDto customerDTO)
+            throws PaymentException, EntityNotFoundException {
+        return new ResponseEntity<>(paymentService.updateCustomer(id, customerDTO), HttpStatus.OK);
     }
 
     @PatchMapping("/customers/drivers/{id}")
@@ -75,11 +72,9 @@ public class PaymentController {
     }
 
     @PostMapping("/customerCharge")
-    public ResponseEntity<ChargeResponseDto> chargeByCustomer(@RequestBody @Valid CustomerChargeRequestDto customerChargeRequestDTO,
-                                                              BindingResult bindingResult)
-            throws NotEnoughMoneyException, PaymentException, EntityNotFoundException, EntityValidateException {
-
-        return new ResponseEntity<>(paymentService.chargeFromCustomer(customerChargeRequestDTO, bindingResult), HttpStatus.OK);
+    public ResponseEntity<ChargeResponseDto> chargeByCustomer(@RequestBody @Valid CustomerChargeRequestDto customerChargeRequestDTO)
+            throws NotEnoughMoneyException, PaymentException, EntityNotFoundException {
+        return new ResponseEntity<>(paymentService.chargeFromCustomer(customerChargeRequestDTO), HttpStatus.OK);
     }
 
 }

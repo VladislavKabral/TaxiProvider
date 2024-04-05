@@ -1,9 +1,10 @@
 package by.modsen.taxiprovider.ridesservice.unit;
 
 import by.modsen.taxiprovider.ridesservice.controller.ride.RidesController;
-import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDTO;
-import by.modsen.taxiprovider.ridesservice.dto.ride.RideDTO;
+import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideDto;
+import by.modsen.taxiprovider.ridesservice.dto.ride.RideListDto;
 import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.service.ride.RidesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
@@ -17,14 +18,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.validation.BindingResult;
-
-import java.util.List;
 
 import static by.modsen.taxiprovider.ridesservice.util.Message.*;
 import static by.modsen.taxiprovider.ridesservice.utility.RidesTestUtil.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -51,7 +47,7 @@ class RidesControllerUnitTests {
 	@Test
 	public void testGetRidesWhenRidesExistReturnListOfRides() throws Exception {
 		//given
-		List<RideDTO> rides = getRides();
+		RideListDto rides = new RideListDto(getRides());
 
 		//when
 		when(ridesService.findAll()).thenReturn(rides);
@@ -61,32 +57,33 @@ class RidesControllerUnitTests {
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(1))
-				.andExpect(jsonPath("$[0].id").value(rides.get(0).getId()))
-				.andExpect(jsonPath("$[0].passengerId").value(rides.get(0).getPassengerId()))
-				.andExpect(jsonPath("$[0].driverId").value(rides.get(0).getDriverId()))
-				.andExpect(jsonPath("$[0].cost").value(rides.get(0).getCost()))
-				.andExpect(jsonPath("$[0].status").value(rides.get(0).getStatus()))
-				.andExpect(jsonPath("$[0].paymentType").value(rides.get(0).getPaymentType()));
+				.andExpect(jsonPath("$.content[0].id").value(rides.getContent().get(0).getId()))
+				.andExpect(jsonPath("$.content[0].passengerId").value(rides.getContent().get(0).getPassengerId()))
+				.andExpect(jsonPath("$.content[0].driverId").value(rides.getContent().get(0).getDriverId()))
+				.andExpect(jsonPath("$.content[0].cost").value(rides.getContent().get(0).getCost()))
+				.andExpect(jsonPath("$.content[0].status").value(rides.getContent().get(0).getStatus()))
+				.andExpect(jsonPath("$.content[0].paymentType").value(rides.getContent().get(0).getPaymentType()));
 	}
 
 	@Test
 	public void testGetRidesWhenRidesDoNotExistReturnErrorResponse() throws Exception {
 		//given
+		RideListDto rides = getEmptyRideList();
 
 		//when
-		when(ridesService.findAll()).thenThrow(new EntityNotFoundException(RIDES_NOT_FOUND));
+		when(ridesService.findAll()).thenReturn(rides);
 
 		//then
 		mockMvc.perform(get("/rides")
 				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.message").value(RIDES_NOT_FOUND));
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content.length()").value(0));
 	}
 
 	@Test
 	public void testGetPassengerRidesWhenRidesExistReturnListOfRides() throws Exception {
 		//given
-		List<RideDTO> rides = getRides();
+		RideListDto rides = new RideListDto(getRides());
 
 		//when
 		when(ridesService.findByPassengerId(DEFAULT_PASSENGER_ID)).thenReturn(rides);
@@ -96,33 +93,33 @@ class RidesControllerUnitTests {
 						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(1))
-				.andExpect(jsonPath("$[0].id").value(rides.get(0).getId()))
-				.andExpect(jsonPath("$[0].passengerId").value(rides.get(0).getPassengerId()))
-				.andExpect(jsonPath("$[0].driverId").value(rides.get(0).getDriverId()))
-				.andExpect(jsonPath("$[0].cost").value(rides.get(0).getCost()))
-				.andExpect(jsonPath("$[0].status").value(rides.get(0).getStatus()))
-				.andExpect(jsonPath("$[0].paymentType").value(rides.get(0).getPaymentType()));
+				.andExpect(jsonPath("$.content[0].id").value(rides.getContent().get(0).getId()))
+				.andExpect(jsonPath("$.content[0].passengerId").value(rides.getContent().get(0).getPassengerId()))
+				.andExpect(jsonPath("$.content[0].driverId").value(rides.getContent().get(0).getDriverId()))
+				.andExpect(jsonPath("$.content[0].cost").value(rides.getContent().get(0).getCost()))
+				.andExpect(jsonPath("$.content[0].status").value(rides.getContent().get(0).getStatus()))
+				.andExpect(jsonPath("$.content[0].paymentType").value(rides.getContent().get(0).getPaymentType()));
 	}
 
 	@Test
 	public void testGetPassengerRidesWhenRidesDoNotExistReturnErrorResponse() throws Exception {
 		//given
+		RideListDto rides = getEmptyRideList();
 
 		//when
-		when(ridesService.findByPassengerId(DEFAULT_PASSENGER_ID))
-				.thenThrow(new EntityNotFoundException(String.format(PASSENGER_RIDES_NOT_FOUND, DEFAULT_PASSENGER_ID)));
+		when(ridesService.findByPassengerId(DEFAULT_PASSENGER_ID)).thenReturn(rides);
 
 		//then
 		mockMvc.perform(get("/rides/passenger/1")
 						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.message").value(String.format(PASSENGER_RIDES_NOT_FOUND, DEFAULT_PASSENGER_ID)));
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content.length()").value(0));
 	}
 
 	@Test
 	public void testDriverRidesWhenRidesExistReturnListOfRides() throws Exception {
 		//given
-		List<RideDTO> rides = getRides();
+		RideListDto rides = new RideListDto(getRides());
 
 		//when
 		when(ridesService.findByDriverId(DEFAULT_DRIVER_ID)).thenReturn(rides);
@@ -132,33 +129,34 @@ class RidesControllerUnitTests {
 						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(1))
-				.andExpect(jsonPath("$[0].id").value(rides.get(0).getId()))
-				.andExpect(jsonPath("$[0].passengerId").value(rides.get(0).getPassengerId()))
-				.andExpect(jsonPath("$[0].driverId").value(rides.get(0).getDriverId()))
-				.andExpect(jsonPath("$[0].cost").value(rides.get(0).getCost()))
-				.andExpect(jsonPath("$[0].status").value(rides.get(0).getStatus()))
-				.andExpect(jsonPath("$[0].paymentType").value(rides.get(0).getPaymentType()));
+				.andExpect(jsonPath("$.content[0].id").value(rides.getContent().get(0).getId()))
+				.andExpect(jsonPath("$.content[0].passengerId").value(rides.getContent().get(0).getPassengerId()))
+				.andExpect(jsonPath("$.content[0].driverId").value(rides.getContent().get(0).getDriverId()))
+				.andExpect(jsonPath("$.content[0].cost").value(rides.getContent().get(0).getCost()))
+				.andExpect(jsonPath("$.content[0].status").value(rides.getContent().get(0).getStatus()))
+				.andExpect(jsonPath("$.content[0].paymentType").value(rides.getContent().get(0).getPaymentType()));
 	}
 
 	@Test
 	public void testGetDriverRidesWhenRidesDoNotExistReturnErrorResponse() throws Exception {
 		//given
+		RideListDto rides = getEmptyRideList();
 
 		//when
 		when(ridesService.findByDriverId(DEFAULT_DRIVER_ID))
-				.thenThrow(new EntityNotFoundException(String.format(DRIVER_RIDES_NOT_FOUND, DEFAULT_DRIVER_ID)));
+				.thenReturn(rides);
 
 		//then
 		mockMvc.perform(get("/rides/driver/1")
 						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.message").value(String.format(DRIVER_RIDES_NOT_FOUND, DEFAULT_DRIVER_ID)));
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content.length()").value(0));
 	}
 
 	@Test
 	public void testGetRideByIdWhenRideExistReturnRide() throws Exception {
 		//given
-		RideDTO ride = getRide();
+		RideDto ride = getRide();
 
 		//when
 		when(ridesService.findById(DEFAULT_RIDE_ID)).thenReturn(ride);
@@ -193,12 +191,11 @@ class RidesControllerUnitTests {
 	@Test
 	public void testSaveRideWhenRequestIsValidReturnIdOfCreatedRide() throws Exception {
 		//given
-		NewRideDTO request = getRequestForSaveRide();
-		RideResponseDTO response = new RideResponseDTO(DEFAULT_RIDE_ID);
+		NewRideDto request = getRequestForSaveRide();
+		RideResponseDto response = new RideResponseDto(DEFAULT_RIDE_ID);
 
 		//when
-		when(ridesService.save(eq(request), any(BindingResult.class)))
-				.thenReturn(response);
+		when(ridesService.save(request)).thenReturn(response);
 
 		//then
 		mockMvc.perform(post("/rides")
@@ -211,10 +208,10 @@ class RidesControllerUnitTests {
 	@Test
 	public void testSaveRideWhenRequestIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		NewRideDTO request = getInvalidRequestForSaveRide();
+		NewRideDto request = getInvalidRequestForSaveRide();
 
 		//when
-		when(ridesService.save(eq(request), any(BindingResult.class)))
+		when(ridesService.save(request))
 				.thenThrow(new EntityValidateException(SOURCE_ADDRESS_IS_EMPTY));
 
 		//then
@@ -228,11 +225,11 @@ class RidesControllerUnitTests {
 	@Test
 	public void testEditRideWhenRequestIsValidReturnIdOfUpdatedRide() throws Exception {
 		//given
-		RideDTO request = getRequestForEditDrive();
-		RideResponseDTO response = getResponse();
+		RideDto request = getRequestForEditDrive();
+		RideResponseDto response = getResponse();
 
 		//when
-		when(ridesService.update(eq(request), any(BindingResult.class))).thenReturn(response);
+		when(ridesService.update(request)).thenReturn(response);
 
 		//then
 		mockMvc.perform(patch("/rides")
@@ -245,10 +242,10 @@ class RidesControllerUnitTests {
 	@Test
 	public void testEditRideWhenRequestIsInvalidReturnErrorResponse() throws Exception {
 		//given
-		RideDTO request = getInvalidRequestForEditDrive();
+		RideDto request = getInvalidRequestForEditDrive();
 
 		//when
-		when(ridesService.update(eq(request), any(BindingResult.class)))
+		when(ridesService.update(request))
 				.thenThrow(new EntityValidateException(DESTINATION_ADDRESS_IS_EMPTY));
 
 		//then
@@ -262,7 +259,7 @@ class RidesControllerUnitTests {
 	@Test
 	public void testCancelRideWhenRideExistsReturnIdOfCancelledRide() throws Exception {
 		//given
-		RideResponseDTO response = new RideResponseDTO(DEFAULT_RIDE_ID);
+		RideResponseDto response = new RideResponseDto(DEFAULT_RIDE_ID);
 
 		//when
 		when(ridesService.cancel(DEFAULT_PASSENGER_ID)).thenReturn(response);

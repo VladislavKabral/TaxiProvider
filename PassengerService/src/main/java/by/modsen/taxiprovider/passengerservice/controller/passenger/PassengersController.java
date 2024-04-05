@@ -4,6 +4,7 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerListDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengersPageDto;
 import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDto;
 import by.modsen.taxiprovider.passengerservice.service.PassengersService;
 import by.modsen.taxiprovider.passengerservice.util.exception.EntityNotFoundException;
@@ -11,10 +12,8 @@ import by.modsen.taxiprovider.passengerservice.util.exception.EntityValidateExce
 import by.modsen.taxiprovider.passengerservice.util.exception.InvalidRequestDataException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,10 +37,10 @@ public class PassengersController {
     }
 
     @GetMapping(params = {"page", "size", "sort"})
-    public ResponseEntity<Page<PassengerDto>> getPassengersPage(@RequestParam("page") int page,
-                                                                @RequestParam("size") int size,
-                                                                @RequestParam("sort") String sortField)
-            throws EntityNotFoundException, InvalidRequestDataException {
+    public ResponseEntity<PassengersPageDto> getPassengersPage(@RequestParam(name = "page", required = false, defaultValue = "1") int page,
+                                                               @RequestParam(name = "size", required = false, defaultValue = "10") int size,
+                                                               @RequestParam(name = "sort", required = false, defaultValue = "lastname") String sortField)
+            throws InvalidRequestDataException {
         return new ResponseEntity<>(passengersService.findPagePassengers(page, size, sortField),
                 HttpStatus.OK);
     }
@@ -58,18 +57,16 @@ public class PassengersController {
     }
 
     @PostMapping
-    public ResponseEntity<PassengerResponseDto> savePassenger(@RequestBody @Valid NewPassengerDto passengerDTO,
-                                                              BindingResult bindingResult)
-            throws EntityValidateException, EntityNotFoundException {
-        return new ResponseEntity<>(passengersService.save(passengerDTO, bindingResult), HttpStatus.OK);
+    public ResponseEntity<PassengerResponseDto> savePassenger(@RequestBody @Valid NewPassengerDto passengerDTO)
+            throws EntityNotFoundException, EntityValidateException {
+        return new ResponseEntity<>(passengersService.save(passengerDTO), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<PassengerResponseDto> editPassenger(@PathVariable("id") long id,
-                                                              @RequestBody @Valid PassengerDto passengerDTO,
-                                                              BindingResult bindingResult)
+                                                              @RequestBody @Valid PassengerDto passengerDTO)
             throws EntityNotFoundException, EntityValidateException {
-        return new ResponseEntity<>(passengersService.update(id, passengerDTO, bindingResult), HttpStatus.OK);
+        return new ResponseEntity<>(passengersService.update(id, passengerDTO), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

@@ -14,7 +14,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,10 +37,10 @@ public class DriversController {
     }
 
     @GetMapping(params = {"page", "size", "sort"})
-    public ResponseEntity<DriversPageDto> getDriversPage(@RequestParam("page") int page,
-                                                         @RequestParam("size") int size,
-                                                         @RequestParam("sort") String sortField)
-            throws EntityNotFoundException, InvalidRequestDataException {
+    public ResponseEntity<DriversPageDto> getDriversPage(@RequestParam(name = "page", required = false, defaultValue = "1")  int page,
+                                                         @RequestParam(name = "size", required = false, defaultValue = "10") int size,
+                                                         @RequestParam(value = "sort", required = false, defaultValue = "lastname") String sortField)
+            throws InvalidRequestDataException {
         return new ResponseEntity<>(driversService.findPageDrivers(page, size, sortField), HttpStatus.OK);
     }
 
@@ -61,18 +60,16 @@ public class DriversController {
     }
 
     @PostMapping
-    public ResponseEntity<DriverResponseDto> saveDriver(@RequestBody @Valid NewDriverDto driverDTO,
-                                                        BindingResult bindingResult)
-            throws EntityValidateException, EntityNotFoundException {
-        return new ResponseEntity<>(driversService.save(driverDTO, bindingResult), HttpStatus.CREATED);
+    public ResponseEntity<DriverResponseDto> saveDriver(@RequestBody @Valid NewDriverDto driverDTO)
+            throws EntityNotFoundException, EntityValidateException {
+        return new ResponseEntity<>(driversService.save(driverDTO), HttpStatus.CREATED);
     }
 
-    @PatchMapping(value = "/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<DriverResponseDto> editDriver(@PathVariable("id") long id,
-                                                        @RequestBody @Valid DriverDto driverDTO,
-                                                        BindingResult bindingResult)
+                                                        @RequestBody @Valid DriverDto driverDTO)
             throws EntityNotFoundException, EntityValidateException {
-        return new ResponseEntity<>(driversService.update(id, driverDTO, bindingResult), HttpStatus.OK);
+        return new ResponseEntity<>(driversService.update(id, driverDTO), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +28,7 @@ public class PromoCodesController {
     private final PromoCodesService promoCodesService;
 
     @GetMapping
-    public ResponseEntity<PromoCodesListDto> getPromoCodes() throws EntityNotFoundException {
+    public ResponseEntity<PromoCodesListDto> getPromoCodes() {
         return new ResponseEntity<>(promoCodesService.findAll(), HttpStatus.OK);
     }
 
@@ -40,17 +39,16 @@ public class PromoCodesController {
     }
 
     @PostMapping
-    public ResponseEntity<PromoCodeResponseDto> savePromoCode(@RequestBody @Valid PromoCodeDto promoCodeDTO,
-                                                              BindingResult bindingResult)
+    public ResponseEntity<PromoCodeResponseDto> savePromoCode(@RequestBody @Valid PromoCodeDto promoCodeDTO)
             throws EntityValidateException, EntityNotFoundException {
-        return new ResponseEntity<>(promoCodesService.save(promoCodeDTO, bindingResult), HttpStatus.CREATED);
+        return new ResponseEntity<>(promoCodesService.save(promoCodeDTO), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<PromoCodeResponseDto> editPromoCode(@PathVariable("id") long id,
-                                                              @RequestBody @Valid PromoCodeDto promoCodeDTO,
-                                                              BindingResult bindingResult) throws EntityValidateException {
-        return new ResponseEntity<>(promoCodesService.update(id, promoCodeDTO, bindingResult), HttpStatus.OK);
+                                                              @RequestBody @Valid PromoCodeDto promoCodeDTO)
+            throws EntityValidateException {
+        return new ResponseEntity<>(promoCodesService.update(id, promoCodeDTO), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
