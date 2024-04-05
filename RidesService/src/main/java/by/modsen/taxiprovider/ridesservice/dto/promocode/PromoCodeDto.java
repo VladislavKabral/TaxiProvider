@@ -3,6 +3,7 @@ package by.modsen.taxiprovider.ridesservice.dto.promocode;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import static by.modsen.taxiprovider.ridesservice.util.Regex.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PromoCodeDto {
 
     private long id;

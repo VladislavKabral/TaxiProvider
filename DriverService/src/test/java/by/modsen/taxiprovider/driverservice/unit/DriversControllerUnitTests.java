@@ -19,12 +19,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.validation.BindingResult;
 
 import static by.modsen.taxiprovider.driverservice.utilily.DriversTestUtil.*;
 import static by.modsen.taxiprovider.driverservice.util.Message.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -143,10 +140,15 @@ class DriversControllerUnitTests {
     @Test
     public void testGetDriversPageWhenThereAreNotAnyDriversOnThePageReturnErrorResponse() throws Exception {
         //given
+        DriversPageDto driversPage = DriversPageDto.builder()
+                .content(getEmptyDriverList().getContent())
+                .page(DEFAULT_PAGE)
+                .size(DEFAULT_PAGE_SIZE)
+                .build();
 
         //when
         when(driversService.findPageDrivers(DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_SORT_FIELD))
-                .thenThrow(new EntityNotFoundException(DRIVERS_ON_PAGE_NOT_FOUND));
+                .thenReturn(driversPage);
 
         //then
         mockMvc.perform(get("/drivers")
@@ -154,8 +156,8 @@ class DriversControllerUnitTests {
                         .queryParam("size", String.valueOf(DEFAULT_PAGE_SIZE))
                         .queryParam("sort", DEFAULT_SORT_FIELD)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value(DRIVERS_ON_PAGE_NOT_FOUND));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 
     @Test
@@ -248,7 +250,7 @@ class DriversControllerUnitTests {
         NewDriverDto newDriverRequest = getRequestForSaveDriver();
 
         //when
-        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
+        when(driversService.save(newDriverRequest))
                 .thenReturn(new DriverResponseDto(DEFAULT_DRIVER_ID));
 
         //then
@@ -265,8 +267,6 @@ class DriversControllerUnitTests {
         NewDriverDto newDriverRequest = getRequestForSaveDriverWithInvalidLastName();
 
         //when
-        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
-                .thenThrow(new EntityValidateException(DRIVER_LASTNAME_BODY_IS_INVALID));
 
         //then
         mockMvc.perform(post("/drivers")
@@ -282,8 +282,6 @@ class DriversControllerUnitTests {
         NewDriverDto newDriverRequest = getRequestForSaveDriverWithInvalidFirstName();
 
         //when
-        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
-                .thenThrow(new EntityValidateException(DRIVER_FIRSTNAME_BODY_IS_INVALID));
 
         //then
         mockMvc.perform(post("/drivers")
@@ -299,8 +297,6 @@ class DriversControllerUnitTests {
         NewDriverDto newDriverRequest = getRequestForSaveDriverWithInvalidEmail();
 
         //when
-        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
-                .thenThrow(new EntityValidateException(DRIVER_EMAIL_WRONG_FORMAT));
 
         //then
         mockMvc.perform(post("/drivers")
@@ -316,8 +312,6 @@ class DriversControllerUnitTests {
         NewDriverDto newDriverRequest = getRequestForSaveDriverWithInvalidPhoneNumber();
 
         //when
-        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
-                .thenThrow(new EntityValidateException(DRIVER_PHONE_NUMBER_FORMAT_IS_WRONG));
 
         //then
         mockMvc.perform(post("/drivers")
@@ -333,8 +327,6 @@ class DriversControllerUnitTests {
         NewDriverDto newDriverRequest = getRequestForSaveDriverWithInvalidPassword();
 
         //when
-        when(driversService.save(eq(newDriverRequest), any(BindingResult.class)))
-                .thenThrow(new EntityValidateException(DRIVER_PASSWORD_IS_EMPTY));
 
         //then
         mockMvc.perform(post("/drivers")
@@ -350,7 +342,7 @@ class DriversControllerUnitTests {
         DriverDto driverDTO = getDriver();
 
         //when
-        when(driversService.update(eq(DEFAULT_DRIVER_ID), eq(driverDTO), any(BindingResult.class)))
+        when(driversService.update(DEFAULT_DRIVER_ID, driverDTO))
                 .thenReturn(new DriverResponseDto(DEFAULT_DRIVER_ID));
 
         //then
@@ -367,7 +359,7 @@ class DriversControllerUnitTests {
         DriverDto driverDTO = getRequestForUpdateDriverWithInvalidStatus();
 
         //when
-        when(driversService.update(eq(DEFAULT_DRIVER_ID), eq(driverDTO), any(BindingResult.class)))
+        when(driversService.update(DEFAULT_DRIVER_ID,driverDTO))
                 .thenThrow(new EntityValidateException(INVALID_DRIVER_STATUS));
 
         //then

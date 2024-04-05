@@ -38,8 +38,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 
 import static by.modsen.taxiprovider.paymentservice.util.Message.*;
 
@@ -77,15 +75,39 @@ public class PaymentService {
 
     private static final String RIDE_STATUS_PAID = "PAID";
 
+    private static final String CARD_NUMBER_FIELD_NAME = "number";
+
+    private static final String EXPIRATION_MONTH_FIELD_NAME = "exp_month";
+
+    private static final String EXPIRATION_YEAR_FIELD_NAME = "exp_year";
+
+    private static final String CVC_FIELD_NAME = "cvc";
+
+    private static final String CARD_FIELD_NAME = "card";
+
+    private static final String AMOUNT_FIELD_NAME = "amount";
+
+    private static final String CURRENCY_FIELD_NAME = "currency";
+
+    private static final String SOURCE_FIELD_NAME = "source";
+
+    private static final String PAYMENT_TYPE_NAME = "pm_card_visa";
+
+    private static final String TYPE_FIELD_NAME = "type";
+
+    private static final String CUSTOMER_FIELD_NAME = "customer";
+
+    private static final String TOKEN_FIELD_NAME = "token";
+
+    private static final String TOKEN_VALUE = "tok_visa";
+
     @PostConstruct
     public void init(){
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
     }
 
-    public ChargeResponseDto charge(ChargeRequestDto chargeRequestDTO, BindingResult bindingResult)
-            throws PaymentException, EntityValidateException {
-
-        handleBindingResult(bindingResult);
+    public ChargeResponseDto charge(ChargeRequestDto chargeRequestDTO)
+            throws PaymentException {
 
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
@@ -94,9 +116,9 @@ public class PaymentService {
         Charge charge;
         try {
             Map<String, Object> params = new HashMap<>();
-            params.put("amount", Math.round(chargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
-            params.put("currency", chargeRequestDTO.getCurrency());
-            params.put("source", chargeRequestDTO.getCardToken());
+            params.put(AMOUNT_FIELD_NAME, convertToStripeScale(chargeRequestDTO.getAmount().floatValue()));
+            params.put(CURRENCY_FIELD_NAME, chargeRequestDTO.getCurrency());
+            params.put(SOURCE_FIELD_NAME, chargeRequestDTO.getCardToken());
             charge = Charge.create(params, requestOptions);
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
@@ -115,11 +137,10 @@ public class PaymentService {
                 .build();
     }
 
-    public TokenResponseDto createStripeToken(CardRequestDto cardRequestDTO, BindingResult bindingResult)
+    public TokenResponseDto createStripeToken(CardRequestDto cardRequestDTO)
             throws PaymentException, EntityValidateException {
 
-        cardRequestValidator.validate(cardRequestDTO, bindingResult);
-        handleBindingResult(bindingResult);
+        cardRequestValidator.validate(cardRequestDTO);
 
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PUBLIC_KEY)
@@ -128,12 +149,12 @@ public class PaymentService {
         Token token;
         try {
             Map<String, Object> card = new HashMap<>();
-            card.put("number", cardRequestDTO.getNumber());
-            card.put("exp_month", cardRequestDTO.getMonth());
-            card.put("exp_year", cardRequestDTO.getYear());
-            card.put("cvc", cardRequestDTO.getCvc());
+            card.put(CARD_NUMBER_FIELD_NAME, cardRequestDTO.getNumber());
+            card.put(EXPIRATION_MONTH_FIELD_NAME, cardRequestDTO.getMonth());
+            card.put(EXPIRATION_YEAR_FIELD_NAME, cardRequestDTO.getYear());
+            card.put(CVC_FIELD_NAME, cardRequestDTO.getCvc());
             Map<String, Object> params = new HashMap<>();
-            params.put("card", card);
+            params.put(CARD_FIELD_NAME, card);
             token = Token.create(params, requestOptions);
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
@@ -144,11 +165,10 @@ public class PaymentService {
                 .build();
     }
 
-    public CustomerResponseDto createCustomer(CustomerDto customerDTO, BindingResult bindingResult)
-            throws PaymentException, EntityValidateException, EntityNotFoundException {
+    public CustomerResponseDto createCustomer(CustomerDto customerDTO) throws PaymentException, EntityValidateException,
+            EntityNotFoundException {
 
-        customerValidator.validate(customerDTO, bindingResult);
-        handleBindingResult(bindingResult);
+        customerValidator.validate(customerDTO);
 
         Stripe.apiKey = STRIPE_API_PUBLIC_KEY;
 
@@ -157,7 +177,7 @@ public class PaymentService {
                         .setName(customerDTO.getName())
                         .setEmail(customerDTO.getEmail())
                         .setPhone(customerDTO.getPhone())
-                        .setBalance((long) Math.round(customerDTO.getBalance().floatValue() * CONVERT_COEFFICIENT))
+                        .setBalance(convertToStripeScale(customerDTO.getBalance().floatValue()))
                         .build();
 
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
@@ -170,10 +190,8 @@ public class PaymentService {
         return new CustomerResponseDto(customer.getId());
     }
 
-    public CustomerResponseDto updateCustomer(long id, CustomerDto customerDTO, BindingResult bindingResult) throws PaymentException,
-            EntityNotFoundException, EntityValidateException {
-
-        handleBindingResult(bindingResult);
+    public CustomerResponseDto updateCustomer(long id, CustomerDto customerDTO) throws PaymentException,
+            EntityNotFoundException {
 
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
@@ -188,7 +206,7 @@ public class PaymentService {
                     .setName(customerDTO.getName())
                     .setEmail(customerDTO.getEmail())
                     .setPhone(customerDTO.getPhone())
-                    .setBalance((long) Math.round(customerDTO.getBalance().floatValue() * CONVERT_COEFFICIENT))
+                    .setBalance(convertToStripeScale(customerDTO.getBalance().floatValue()))
                     .build();
             resource.update(params, requestOptions);
         } catch (StripeException stripeException) {
@@ -217,23 +235,20 @@ public class PaymentService {
         return new CustomerResponseDto(customer.getId());
     }
 
-    public ChargeResponseDto chargeFromCustomer(CustomerChargeRequestDto customerChargeRequestDTO,
-                                                BindingResult bindingResult)
-            throws EntityNotFoundException, NotEnoughMoneyException, PaymentException, EntityValidateException {
-
-        handleBindingResult(bindingResult);
+    public ChargeResponseDto chargeFromCustomer(CustomerChargeRequestDto customerChargeRequestDTO)
+            throws EntityNotFoundException, NotEnoughMoneyException, PaymentException {
 
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
         User user = usersService.findByTaxiUserIdAndRole(customerChargeRequestDTO.getTaxiUserId(),
                 customerChargeRequestDTO.getRole());
         String customerId = user.getCustomerId();
-        checkBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
-        updateBalance(customerId, Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT));
+        checkBalance(customerId, convertToStripeScale(customerChargeRequestDTO.getAmount().floatValue()));
+        updateBalance(customerId, convertToStripeScale(customerChargeRequestDTO.getAmount().floatValue()));
 
         PaymentIntent intent;
         try {
             PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                    .setAmount((long) Math.round(customerChargeRequestDTO.getAmount().floatValue() * CONVERT_COEFFICIENT))
+                    .setAmount(convertToStripeScale(customerChargeRequestDTO.getAmount().floatValue()))
                     .setCurrency(customerChargeRequestDTO.getCurrency())
                     .setCustomer(customerId)
                     .setAutomaticPaymentMethods(
@@ -261,7 +276,7 @@ public class PaymentService {
     private void confirmPaymentIntent(PaymentIntent resource) throws StripeException {
         PaymentIntentConfirmParams params =
                 PaymentIntentConfirmParams.builder()
-                        .setPaymentMethod("pm_card_visa")
+                        .setPaymentMethod(PAYMENT_TYPE_NAME)
                         .build();
         resource.confirm(params);
     }
@@ -364,14 +379,14 @@ public class PaymentService {
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
         Map<String, Object> paymentMethodParams = new HashMap<>();
-        paymentMethodParams.put("type", "card");
+        paymentMethodParams.put(TYPE_FIELD_NAME, CARD_FIELD_NAME);
         Map<String, Object> cardParams = new HashMap<>();
-        cardParams.put("token", "tok_visa");
-        paymentMethodParams.put("card", cardParams);
+        cardParams.put(TOKEN_FIELD_NAME, TOKEN_VALUE);
+        paymentMethodParams.put(CARD_FIELD_NAME, cardParams);
         try {
             PaymentMethod paymentMethod = PaymentMethod.create(paymentMethodParams);
             Map<String, Object> attachParams = new HashMap<>();
-            attachParams.put("customer", customerId);
+            attachParams.put(CUSTOMER_FIELD_NAME, customerId);
             paymentMethod.attach(attachParams, requestOptions);
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
@@ -408,15 +423,7 @@ public class PaymentService {
 
     }
 
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
+    private long convertToStripeScale(float value) {
+        return Math.round(value * CONVERT_COEFFICIENT);
     }
 }

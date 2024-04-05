@@ -10,16 +10,16 @@ import java.util.stream.Collectors;
 @Component
 public class AddressMapper {
 
-    private AddressDto toDTO(Address address) {
+    private AddressDto toDto(Address address) {
         return AddressDto.builder()
                 .latitude(Double.valueOf(address.getLatitude()))
                 .longitude(Double.valueOf(address.getLongitude()))
                 .build();
     }
 
-    public List<AddressDto> toListDTO(List<Address> addresses) {
+    public List<AddressDto> toListDto(List<Address> addresses) {
         return addresses.stream()
-                .map(this::toDTO)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 }

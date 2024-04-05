@@ -1,6 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.client;
 
 import by.modsen.taxiprovider.ridesservice.dto.driver.DriverDto;
+import by.modsen.taxiprovider.ridesservice.dto.driver.DriverListDto;
 import by.modsen.taxiprovider.ridesservice.dto.error.ErrorResponseDto;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.ExternalServiceRequestException;
@@ -14,8 +15,6 @@ import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static by.modsen.taxiprovider.ridesservice.util.Message.*;
 
@@ -29,13 +28,13 @@ public class DriverHttpClient {
 
     private static final int RETRY_DURATION_TIME = 5;
 
-    public List<DriverDto> getFreeDrivers() throws EntityNotFoundException {
+    public DriverListDto getFreeDrivers() throws EntityNotFoundException {
         WebClient webClient = WebClient.builder()
                 .baseUrl(DRIVERS_SERVICE_HOST_URL)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
-        List<DriverDto> drivers =  webClient.get()
+        DriverListDto drivers =  webClient.get()
                 .uri("/free")
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
@@ -44,7 +43,7 @@ public class DriverHttpClient {
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                         Mono.error(new ExternalServiceRequestException(String
                                 .format(EXTERNAL_SERVICE_ERROR, DRIVERS_SERVICE_HOST_URL))))
-                .bodyToFlux(DriverDto.class)
+                .bodyToMono(DriverListDto.class)
                 .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, Duration.ofSeconds(RETRY_DURATION_TIME))
                         .filter(throwable -> throwable instanceof ExternalServiceRequestException)
                         .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
@@ -52,10 +51,9 @@ public class DriverHttpClient {
                                     CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE,
                                     DRIVERS_SERVICE_HOST_URL));
                         }))
-                .collect(Collectors.toList())
                 .block();
 
-        if ((drivers != null) && (drivers.isEmpty())) {
+        if (drivers != null && drivers.getContent().isEmpty()) {
             throw new EntityNotFoundException(NO_FREE_DRIVERS);
         }
 

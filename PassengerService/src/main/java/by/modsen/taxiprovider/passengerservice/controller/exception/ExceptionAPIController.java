@@ -60,7 +60,7 @@ public class ExceptionAPIController {
 
         exception.getBindingResult()
                 .getAllErrors()
-                .forEach(error -> errorMessage.append(error.getDefaultMessage()).append(". "));
+                .forEach(error -> errorMessage.append(error.getDefaultMessage()).append(" "));
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

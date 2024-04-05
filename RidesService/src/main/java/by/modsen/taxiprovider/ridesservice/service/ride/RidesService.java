@@ -3,7 +3,6 @@ package by.modsen.taxiprovider.ridesservice.service.ride;
 import by.modsen.taxiprovider.ridesservice.client.DriverHttpClient;
 import by.modsen.taxiprovider.ridesservice.client.PaymentHttpClient;
 import by.modsen.taxiprovider.ridesservice.dto.driver.DriverDto;
-import by.modsen.taxiprovider.ridesservice.dto.error.ErrorResponseDto;
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDto;
 import by.modsen.taxiprovider.ridesservice.dto.request.CustomerChargeRequestDto;
 import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDto;
@@ -24,30 +23,18 @@ import by.modsen.taxiprovider.ridesservice.service.ride.distance.DistanceCalcula
 import by.modsen.taxiprovider.ridesservice.util.exception.DistanceCalculationException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
-import by.modsen.taxiprovider.ridesservice.util.exception.ExternalServiceRequestException;
-import by.modsen.taxiprovider.ridesservice.util.exception.ExternalServiceUnavailableException;
 import by.modsen.taxiprovider.ridesservice.util.validation.ride.RideValidator;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static by.modsen.taxiprovider.ridesservice.util.Message.*;
 import static by.modsen.taxiprovider.ridesservice.util.Status.*;
@@ -98,13 +85,13 @@ public class RidesService {
         List<Ride> rides = ridesRepository.findAll();
 
         return RideListDto.builder()
-                .content(rideMapper.toListDTO(rides))
+                .content(rideMapper.toListDto(rides))
                 .build();
     }
 
     @Transactional(readOnly = true)
     public RideDto findById(long id) throws EntityNotFoundException {
-        return rideMapper.toDTO(ridesRepository.findById(id).orElseThrow(EntityNotFoundException
+        return rideMapper.toDto(ridesRepository.findById(id).orElseThrow(EntityNotFoundException
                 .entityNotFoundException(String.format(RIDE_NOT_FOUND, id))));
     }
 
@@ -113,7 +100,7 @@ public class RidesService {
         List<Ride> rides = ridesRepository.findByPassengerIdAndStatus(passengerId, RIDE_STATUS_COMPLETED);
 
         return RideListDto.builder()
-                .content(rideMapper.toListDTO(rides))
+                .content(rideMapper.toListDto(rides))
                 .build();
     }
 
@@ -122,7 +109,7 @@ public class RidesService {
         List<Ride> rides = ridesRepository.findByDriverIdAndStatus(driverId, RIDE_STATUS_COMPLETED);
 
         return RideListDto.builder()
-                .content(rideMapper.toListDTO(rides))
+                .content(rideMapper.toListDto(rides))
                 .build();
     }
 
@@ -147,12 +134,15 @@ public class RidesService {
     }
 
     @Transactional
-    public RideResponseDto save(NewRideDto rideDTO, PromoCodeDto promoCodeDTO, BindingResult bindingResult) throws IOException,
-            ParseException, DistanceCalculationException, EntityNotFoundException, InterruptedException,
-            EntityValidateException {
+    public RideResponseDto save(NewRideDto rideDTO) throws IOException, ParseException, DistanceCalculationException,
+            EntityNotFoundException, InterruptedException, EntityValidateException {
+
+        PromoCodeDto promoCodeDTO = null;
+        if (rideDTO.getPromoCode() != null) {
+            promoCodeDTO = promoCodesService.findByValue(rideDTO.getPromoCode().getValue());
+        }
 
         Ride ride = rideMapper.toEntity(rideDTO);
-        handleBindingResult(bindingResult);
 
         PromoCode promoCode = null;
         if (promoCodeDTO != null) {
@@ -192,11 +182,14 @@ public class RidesService {
         ride.setStatus(RIDE_STATUS_WAITING);
         ride.setCost(rideCost);
 
-        DriverDto driver = driverHttpClient.getFreeDrivers().get(0);
+        DriverDto driver = driverHttpClient.getFreeDrivers().getContent().get(0);
         driver.setStatus(DRIVER_STATUS_TAKEN);
 
         driverHttpClient.updateDriver(driver);
         ride.setDriverId(driver.getId());
+
+        rideValidator.validate(ride);
+
         ridesRepository.save(ride);
 
         Ride createdRide = findDriverCurrentDrive(driver.getId(), RIDE_STATUS_WAITING);
@@ -213,11 +206,9 @@ public class RidesService {
     }
 
     @Transactional
-    public RideResponseDto update(RideDto rideDTO, BindingResult bindingResult) throws EntityValidateException,
-            EntityNotFoundException {
+    public RideResponseDto update(RideDto rideDTO) throws EntityValidateException, EntityNotFoundException {
 
-        rideValidator.validate(rideDTO, bindingResult);
-        handleBindingResult(bindingResult);
+        rideValidator.validate(rideMapper.toEntity(rideDTO));
 
         Ride ride = null;
         switch (rideDTO.getStatus()) {
@@ -327,12 +318,11 @@ public class RidesService {
         return ride;
     }
 
-    public BigDecimal getPotentialRideCost(PotentialRideDto potentialRideDTO, BindingResult bindingResult)
+    public BigDecimal getRideCost(PotentialRideDto potentialRideDTO)
             throws IOException, ParseException, DistanceCalculationException, InterruptedException,
             EntityNotFoundException, EntityValidateException {
 
         PotentialRide potentialRide = potentialRideMapper.toEntity(potentialRideDTO);
-        handleBindingResult(bindingResult);
 
         return calculatePotentialRideCost(potentialRide);
     }
@@ -368,17 +358,4 @@ public class RidesService {
 
         return rideDistance;
     }
-
-    private void handleBindingResult(BindingResult bindingResult) throws EntityValidateException {
-        if (bindingResult.hasErrors()) {
-            StringBuilder message = new StringBuilder();
-
-            for (FieldError error: bindingResult.getFieldErrors()) {
-                message.append(error.getDefaultMessage()).append(". ");
-            }
-
-            throw new EntityValidateException(message.toString());
-        }
-    }
-
 }

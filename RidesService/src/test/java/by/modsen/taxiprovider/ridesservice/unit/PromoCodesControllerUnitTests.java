@@ -1,8 +1,9 @@
 package by.modsen.taxiprovider.ridesservice.unit;
 
 import by.modsen.taxiprovider.ridesservice.controller.promocode.PromoCodesController;
-import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDTO;
-import by.modsen.taxiprovider.ridesservice.dto.response.PromoCodeResponseDTO;
+import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDto;
+import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodesListDto;
+import by.modsen.taxiprovider.ridesservice.dto.response.PromoCodeResponseDto;
 import by.modsen.taxiprovider.ridesservice.service.promocode.PromoCodesService;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundException;
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
@@ -14,14 +15,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.validation.BindingResult;
-
-import java.util.List;
 
 import static by.modsen.taxiprovider.ridesservice.utility.PromoCodesTestUtil.*;
 import static by.modsen.taxiprovider.ridesservice.util.Message.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,7 +41,7 @@ public class PromoCodesControllerUnitTests {
     @Test
     public void testGetPromoCodesWhenPromoCodesExistReturnListOfPromoCodes() throws Exception {
         //given
-        List<PromoCodeDTO> promoCodes = getPromoCodes();
+        PromoCodesListDto promoCodes = new PromoCodesListDto(getPromoCodes());
 
         //when
         when(promoCodesService.findAll()).thenReturn(promoCodes);
@@ -54,30 +50,31 @@ public class PromoCodesControllerUnitTests {
         mockMvc.perform(get("/promoCodes")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].value").value(promoCodes.get(0).getValue()))
-                .andExpect(jsonPath("$[1].value").value(promoCodes.get(1).getValue()))
-                .andExpect(jsonPath("$[2].value").value(promoCodes.get(2).getValue()));
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.content[0].value").value(promoCodes.getContent().get(0).getValue()))
+                .andExpect(jsonPath("$.content[1].value").value(promoCodes.getContent().get(1).getValue()))
+                .andExpect(jsonPath("$.content[2].value").value(promoCodes.getContent().get(2).getValue()));
     }
 
     @Test
     public void testGetPromoCodesWhenPromoCodesDoNotExistReturnErrorResponse() throws Exception {
         //given
+        PromoCodesListDto promoCodes = getEmptyPromoCodesList();
 
         //when
-        when(promoCodesService.findAll()).thenThrow(new EntityNotFoundException(PROMO_CODES_NOT_FOUND));
+        when(promoCodesService.findAll()).thenReturn(promoCodes);
 
         //then
         mockMvc.perform(get("/promoCodes")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value(PROMO_CODES_NOT_FOUND));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 
     @Test
     public void testGetPromoCodeByValueWhenPromoCodeExistsReturnPromoCode() throws Exception {
         //given
-        PromoCodeDTO promoCode = getPromoCode();
+        PromoCodeDto promoCode = getPromoCode();
 
         //when
         when(promoCodesService.findByValue(DEFAULT_PROMO_CODE_VALUE)).thenReturn(promoCode);
@@ -111,11 +108,11 @@ public class PromoCodesControllerUnitTests {
     @Test
     public void testSavePromoCodeWhenRequestIsValidReturnIdOfCreatedPromoCode() throws Exception {
         //given
-        PromoCodeDTO request = getRequestForSavePromoCode();
-        PromoCodeResponseDTO response = getResponse();
+        PromoCodeDto request = getRequestForSavePromoCode();
+        PromoCodeResponseDto response = getResponse();
 
         //when
-        when(promoCodesService.save(eq(request), any(BindingResult.class))).thenReturn(response);
+        when(promoCodesService.save(request)).thenReturn(response);
 
         //then
         mockMvc.perform(post("/promoCodes")
@@ -128,10 +125,10 @@ public class PromoCodesControllerUnitTests {
     @Test
     public void testSavePromoCodeWhenRequestIsInvalidReturnErrorResponse() throws Exception {
         //given
-        PromoCodeDTO request = getInvalidRequestForSavePromoCode();
+        PromoCodeDto request = getInvalidRequestForSavePromoCode();
 
         //when
-        when(promoCodesService.save(eq(request), any(BindingResult.class)))
+        when(promoCodesService.save(request))
                 .thenThrow(new EntityValidateException(PROMO_CODE_SIZE_IS_INVALID));
 
         //then
@@ -145,11 +142,11 @@ public class PromoCodesControllerUnitTests {
     @Test
     public void testEditPromoCodeWhenRequestIsValidReturnIdOfUpdatedPromoCode() throws Exception {
         //given
-        PromoCodeDTO request = getRequestForEditPromoCode();
-        PromoCodeResponseDTO response = getResponse();
+        PromoCodeDto request = getRequestForEditPromoCode();
+        PromoCodeResponseDto response = getResponse();
 
         //when
-        when(promoCodesService.update(eq(request.getId()), eq(request), any(BindingResult.class))).thenReturn(response);
+        when(promoCodesService.update(request.getId(), request)).thenReturn(response);
 
         //then
         mockMvc.perform(patch("/promoCodes/1")
@@ -162,10 +159,10 @@ public class PromoCodesControllerUnitTests {
     @Test
     public void testEditPromoCodeWhenRequestIsInvalidReturnErrorResponse() throws Exception {
         //given
-        PromoCodeDTO request = getInvalidRequestForEditPromoCode();
+        PromoCodeDto request = getInvalidRequestForEditPromoCode();
 
         //when
-        when(promoCodesService.update(eq(request.getId()), eq(request), any(BindingResult.class)))
+        when(promoCodesService.update(request.getId(), request))
                 .thenThrow(new EntityValidateException(DISCOUNT_IS_INVALID));
 
         //then
@@ -179,7 +176,7 @@ public class PromoCodesControllerUnitTests {
     @Test
     public void testDeletePromoCodeWhenPromoCodeExistsReturnIdOfDeletedPromoCode() throws Exception {
         //given
-        PromoCodeResponseDTO response = getResponse();
+        PromoCodeResponseDto response = getResponse();
 
         //when
         when(promoCodesService.delete(DEFAULT_PROMO_CODE_ID)).thenReturn(response);

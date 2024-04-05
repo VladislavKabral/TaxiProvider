@@ -65,7 +65,7 @@ public class DistanceCalculator {
     private String getRequestBody(Address source, Address target) throws JsonProcessingException {
         ObjectWriter objectWriter = new ObjectMapper().writer().withDefaultPrettyPrinter();
         return objectWriter.writeValueAsString(DistanceRequestDto.builder()
-                .points(addressMapper.toListDTO(List.of(source, target)))
+                .points(addressMapper.toListDto(List.of(source, target)))
                 .sources(new int[]{0})
                 .targets(new int[]{1})
                 .build());

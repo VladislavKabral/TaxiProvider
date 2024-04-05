@@ -24,6 +24,8 @@ public class RatingHttpClient {
     private String RATINGS_SERVICE_HOST_URL;
 
     private static final String PASSENGER_ROLE_NAME = "PASSENGER";
+    private static final String TAXI_USER_ID_FIELD_NAME = "taxiUserId";
+    private static final String ROLE_FIELD_NAME = "role";
 
     private static final int MAX_RETRY_ATTEMPTS = 3;
 
@@ -63,8 +65,8 @@ public class RatingHttpClient {
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .queryParam("taxiUserId", passengerId)
-                        .queryParam("role", PASSENGER_ROLE_NAME)
+                        .queryParam(TAXI_USER_ID_FIELD_NAME, passengerId)
+                        .queryParam(ROLE_FIELD_NAME, PASSENGER_ROLE_NAME)
                         .build())
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,clientResponse ->

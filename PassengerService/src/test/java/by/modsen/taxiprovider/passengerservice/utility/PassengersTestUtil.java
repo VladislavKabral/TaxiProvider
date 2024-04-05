@@ -1,10 +1,12 @@
 package by.modsen.taxiprovider.passengerservice.utility;
 
-import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDTO;
-import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDTO;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerListDto;
+import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDto;
 import lombok.experimental.UtilityClass;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @UtilityClass
@@ -23,22 +25,22 @@ public class PassengersTestUtil {
     public final String DEFAULT_PASSENGER_PHONE_NUMBER = "+375291234590";
     public final String DEFAULT_PASSENGER_PASSWORD = "$2a$12$kjMvQl359in5BXoX1mgAhORCAwfCU3OREAAR1wX9444WVoMvORKiW";
 
-    public List<PassengerDTO> getPassengers() {
-        return List.of(PassengerDTO.builder()
+    public List<PassengerDto> getPassengers() {
+        return List.of(PassengerDto.builder()
                         .id(1)
                         .lastname("Ivanov")
                         .firstname("Ivan")
                         .email("mr.ivanov@mail.ru")
                         .phoneNumber("+375291234590")
                         .build(),
-                PassengerDTO.builder()
+                PassengerDto.builder()
                         .id(2)
                         .lastname("Petrov")
                         .firstname("Petr")
                         .email("mr.petrov@mail.ru")
                         .phoneNumber("+375336894867")
                         .build(),
-                PassengerDTO.builder()
+                PassengerDto.builder()
                         .id(3)
                         .lastname("Borisov")
                         .firstname("Boris")
@@ -47,32 +49,12 @@ public class PassengersTestUtil {
                         .build());
     }
 
-    public List<PassengerDTO> getSortedPassengers() {
-        return List.of(PassengerDTO.builder()
-                        .id(3)
-                        .lastname("Borisov")
-                        .firstname("Boris")
-                        .email("mr.borisov@mail.ru")
-                        .phoneNumber("+375296131124")
-                        .build(),
-                PassengerDTO.builder()
-                        .id(1)
-                        .lastname("Ivanov")
-                        .firstname("Ivan")
-                        .email("mr.ivanov@mail.ru")
-                        .phoneNumber("+375291234590")
-                        .build(),
-                PassengerDTO.builder()
-                        .id(2)
-                        .lastname("Petrov")
-                        .firstname("Petr")
-                        .email("mr.petrov@mail.ru")
-                        .phoneNumber("+375336894867")
-                        .build());
+    public PassengerListDto getEmptyPassengersList() {
+        return new PassengerListDto(new ArrayList<>());
     }
 
-    public PassengerDTO getPassenger() {
-        return PassengerDTO.builder()
+    public PassengerDto getPassenger() {
+        return PassengerDto.builder()
                 .id(DEFAULT_PASSENGER_ID)
                 .lastname(DEFAULT_PASSENGER_LASTNAME)
                 .firstname(DEFAULT_PASSENGER_FIRSTNAME)
@@ -81,15 +63,15 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public PassengerProfileDTO getPassengerProfile() {
-        return PassengerProfileDTO.builder()
+    public PassengerProfileDto getPassengerProfile() {
+        return PassengerProfileDto.builder()
                 .passenger(getPassenger())
                 .rating(DEFAULT_PASSENGER_RATING)
                 .build();
     }
 
-    public NewPassengerDTO getRequestForSavePassenger() {
-        return NewPassengerDTO.builder()
+    public NewPassengerDto getRequestForSavePassenger() {
+        return NewPassengerDto.builder()
                 .lastname(DEFAULT_PASSENGER_LASTNAME)
                 .firstname(DEFAULT_PASSENGER_FIRSTNAME)
                 .email(DEFAULT_PASSENGER_EMAIL)
@@ -98,8 +80,8 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public NewPassengerDTO getRequestForSavePassengerWithInvalidLastName() {
-        return NewPassengerDTO.builder()
+    public NewPassengerDto getRequestForSavePassengerWithInvalidLastName() {
+        return NewPassengerDto.builder()
                 .lastname("Iva 56nov")
                 .firstname(DEFAULT_PASSENGER_FIRSTNAME)
                 .email(DEFAULT_PASSENGER_EMAIL)
@@ -108,8 +90,8 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public NewPassengerDTO getRequestForSavePassengerWithInvalidFirstName() {
-        return NewPassengerDTO.builder()
+    public NewPassengerDto getRequestForSavePassengerWithInvalidFirstName() {
+        return NewPassengerDto.builder()
                 .lastname(DEFAULT_PASSENGER_LASTNAME)
                 .firstname("Iv35an")
                 .email(DEFAULT_PASSENGER_EMAIL)
@@ -118,8 +100,8 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public NewPassengerDTO getRequestForSavePassengerWithInvalidEmail() {
-        return NewPassengerDTO.builder()
+    public NewPassengerDto getRequestForSavePassengerWithInvalidEmail() {
+        return NewPassengerDto.builder()
                 .lastname(DEFAULT_PASSENGER_LASTNAME)
                 .firstname(DEFAULT_PASSENGER_FIRSTNAME)
                 .email("mr.ivanov.ru")
@@ -128,8 +110,8 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public NewPassengerDTO getRequestForSavePassengerWithInvalidPhoneNumber() {
-        return NewPassengerDTO.builder()
+    public NewPassengerDto getRequestForSavePassengerWithInvalidPhoneNumber() {
+        return NewPassengerDto.builder()
                 .lastname(DEFAULT_PASSENGER_LASTNAME)
                 .firstname(DEFAULT_PASSENGER_FIRSTNAME)
                 .email(DEFAULT_PASSENGER_EMAIL)
@@ -138,8 +120,8 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public NewPassengerDTO getRequestForSavePassengerWithInvalidPassword() {
-        return NewPassengerDTO.builder()
+    public NewPassengerDto getRequestForSavePassengerWithInvalidPassword() {
+        return NewPassengerDto.builder()
                 .lastname(DEFAULT_PASSENGER_LASTNAME)
                 .firstname(DEFAULT_PASSENGER_FIRSTNAME)
                 .email(DEFAULT_PASSENGER_EMAIL)
@@ -148,8 +130,8 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public PassengerDTO getRequestForEditPassenger() {
-        return PassengerDTO.builder()
+    public PassengerDto getRequestForEditPassenger() {
+        return PassengerDto.builder()
                 .id(DEFAULT_PASSENGER_ID)
                 .lastname(DEFAULT_PASSENGER_LASTNAME)
                 .firstname(DEFAULT_PASSENGER_FIRSTNAME)
@@ -158,8 +140,8 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public PassengerDTO getRequestForEditPassengerWithInvalidLastname() {
-        return PassengerDTO.builder()
+    public PassengerDto getRequestForEditPassengerWithInvalidLastname() {
+        return PassengerDto.builder()
                 .id(DEFAULT_PASSENGER_ID)
                 .lastname("%gghh7")
                 .firstname(DEFAULT_PASSENGER_FIRSTNAME)
@@ -168,8 +150,8 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public PassengerDTO getRequestForEditPassengerWithInvalidFirstname() {
-        return PassengerDTO.builder()
+    public PassengerDto getRequestForEditPassengerWithInvalidFirstname() {
+        return PassengerDto.builder()
                 .id(DEFAULT_PASSENGER_ID)
                 .lastname(DEFAULT_PASSENGER_LASTNAME)
                 .firstname("%gghh7")
@@ -178,8 +160,8 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public PassengerDTO getRequestForEditPassengerWithInvalidEmail() {
-        return PassengerDTO.builder()
+    public PassengerDto getRequestForEditPassengerWithInvalidEmail() {
+        return PassengerDto.builder()
                 .id(DEFAULT_PASSENGER_ID)
                 .lastname(DEFAULT_PASSENGER_LASTNAME)
                 .firstname(DEFAULT_PASSENGER_FIRSTNAME)
@@ -188,8 +170,8 @@ public class PassengersTestUtil {
                 .build();
     }
 
-    public PassengerDTO getRequestForEditPassengerWithInvalidPhoneNumber() {
-        return PassengerDTO.builder()
+    public PassengerDto getRequestForEditPassengerWithInvalidPhoneNumber() {
+        return PassengerDto.builder()
                 .id(DEFAULT_PASSENGER_ID)
                 .lastname(DEFAULT_PASSENGER_LASTNAME)
                 .firstname(DEFAULT_PASSENGER_FIRSTNAME)

@@ -1,4 +1,4 @@
-package by.modsen.taxiprovider.passengerservice.dto.passenger;
+package by.modsen.taxiprovider.ridesservice.dto.driver;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,11 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PassengersPageDto {
+public class DriverListDto {
 
-    private List<PassengerDto> content;
-
-    private int page;
-
-    private int size;
+    private List<DriverDto> content;
 }

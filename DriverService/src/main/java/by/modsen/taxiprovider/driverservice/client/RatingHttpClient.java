@@ -21,6 +21,8 @@ import static by.modsen.taxiprovider.driverservice.util.Message.*;
 public class RatingHttpClient {
 
     private static final String DRIVER_ROLE_NAME = "DRIVER";
+    private static final String TAXI_USER_ID_FIELD_NAME = "taxiUserId";
+    private static final String ROLE_FIELD_NAME = "role";
 
     @Value("${ratings-service-host-url}")
     private String RATINGS_SERVICE_HOST_URL;
@@ -63,8 +65,8 @@ public class RatingHttpClient {
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .queryParam("taxiUserId", driverId)
-                        .queryParam("role", DRIVER_ROLE_NAME)
+                        .queryParam(TAXI_USER_ID_FIELD_NAME, driverId)
+                        .queryParam(ROLE_FIELD_NAME, DRIVER_ROLE_NAME)
                         .build())
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
@@ -82,5 +84,4 @@ public class RatingHttpClient {
                         }))
                 .block();
     }
-
 }

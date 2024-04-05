@@ -19,11 +19,11 @@ public class PromoCodeMapper {
         return modelMapper.map(promoCodeDTO, PromoCode.class);
     }
 
-    public PromoCodeDto toDTO(PromoCode promoCode) {
+    public PromoCodeDto toDto(PromoCode promoCode) {
         return modelMapper.map(promoCode, PromoCodeDto.class);
     }
 
-    public List<PromoCodeDto> toListDTO(List<PromoCode> promoCodes) {
-        return promoCodes.stream().map(this::toDTO).collect(Collectors.toList());
+    public List<PromoCodeDto> toListDto(List<PromoCode> promoCodes) {
+        return promoCodes.stream().map(this::toDto).collect(Collectors.toList());
     }
 }

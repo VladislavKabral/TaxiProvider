@@ -16,17 +16,17 @@ public class DriverMapper {
 
     private final ModelMapper modelMapper;
 
-    public Driver toEntity(NewDriverDto newDriverDTO) {
-        return modelMapper.map(newDriverDTO, Driver.class);
+    public Driver toEntity(NewDriverDto newDriverDto) {
+        return modelMapper.map(newDriverDto, Driver.class);
     }
 
-    public DriverDto toDTO(Driver driver) {
+    public DriverDto toDto(Driver driver) {
         return modelMapper.map(driver, DriverDto.class);
     }
 
-    public List<DriverDto> toListDTO(List<Driver> drivers) {
+    public List<DriverDto> toListDto(List<Driver> drivers) {
         return drivers.stream()
-                .map(this::toDTO)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 }

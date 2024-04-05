@@ -16,21 +16,21 @@ public class PassengerMapper {
 
     private final ModelMapper modelMapper;
 
-    public Passenger toEntity(PassengerDto passengerDTO) {
-        return modelMapper.map(passengerDTO, Passenger.class);
+    public Passenger toEntity(PassengerDto passengerDto) {
+        return modelMapper.map(passengerDto, Passenger.class);
     }
 
-    public Passenger toEntity(NewPassengerDto passengerDTO) {
-        return modelMapper.map(passengerDTO, Passenger.class);
+    public Passenger toEntity(NewPassengerDto passengerDto) {
+        return modelMapper.map(passengerDto, Passenger.class);
     }
 
-    public PassengerDto toDTO(Passenger passenger) {
+    public PassengerDto toDto(Passenger passenger) {
         return modelMapper.map(passenger, PassengerDto.class);
     }
 
-    public List<PassengerDto> toListDTO(List<Passenger> passengers) {
+    public List<PassengerDto> toListDto(List<Passenger> passengers) {
         return passengers.stream()
-                .map(this::toDTO)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 }
