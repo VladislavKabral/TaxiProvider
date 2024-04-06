@@ -16,8 +16,13 @@ public class DriversTestUtil {
     public final String GET_DRIVERS_PATH = "/drivers";
     public final String GET_FREE_DRIVERS_PATH = "/drivers/free";
     public final String GET_DEFAULT_DRIVER_PATH = "/drivers/1";
+    public final String GET_DEFAULT_DRIVER_PROFILE_PATH = "/drivers/1/profile";
+    public final String GET_DEFAULT_NON_EXISTS_DRIVER_PROFILE_PATH = "/drivers/4/profile";
+    public final String DEACTIVATE_DEFAULT_DRIVER_PATH = "/drivers/1";
     public final String GET_NON_EXISTENT_DRIVER_PATH = "/drivers/4";
+    public final String DEACTIVATE_NON_EXISTENT_DRIVER_PATH = "/drivers/4";
     public final String INIT_DRIVER_RATING_PATH = "/ratings/init";
+    public final String GET_DRIVER_RATING_PATH = "/ratings?taxiUserId=1&role=DRIVER";
     public final String PAGE_PARAM_NAME = "page";
     public final String SIZE_PARAM_NAME = "size";
     public final String SORT_PARAM_NAME = "sort";
