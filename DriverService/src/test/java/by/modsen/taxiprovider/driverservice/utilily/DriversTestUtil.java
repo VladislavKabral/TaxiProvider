@@ -4,6 +4,8 @@ import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverListDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
+import by.modsen.taxiprovider.driverservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.driverservice.model.Driver;
 import lombok.experimental.UtilityClass;
 
 import java.math.BigDecimal;
@@ -44,6 +46,7 @@ public class DriversTestUtil {
     public final String DEFAULT_DRIVER_PHONE_NUMBER = "+375293660893";
     public final String DEFAULT_NEW_DRIVER_PHONE_NUMBER = "+375292796152";
     public final String DEFAULT_DRIVER_ACCOUNT_STATUS = "ACTIVE";
+    public final String DRIVER_ROLE_NAME = "DRIVER";
     public final String DEFAULT_DRIVER_STATUS = "FREE";
     public final BigDecimal DEFAULT_DRIVER_BALANCE = BigDecimal.valueOf(0.0);
     public final String DEFAULT_NEW_DRIVER_PASSWORD = "$2a$12$b7CcS8TDc.0Zjc2bZHYFPOfnOvJsR6EDC.PlDloRe3RevAC3jYLDS";
@@ -83,6 +86,39 @@ public class DriversTestUtil {
                 .build();
     }
 
+    public List<Driver> getDriverList() {
+        return List.of(Driver.builder()
+                        .id(1)
+                        .lastname("Vasiliev")
+                        .firstname("Platon")
+                        .email("mr.vasiliev@mail.ru")
+                        .phoneNumber("+375293660893")
+                        .accountStatus("ACTIVE")
+                        .status("FREE")
+                        .balance(BigDecimal.valueOf(0.00))
+                        .build(),
+                Driver.builder()
+                        .id(2)
+                        .lastname("Dybrovin")
+                        .firstname("Ilia")
+                        .email("mr.dybrovin@mail.ru")
+                        .phoneNumber("+375296499224")
+                        .accountStatus("ACTIVE")
+                        .status("FREE")
+                        .balance(BigDecimal.ZERO)
+                        .build(),
+                Driver.builder()
+                        .id(3)
+                        .lastname("Smirnov")
+                        .firstname("Sergei")
+                        .email("mr.smirnov@mail.ru")
+                        .phoneNumber("+375298415692")
+                        .accountStatus("ACTIVE")
+                        .status("FREE")
+                        .balance(BigDecimal.valueOf(0.00))
+                        .build());
+    }
+
     public DriverListDto getEmptyDriverList() {
         return new DriverListDto(new ArrayList<>());
     }
@@ -100,10 +136,31 @@ public class DriversTestUtil {
                 .build();
     }
 
+    public Driver getDefaultDriver() {
+        return Driver.builder()
+                .id(DEFAULT_DRIVER_ID)
+                .lastname(DEFAULT_DRIVER_LASTNAME)
+                .firstname(DEFAULT_DRIVER_FIRSTNAME)
+                .email(DEFAULT_DRIVER_EMAIL)
+                .phoneNumber(DEFAULT_DRIVER_PHONE_NUMBER)
+                .accountStatus(DEFAULT_DRIVER_ACCOUNT_STATUS)
+                .status(DEFAULT_DRIVER_STATUS)
+                .balance(DEFAULT_DRIVER_BALANCE)
+                .build();
+    }
+
     public DriverProfileDto getDriverProfile() {
         return DriverProfileDto.builder()
                 .driver(getDriver())
                 .rating(DEFAULT_DRIVER_RATING)
+                .build();
+    }
+
+    public RatingDto getDefaultDriverRating() {
+        return RatingDto.builder()
+                .taxiUserId(DEFAULT_DRIVER_ID)
+                .value(DEFAULT_DRIVER_RATING)
+                .role(DRIVER_ROLE_NAME)
                 .build();
     }
 
