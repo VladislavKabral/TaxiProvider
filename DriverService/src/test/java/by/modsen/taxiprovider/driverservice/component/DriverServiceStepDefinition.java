@@ -74,8 +74,8 @@ public class DriverServiceStepDefinition {
         when(driverMapper.toListDto(any())).thenReturn(getDrivers().getContent());
     }
 
-    @When("The method findAll is called")
-    public void theMethodFindAllIsCalled() {
+    @When("Get all drivers")
+    public void getAllDrivers() {
         driverListResponse = driverService.findAll();
     }
 
@@ -93,8 +93,8 @@ public class DriverServiceStepDefinition {
         when(driverMapper.toDto(driver)).thenReturn(getDriver());
     }
 
-    @When("The method findById is called with id {long}")
-    public void theMethodFindByIdIsCalled(long id) {
+    @When("Find the driver with id {long}")
+    public void findTheDriverById(long id) {
         try {
             driverResponse = driverService.findById(id);
         } catch (EntityNotFoundException e) {
@@ -102,22 +102,22 @@ public class DriverServiceStepDefinition {
         }
     }
 
-    @Then("A driver response with driver")
-    public void aDriverResponseWithDriver() {
+    @Then("A response with driver")
+    public void aResponseWithDriver() {
         assertEquals(driverResponse.getId(), DEFAULT_DRIVER_ID);
         assertEquals(driverResponse.getLastname(), DEFAULT_DRIVER_LASTNAME);
         assertEquals(driverResponse.getFirstname(), DEFAULT_DRIVER_FIRSTNAME);
     }
 
     @Given("The driver with id {long} doesn't exist")
-    public void theDriverWithIdDoesntExist(long id) {
+    public void theDriverWithIdDoesNotExist(long id) {
         when(driverRepository.findById(id)).thenReturn(Optional.empty());
         Optional<Driver> driver = driverRepository.findById(id);
         assertFalse(driver.isPresent());
     }
 
-    @Then("EntityNotFoundException is threw and response doesn't have driver with id {long}")
-    public void entityNotFoundExceptionIsThrew(long id) {
+    @Then("The driver with id {long} wasn't found")
+    public void theDriverWasNotFound(long id) {
         String expectedResponse = String.format(DRIVER_NOT_FOUND, id);
         String actualResponse = exception.getMessage();
 
@@ -136,8 +136,8 @@ public class DriverServiceStepDefinition {
         when(driverRepository.findByEmail(anyString())).thenReturn(Optional.of(driver));
     }
 
-    @When("The method save is called")
-    public void theMethodSaveIsCalled() {
+    @When("Save a new driver")
+    public void saveANewDriver() {
         NewDriverDto newDriver = getRequestForSaveDriver();
 
         try {
@@ -147,8 +147,8 @@ public class DriverServiceStepDefinition {
         }
     }
 
-    @Then("DriverResponse with id of created driver")
-    public void driverResponseWithIdOfCreatedDriver() {
+    @Then("A response with id of created driver")
+    public void aResponseWithIdOfCreatedDriver() {
         assertEquals(driverResponseDto.getId(), DEFAULT_DRIVER_ID);
     }
 
@@ -167,8 +167,8 @@ public class DriverServiceStepDefinition {
 
     }
 
-    @Then("EntityValidateException is threw")
-    public void entityValidateExceptionIsThrew() {
+    @Then("A new driver wasn't created")
+    public void aNewDriverWasNotCreated() {
         String actualResponse = exception.getMessage();
 
         assertEquals(DRIVER_WITH_GIVEN_EMAIL_ALREADY_EXISTS, actualResponse);
@@ -185,6 +185,13 @@ public class DriverServiceStepDefinition {
                 .validate(driver);
     }
 
+    @Then("The driver wasn't updated")
+    public void theDriverWasNotUpdated() {
+        String actualResponse = exception.getMessage();
+
+        assertEquals(DRIVER_WITH_GIVEN_EMAIL_ALREADY_EXISTS, actualResponse);
+    }
+
     @Given("The valid request for updating driver")
     public void theValidRequestForUpdatingDriver() {
         Driver driver = getDefaultDriver();
@@ -192,8 +199,8 @@ public class DriverServiceStepDefinition {
         when(driverRepository.findById(anyLong())).thenReturn(Optional.ofNullable(driver));
     }
 
-    @When("The method update is called")
-    public void theMethodUpdateIsCalled() {
+    @When("Update the driver")
+    public void updateTheDriver() {
         DriverDto driverDto = getDriver();
 
         try {
@@ -203,8 +210,8 @@ public class DriverServiceStepDefinition {
         }
     }
 
-    @Then("Driver response with id of updated driver")
-    public void driverResponseWithIdOfUpdatedDriver() {
+    @Then("A response with id of updated driver")
+    public void aResponseWithIdOfUpdatedDriver() {
         assertEquals(driverResponseDto.getId(), DEFAULT_DRIVER_ID);
     }
 
@@ -215,8 +222,8 @@ public class DriverServiceStepDefinition {
         when(driverRepository.findById(anyLong())).thenReturn(Optional.ofNullable(driver));
     }
 
-    @When("The method deactivate is called with id {long}")
-    public void theMethodDeactivateIsCalled(long id) {
+    @When("Deactivate the driver with id {long}")
+    public void deactivateTheDriverById(long id) {
         try {
             driverResponseDto = driverService.deactivate(id);
         } catch (EntityNotFoundException e) {
@@ -224,8 +231,8 @@ public class DriverServiceStepDefinition {
         }
     }
 
-    @Then("Driver response with id of deactivated driver")
-    public void driverResponseWithIdOfDeactivatedDriver() {
+    @Then("A response with id of deactivated driver")
+    public void aResponseWithIdOfDeactivatedDriver() {
         assertEquals(driverResponseDto.getId(), DEFAULT_DRIVER_ID);
     }
 
@@ -241,7 +248,7 @@ public class DriverServiceStepDefinition {
         when(ratingHttpClient.getDriverRating(anyLong())).thenReturn(rating);
     }
 
-    @When("The method getProfile is called with id {long}")
+    @When("Get profile of the driver with id {long}")
     public void theMethodGetProfileIsCalled(long id) {
         try {
             driverProfile = driverService.getDriverProfile(id);
@@ -250,8 +257,8 @@ public class DriverServiceStepDefinition {
         }
     }
 
-    @Then("Response with profile of driver")
-    public void responseWithProfileOfDriver() {
+    @Then("A response with profile of the driver")
+    public void aResponseWithProfileOfDriver() {
         assertEquals(driverProfile.getDriver(), getDriver());
         assertEquals(driverProfile.getRating(), DEFAULT_DRIVER_RATING);
     }
