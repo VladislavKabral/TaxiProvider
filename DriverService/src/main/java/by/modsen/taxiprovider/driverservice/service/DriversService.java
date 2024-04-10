@@ -62,7 +62,7 @@ public class DriversService {
         List<Driver> drivers = driversRepository
                 .findAll(PageRequest.of(index - 1, count, Sort.by(sortField))).getContent()
                 .stream()
-                .filter(driver -> driver.getStatus().equals(DRIVER_ACCOUNT_STATUS_ACTIVE))
+                .filter(driver -> driver.getAccountStatus().equals(DRIVER_ACCOUNT_STATUS_ACTIVE))
                 .toList();
 
         return DriversPageDto.builder()
