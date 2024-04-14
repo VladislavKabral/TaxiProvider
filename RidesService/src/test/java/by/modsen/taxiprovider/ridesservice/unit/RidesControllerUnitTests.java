@@ -192,7 +192,7 @@ class RidesControllerUnitTests {
 	public void testSaveRideWhenRequestIsValidReturnIdOfCreatedRide() throws Exception {
 		//given
 		NewRideDto request = getRequestForSaveRide();
-		RideResponseDto response = new RideResponseDto(DEFAULT_RIDE_ID);
+		RideResponseDto response = new RideResponseDto(DEFAULT_RIDE_ID, DEFAULT_DRIVER_ID, DEFAULT_PASSENGER_ID);
 
 		//when
 		when(ridesService.save(request)).thenReturn(response);
@@ -259,7 +259,7 @@ class RidesControllerUnitTests {
 	@Test
 	public void testCancelRideWhenRideExistsReturnIdOfCancelledRide() throws Exception {
 		//given
-		RideResponseDto response = new RideResponseDto(DEFAULT_RIDE_ID);
+		RideResponseDto response = new RideResponseDto(DEFAULT_RIDE_ID, DEFAULT_DRIVER_ID, DEFAULT_PASSENGER_ID);
 
 		//when
 		when(ridesService.cancel(DEFAULT_PASSENGER_ID)).thenReturn(response);
