@@ -10,4 +10,8 @@ import lombok.NoArgsConstructor;
 public class RideResponseDto {
 
     private long id;
+
+    private long driverId;
+
+    private long passengerId;
 }

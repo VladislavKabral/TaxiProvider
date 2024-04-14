@@ -156,7 +156,7 @@ class RidesControllerUnitTests {
 	@Test
 	public void testGetRideByIdWhenRideExistReturnRide() throws Exception {
 		//given
-		RideDto ride = getRide();
+		RideDto ride = getRideDto();
 
 		//when
 		when(ridesService.findById(DEFAULT_RIDE_ID)).thenReturn(ride);
