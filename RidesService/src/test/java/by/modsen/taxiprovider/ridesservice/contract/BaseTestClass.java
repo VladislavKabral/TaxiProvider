@@ -44,11 +44,11 @@ public class BaseTestClass {
 
         when(ridesService.findAll()).thenReturn(getRideListDto());
 
-        when(ridesService.cancel(anyLong())).thenReturn(new RideResponseDto(DEFAULT_RIDE_ID));
+        when(ridesService.cancel(anyLong())).thenReturn(new RideResponseDto(DEFAULT_RIDE_ID, DEFAULT_DRIVER_ID, DEFAULT_PASSENGER_ID));
 
         when(promoCodesService.save(any())).thenReturn(new PromoCodeResponseDto(NON_EXISTS_PROMO_CODE_ID));
 
-        when(ridesService.save(any())).thenReturn(new RideResponseDto(DEFAULT_NON_EXISTS_RIDE_ID));
+        when(ridesService.save(any())).thenReturn(new RideResponseDto(DEFAULT_NON_EXISTS_RIDE_ID, DEFAULT_DRIVER_ID, DEFAULT_PASSENGER_ID));
 
         when(promoCodesService.update(anyLong(), any())).thenReturn(new PromoCodeResponseDto(DEFAULT_PROMO_CODE_ID));
 
