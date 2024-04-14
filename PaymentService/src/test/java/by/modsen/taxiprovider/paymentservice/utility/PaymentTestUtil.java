@@ -7,6 +7,7 @@ import by.modsen.taxiprovider.paymentservice.dto.request.CustomerChargeRequestDt
 import by.modsen.taxiprovider.paymentservice.dto.response.BalanceResponseDto;
 import by.modsen.taxiprovider.paymentservice.dto.response.ChargeResponseDto;
 import by.modsen.taxiprovider.paymentservice.dto.response.CustomerResponseDto;
+import by.modsen.taxiprovider.paymentservice.dto.response.TokenResponseDto;
 import lombok.experimental.UtilityClass;
 
 import java.math.BigDecimal;
@@ -31,6 +32,19 @@ public class PaymentTestUtil {
     public final BigDecimal DEFAULT_CUSTOMER_BALANCE = BigDecimal.valueOf(100.0);
     public final String DEFAULT_CUSTOMER_ROLE = "PASSENGER";
     public final String CUSTOMER_WAS_NOT_FOUND_MESSAGE = "No such customer: '%s'; code: resource_missing; request-id: req_BJrTochHEYdE88";
+
+    public TokenResponseDto getTokenResponse() {
+        return TokenResponseDto.builder()
+                .token(DEFAULT_CARD_TOKEN)
+                .build();
+    }
+
+    public BalanceResponseDto getCustomerBalance() {
+        return BalanceResponseDto.builder()
+                .amount(DEFAULT_CHARGE_AMOUNT)
+                .currency(DEFAULT_CURRENCY)
+                .build();
+    }
 
     public CardRequestDto getCardRequest() {
         return CardRequestDto.builder()
