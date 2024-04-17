@@ -40,6 +40,15 @@ services:
     depends_on:
       - zookeeper
 
+  eureka-server:
+    image: eureka-server:0.0.1
+    container_name: eureka-server
+    networks:
+      - taxi_provider
+    ports:
+      - '8761:8761'
+
+
   passenger-service:
     image: passenger-service:0.0.1
     container_name: passenger-service
@@ -55,6 +64,7 @@ services:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
     depends_on:
       - db
+      - eureka-server
       - kafka
 
   driver-service:
@@ -72,6 +82,7 @@ services:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
     depends_on:
       - db
+      - eureka-server
       - kafka
 
   ride-service:
@@ -89,6 +100,7 @@ services:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
     depends_on:
       - db
+      - eureka-server
       - kafka
 
   payment-service:
@@ -104,6 +116,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=0000
     depends_on:
       - db
+      - eureka-server
 
   rating-service:
     image: rating-service:0.0.1
@@ -118,6 +131,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=0000
     depends_on:
       - db
+      - eureka-server
 
 networks:
   taxi_provider:

@@ -18,6 +18,7 @@
         <modelmapper.version>3.1.1</modelmapper.version>
         <cucumber.version>7.14.0</cucumber.version>
         <spring.cloud.contract.version>4.1.2</spring.cloud.contract.version>
+        <eureka.client.version>4.1.1</eureka.client.version>
     </properties>
     <dependencies>
         <dependency>
@@ -84,6 +85,11 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-contract-verifier</artifactId>
             <version>${spring.cloud.contract.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+            <version>${eureka.client.version}</version>
         </dependency>
     </dependencies>
 
