@@ -202,7 +202,7 @@ public class RidesService {
                 createdRide.getDriverId(),
                 ZonedDateTime.now(ZoneId.of("UTC"))).toString());
 
-        return new RideResponseDto(createdRide.getId());
+        return new RideResponseDto(createdRide.getId(), createdRide.getDriverId(), createdRide.getPassengerId());
     }
 
     @Transactional
@@ -228,7 +228,7 @@ public class RidesService {
 
         ridesRepository.save(ride);
 
-        return new RideResponseDto(ride.getId());
+        return new RideResponseDto(ride.getId(), ride.getDriverId(), ride.getPassengerId());
     }
 
     @Transactional
@@ -236,7 +236,7 @@ public class RidesService {
         Ride ride = ridesRepository.findById(id)
                 .orElseThrow(EntityNotFoundException.entityNotFoundException(String.format(RIDE_NOT_FOUND, id)));
         ridesRepository.delete(ride);
-        return new RideResponseDto(id);
+        return new RideResponseDto(id, ride.getDriverId(), ride.getPassengerId());
     }
 
     @Transactional
@@ -254,7 +254,7 @@ public class RidesService {
                 ride.getDriverId(),
                 ZonedDateTime.now(ZoneId.of("UTC")).toString()));
 
-        return new RideResponseDto(ride.getId());
+        return new RideResponseDto(ride.getId(), ride.getDriverId(), ride.getPassengerId());
     }
 
     private Ride startRide(RideDto rideDTO) throws EntityNotFoundException {

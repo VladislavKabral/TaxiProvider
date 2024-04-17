@@ -59,7 +59,7 @@ public class PromoCodesControllerUnitTests {
     @Test
     public void testGetPromoCodesWhenPromoCodesDoNotExistReturnErrorResponse() throws Exception {
         //given
-        PromoCodesListDto promoCodes = getEmptyPromoCodesList();
+        PromoCodesListDto promoCodes = getEmptyPromoCodeDtoList();
 
         //when
         when(promoCodesService.findAll()).thenReturn(promoCodes);
@@ -74,7 +74,7 @@ public class PromoCodesControllerUnitTests {
     @Test
     public void testGetPromoCodeByValueWhenPromoCodeExistsReturnPromoCode() throws Exception {
         //given
-        PromoCodeDto promoCode = getPromoCode();
+        PromoCodeDto promoCode = getPromoCodeDto();
 
         //when
         when(promoCodesService.findByValue(DEFAULT_PROMO_CODE_VALUE)).thenReturn(promoCode);
