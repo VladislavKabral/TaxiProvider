@@ -1,5 +1,7 @@
 call eureka-server-build.bat
 cd ../
+call api-gateway-build.bat
+cd ../
 call driver-service-build.bat
 cd ../
 call passenger-service-build.bat

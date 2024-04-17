@@ -48,6 +48,17 @@ services:
     ports:
       - '8761:8761'
 
+  api-gateway:
+    image: api-gateway:0.0.1
+    container_name: api-gateway
+    networks:
+      - taxi_provider
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+    depends_on:
+      - eureka-server
+    ports:
+      - '8765:8765'
 
   passenger-service:
     image: passenger-service:0.0.1
