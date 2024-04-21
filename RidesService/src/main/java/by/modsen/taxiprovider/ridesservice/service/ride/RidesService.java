@@ -25,6 +25,8 @@ import by.modsen.taxiprovider.ridesservice.util.exception.EntityNotFoundExceptio
 import by.modsen.taxiprovider.ridesservice.util.exception.EntityValidateException;
 import by.modsen.taxiprovider.ridesservice.util.validation.ride.RideValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.protocol.types.Field;
 import org.json.simple.parser.ParseException;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -42,6 +44,7 @@ import static by.modsen.taxiprovider.ridesservice.util.PaymentType.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RidesService {
 
     private final RidesRepository ridesRepository;
@@ -82,6 +85,7 @@ public class RidesService {
 
     @Transactional(readOnly = true)
     public RideListDto findAll() {
+        log.info(FINDING_ALL_RIDES);
         List<Ride> rides = ridesRepository.findAll();
 
         return RideListDto.builder()
@@ -91,12 +95,14 @@ public class RidesService {
 
     @Transactional(readOnly = true)
     public RideDto findById(long id) throws EntityNotFoundException {
+        log.info(String.format(FINDING_RIDE_BY_ID, id));
         return rideMapper.toDto(ridesRepository.findById(id).orElseThrow(EntityNotFoundException
                 .entityNotFoundException(String.format(RIDE_NOT_FOUND, id))));
     }
 
     @Transactional(readOnly = true)
     public RideListDto findByPassengerId(long passengerId) {
+        log.info(String.format(FINDING_RIDES_BY_PASSENGER_ID, passengerId));
         List<Ride> rides = ridesRepository.findByPassengerIdAndStatus(passengerId, RIDE_STATUS_COMPLETED);
 
         return RideListDto.builder()
@@ -106,6 +112,7 @@ public class RidesService {
 
     @Transactional(readOnly = true)
     public RideListDto findByDriverId(long driverId) {
+        log.info(String.format(FINDING_RIDES_BY_DRIVER_ID, driverId));
         List<Ride> rides = ridesRepository.findByDriverIdAndStatus(driverId, RIDE_STATUS_COMPLETED);
 
         return RideListDto.builder()
@@ -114,28 +121,35 @@ public class RidesService {
     }
 
     public Ride findDriverCurrentDrive(long driverId, String status) throws EntityNotFoundException {
+        log.info(String.format(FINDING_CURRENT_DRIVER_RIDE, driverId, status));
         List<Ride> rides = ridesRepository.findByDriverIdAndStatus(driverId, status);
 
         if (rides.isEmpty()) {
+            log.info(String.format(DRIVER_CURRENT_RIDES_NOT_FOUND, status));
             throw new EntityNotFoundException(String.format(DRIVER_CURRENT_RIDES_NOT_FOUND, status));
         }
 
+        log.info(CURRENT_RIDE_WAS_FOUND);
         return rides.get(0);
     }
 
     public Ride findPassengerCurrentDrive(long passengerId) throws EntityNotFoundException {
+        log.info(String.format(FINDING_CURRENT_PASSENGER_RIDE, passengerId));
         List<Ride> rides = ridesRepository.findByPassengerIdAndStatus(passengerId, RIDE_STATUS_WAITING);
 
         if (rides.isEmpty()) {
+            log.info(WAITING_RIDES_NOT_FOUND);
             throw new EntityNotFoundException(WAITING_RIDES_NOT_FOUND);
         }
 
+        log.info(CURRENT_RIDE_WAS_FOUND);
         return rides.get(0);
     }
 
     @Transactional
     public RideResponseDto save(NewRideDto rideDTO) throws IOException, ParseException, DistanceCalculationException,
             EntityNotFoundException, InterruptedException, EntityValidateException {
+        log.info(SAVING_NEW_RIDE);
 
         PromoCodeDto promoCodeDTO = null;
         if (rideDTO.getPromoCode() != null) {
@@ -179,11 +193,15 @@ public class RidesService {
                 .promoCode(promoCode)
                 .build());
 
+        log.info(String.format(RIDE_COST, rideCost));
+
         ride.setStatus(RIDE_STATUS_WAITING);
         ride.setCost(rideCost);
 
         DriverDto driver = driverHttpClient.getFreeDrivers().getContent().get(0);
         driver.setStatus(DRIVER_STATUS_TAKEN);
+
+        log.info(String.format(RIDE_DRIVER, driver.getId()));
 
         driverHttpClient.updateDriver(driver);
         ride.setDriverId(driver.getId());
@@ -194,6 +212,7 @@ public class RidesService {
 
         Ride createdRide = findDriverCurrentDrive(driver.getId(), RIDE_STATUS_WAITING);
         if (createdRide == null) {
+            log.info(String.format(RIDE_NOT_CREATED, driver.getId()));
             throw new EntityNotFoundException(String.format(RIDE_NOT_CREATED, driver.getId()));
         }
 
@@ -202,12 +221,13 @@ public class RidesService {
                 createdRide.getDriverId(),
                 ZonedDateTime.now(ZoneId.of("UTC"))).toString());
 
+        log.info(RIDE_WAS_CREATED);
         return new RideResponseDto(createdRide.getId(), createdRide.getDriverId(), createdRide.getPassengerId());
     }
 
     @Transactional
     public RideResponseDto update(RideDto rideDTO) throws EntityValidateException, EntityNotFoundException {
-
+        log.info(UPDATING_RIDE);
         rideValidator.validate(rideMapper.toEntity(rideDTO));
 
         Ride ride = null;
@@ -228,19 +248,23 @@ public class RidesService {
 
         ridesRepository.save(ride);
 
+        log.info(String.format(RIDE_WAS_UPDATED, ride.getId()));
         return new RideResponseDto(ride.getId(), ride.getDriverId(), ride.getPassengerId());
     }
 
     @Transactional
     public RideResponseDto delete(long id) throws EntityNotFoundException {
+        log.info(String.format(DELETING_RIDE, id));
         Ride ride = ridesRepository.findById(id)
                 .orElseThrow(EntityNotFoundException.entityNotFoundException(String.format(RIDE_NOT_FOUND, id)));
         ridesRepository.delete(ride);
+        log.info(String.format(RIDE_WAS_DELETED, id));
         return new RideResponseDto(id, ride.getDriverId(), ride.getPassengerId());
     }
 
     @Transactional
     public RideResponseDto cancel(long passengerId) throws EntityNotFoundException {
+        log.info(String.format(CANCELLING_RIDE, passengerId));
         Ride ride = findPassengerCurrentDrive(passengerId);
         ride.setStatus(RIDE_STATUS_CANCELLED);
         ridesRepository.save(ride);
@@ -249,11 +273,13 @@ public class RidesService {
         driver.setStatus(DRIVER_STATUS_FREE);
         driverHttpClient.updateDriver(driver);
 
-        kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_CANCELLED,
+        String message = String.format(RIDE_WAS_CANCELLED,
                 ride.getPassengerId(),
                 ride.getDriverId(),
-                ZonedDateTime.now(ZoneId.of("UTC")).toString()));
+                ZonedDateTime.now(ZoneId.of("UTC")).toString());
+        kafkaTemplate.send(KAFKA_TOPIC_NAME, message);
 
+        log.info(message);
         return new RideResponseDto(ride.getId(), ride.getDriverId(), ride.getPassengerId());
     }
 
@@ -262,11 +288,13 @@ public class RidesService {
         ride.setStartedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         ride.setStatus(rideDTO.getStatus());
 
-        kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_STARTED,
+        String message = String.format(RIDE_WAS_STARTED,
                 ride.getPassengerId(),
                 ride.getDriverId(),
-                ride.getStartedAt().toString()));
+                ride.getStartedAt().toString());
+        kafkaTemplate.send(KAFKA_TOPIC_NAME, message);
 
+        log.info(message);
         return ride;
     }
 
@@ -292,11 +320,13 @@ public class RidesService {
         driverHttpClient.updateDriver(driver);
         ride.setStatus(rideDTO.getStatus());
 
-        kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_ENDED,
+        String message = String.format(RIDE_WAS_ENDED,
                 ride.getPassengerId(),
                 ride.getDriverId(),
-                ride.getEndedAt()));
+                ride.getEndedAt());
+        kafkaTemplate.send(KAFKA_TOPIC_NAME, message);
 
+        log.info(message);
         return ride;
     }
 
@@ -310,11 +340,13 @@ public class RidesService {
         driverHttpClient.updateDriver(driver);
         ride.setStatus(RIDE_STATUS_COMPLETED);
 
-        kafkaTemplate.send(KAFKA_TOPIC_NAME, String.format(RIDE_WAS_ENDED,
+        String message = String.format(RIDE_WAS_ENDED,
                 ride.getPassengerId(),
                 ride.getDriverId(),
-                ride.getEndedAt()));
+                ride.getEndedAt());
+        kafkaTemplate.send(KAFKA_TOPIC_NAME, message);
 
+        log.info(message);
         return ride;
     }
 

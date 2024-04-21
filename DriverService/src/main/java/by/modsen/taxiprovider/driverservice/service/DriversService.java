@@ -15,6 +15,7 @@ import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateExcepti
 import by.modsen.taxiprovider.driverservice.util.exception.InvalidRequestDataException;
 import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -31,6 +32,7 @@ import java.util.List;
 @Service
 @EnableKafka
 @RequiredArgsConstructor
+@Slf4j
 public class DriversService {
 
     private final DriversRepository driversRepository;
@@ -46,6 +48,7 @@ public class DriversService {
     private static final String KAFKA_TOPIC_NAME = "RIDE";
 
     public DriverListDto findAll() {
+        log.info(FIND_ALL_DRIVERS);
         List<Driver> drivers = driversRepository.findByAccountStatus(DRIVER_ACCOUNT_STATUS_ACTIVE);
 
         return DriverListDto.builder()
@@ -56,9 +59,11 @@ public class DriversService {
     public DriversPageDto findPageDrivers(int index, int count, String sortField)
             throws InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {
+            log.info(RECEIVED_PAGE_PARAMETERS_ARE_INVALID);
             throw new InvalidRequestDataException(INVALID_PAGE_REQUEST);
         }
 
+        log.info(FIND_DRIVERS);
         List<Driver> drivers = driversRepository
                 .findAll(PageRequest.of(index - 1, count, Sort.by(sortField))).getContent()
                 .stream()
@@ -73,6 +78,7 @@ public class DriversService {
     }
 
     public DriverDto findById(long id) throws EntityNotFoundException {
+        log.info(String.format(FIND_DRIVER_BY_ID, id));
         return driverMapper.toDto(findDriver(id));
     }
 
@@ -83,6 +89,7 @@ public class DriversService {
     }
 
     public DriverListDto findFreeDrivers() {
+        log.info(FIND_FREE_DRIVERS);
         List<Driver> drivers = driversRepository.findByStatus(DRIVER_STATUS_FREE);
 
         return DriverListDto.builder()
@@ -92,6 +99,7 @@ public class DriversService {
 
     @Transactional
     public DriverResponseDto save(NewDriverDto driverDTO) throws EntityNotFoundException, EntityValidateException {
+        log.info(SAVE_NEW_DRIVER);
         Driver driver = driverMapper.toEntity(driverDTO);
 
         driversValidator.validate(driver);
@@ -109,12 +117,14 @@ public class DriversService {
 
         ratingHttpClient.initDriverRating(createdDriver.getId());
 
+        log.info(String.format(DRIVER_WAS_SAVED, createdDriver.getLastname(), createdDriver.getFirstname()));
         return new DriverResponseDto(createdDriver.getId());
     }
 
     @Transactional
     public DriverResponseDto update(long id, DriverDto driverDTO) throws EntityNotFoundException,
             EntityValidateException {
+        log.info(UPDATE_DRIVER);
         Driver driver = findDriver(id);
 
         String firstname = driverDTO.getFirstname();
@@ -152,20 +162,24 @@ public class DriversService {
         driver.setId(id);
         driversRepository.save(driver);
 
+        log.info(String.format(DRIVER_WAS_UPDATED, driver.getId()));
         return new DriverResponseDto(id);
     }
 
     @Transactional
     public DriverResponseDto deactivate(long id) throws EntityNotFoundException {
+        log.info(DEACTIVATE_DRIVER);
         Driver driver = findDriver(id);
 
         driver.setAccountStatus(DRIVER_ACCOUNT_STATUS_INACTIVE);
         driversRepository.save(driver);
 
+        log.info(String.format(DRIVER_WAS_DEACTIVATED, driver.getId()));
         return new DriverResponseDto(id);
     }
 
     public DriverProfileDto getDriverProfile(long id) throws EntityNotFoundException {
+        log.info(String.format(FIND_DRIVER_PROFILE, id));
         DriverDto driver = findById(id);
 
         return DriverProfileDto.builder()
@@ -176,7 +190,6 @@ public class DriversService {
 
     @KafkaListener(topics = KAFKA_TOPIC_NAME)
     private void messageListener(String message) {
-        //TODO: change to log
-        System.out.println(message);
+        log.info(message);
     }
 }

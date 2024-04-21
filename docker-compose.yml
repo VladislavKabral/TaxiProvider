@@ -40,6 +40,49 @@ services:
     depends_on:
       - zookeeper
 
+  elasticsearch:
+    image: elasticsearch:7.17.17
+    container_name: elasticsearch
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.type=single-node"
+      - xpack.security.enabled=false
+    ports:
+      - '9200:9200'
+    volumes:
+      - ./elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - taxi_provider
+
+  kibana:
+    image: kibana:7.17.17
+    container_name: kibana
+    ports:
+      - '5601:5601'
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    depends_on:
+      - elasticsearch
+    networks:
+      - taxi_provider
+
+  logstash:
+    image: logstash:7.17.17
+    container_name: logstash
+    volumes:
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./monitoring/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+    ports:
+      - '5000:5000'
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - taxi_provider
+    depends_on:
+      - elasticsearch
+
   eureka-server:
     image: eureka-server:0.0.1
     container_name: eureka-server
