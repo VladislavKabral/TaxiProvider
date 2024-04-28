@@ -376,7 +376,6 @@ public class PaymentService {
 
         Long balance = customer.getBalance();
         if (balance < amount) {
-            log.info(String.format(CUSTOMER_HAS_ENOUGH_MONEY, customerId));
             throw new NotEnoughMoneyException(NOT_ENOUGH_MONEY_ON_BALANCE);
         }
 
@@ -422,7 +421,6 @@ public class PaymentService {
             attachParams.put(CUSTOMER_FIELD_NAME, customerId);
             paymentMethod.attach(attachParams, requestOptions);
         } catch (StripeException stripeException) {
-            log.info(NEW_PAYMENT_METHOD_WAS_NOT_CREATED);
             throw new PaymentException(stripeException.getMessage());
         }
 

@@ -125,7 +125,6 @@ public class RidesService {
         List<Ride> rides = ridesRepository.findByDriverIdAndStatus(driverId, status);
 
         if (rides.isEmpty()) {
-            log.info(String.format(DRIVER_CURRENT_RIDES_NOT_FOUND, status));
             throw new EntityNotFoundException(String.format(DRIVER_CURRENT_RIDES_NOT_FOUND, status));
         }
 
@@ -138,7 +137,6 @@ public class RidesService {
         List<Ride> rides = ridesRepository.findByPassengerIdAndStatus(passengerId, RIDE_STATUS_WAITING);
 
         if (rides.isEmpty()) {
-            log.info(WAITING_RIDES_NOT_FOUND);
             throw new EntityNotFoundException(WAITING_RIDES_NOT_FOUND);
         }
 
@@ -212,7 +210,6 @@ public class RidesService {
 
         Ride createdRide = findDriverCurrentDrive(driver.getId(), RIDE_STATUS_WAITING);
         if (createdRide == null) {
-            log.info(String.format(RIDE_NOT_CREATED, driver.getId()));
             throw new EntityNotFoundException(String.format(RIDE_NOT_CREATED, driver.getId()));
         }
 

@@ -59,7 +59,6 @@ public class DriversService {
     public DriversPageDto findPageDrivers(int index, int count, String sortField)
             throws InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {
-            log.info(RECEIVED_PAGE_PARAMETERS_ARE_INVALID);
             throw new InvalidRequestDataException(INVALID_PAGE_REQUEST);
         }
 

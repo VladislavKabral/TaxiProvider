@@ -52,11 +52,9 @@ public class RatingsService {
                 .toList();
 
         if (ratings.isEmpty()) {
-            String message = String.format(TAXI_USER_NOT_FOUND,
+            throw new EntityNotFoundException(String.format(TAXI_USER_NOT_FOUND,
                     request.getTaxiUserId(),
-                    request.getRole());
-            log.info(message);
-            throw new EntityNotFoundException(message);
+                    request.getRole()));
         }
 
         double ratingValue = new BigDecimal(Double.toString((double) ratings.stream()
