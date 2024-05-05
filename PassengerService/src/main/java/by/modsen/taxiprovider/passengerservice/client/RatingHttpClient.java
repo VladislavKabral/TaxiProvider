@@ -8,6 +8,7 @@ import by.modsen.taxiprovider.passengerservice.util.exception.ExternalServiceUna
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.server.resource.web.reactive.function.client.ServletBearerExchangeFilterFunction;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -33,6 +34,7 @@ public class RatingHttpClient {
 
     public void initPassengerRating(long passengerId) {
         WebClient webClient = WebClient.builder()
+                .filter(new ServletBearerExchangeFilterFunction())
                 .baseUrl(RATINGS_SERVICE_HOST_URL)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
@@ -59,6 +61,7 @@ public class RatingHttpClient {
 
     public RatingDto getPassengerRating(long passengerId) {
         WebClient webClient = WebClient.builder()
+                .filter(new ServletBearerExchangeFilterFunction())
                 .baseUrl(RATINGS_SERVICE_HOST_URL)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();

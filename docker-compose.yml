@@ -116,6 +116,21 @@ services:
     ports:
       - '9411:9411'
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    container_name: keycloak
+    hostname: localhost
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=password
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    entrypoint: '/opt/keycloak/bin/kc.sh start-dev --import-realm'
+    ports:
+      - "8080:8080"
+    networks:
+      - taxi_provider
+
   eureka-server:
     image: eureka-server:0.0.1
     container_name: eureka-server
@@ -132,6 +147,9 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TAXI_PROVIDER_CLIENT_SECRET=hBAgr6FirJ3KQ1wzt8wfWcheE52K1kMQ
+      - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/taxi-provider
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
     depends_on:
       - eureka-server
     ports:
@@ -143,7 +161,7 @@ services:
     networks:
       - taxi_provider
     ports:
-      - "8080:8080"
+      - "8081:8081"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal/passengers_db
       - SPRING_DATASOURCE_USERNAME=postgres
@@ -151,6 +169,7 @@ services:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
     depends_on:
       - db
       - eureka-server
@@ -162,7 +181,7 @@ services:
     networks:
       - taxi_provider
     ports:
-      - "8081:8081"
+      - "8082:8082"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal/drivers_db
       - SPRING_DATASOURCE_USERNAME=postgres
@@ -170,6 +189,7 @@ services:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
     depends_on:
       - db
       - eureka-server
@@ -181,7 +201,7 @@ services:
     networks:
       - taxi_provider
     ports:
-      - "8082:8082"
+      - "8083:8083"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal/rides_db
       - SPRING_DATASOURCE_USERNAME=postgres
@@ -189,6 +209,7 @@ services:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
     depends_on:
       - db
       - eureka-server
@@ -200,12 +221,13 @@ services:
     networks:
       - taxi_provider
     ports:
-      - "8083:8083"
+      - "8084:8084"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal/payment_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=0000
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
     depends_on:
       - db
       - eureka-server
@@ -216,12 +238,13 @@ services:
     networks:
       - taxi_provider
     ports:
-      - "8084:8084"
+      - "8085:8085"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal/ratings_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=0000
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
     depends_on:
       - db
       - eureka-server
