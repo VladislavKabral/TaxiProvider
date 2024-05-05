@@ -11,24 +11,24 @@ scrape_configs:
   - job_name: 'driver-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: [ 'driver-service:8081' ]
+      - targets: [ 'driver-service:8082' ]
 
   - job_name: 'passenger-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: [ 'passenger-service:8080' ]
+      - targets: [ 'passenger-service:8081' ]
 
   - job_name: 'payment-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: [ 'payment-service:8083' ]
+      - targets: [ 'payment-service:8084' ]
 
   - job_name: 'rating-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: [ 'ride-service:8084' ]
+      - targets: [ 'rating-service:8085' ]
 
   - job_name: 'ride-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: [ 'ride-service:8082' ]
+      - targets: [ 'ride-service:8083' ]
