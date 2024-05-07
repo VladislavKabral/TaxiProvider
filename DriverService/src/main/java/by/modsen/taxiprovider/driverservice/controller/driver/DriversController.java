@@ -73,7 +73,7 @@ public class DriversController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public ResponseEntity<DriverResponseDto> editDriver(@PathVariable("id") long id,
                                                         @RequestBody @Valid DriverDto driverDTO)
             throws EntityNotFoundException, EntityValidateException {

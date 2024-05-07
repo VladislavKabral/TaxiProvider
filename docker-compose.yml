@@ -12,6 +12,16 @@ services:
     networks:
       - taxi_provider
 
+  mongo_db:
+    image: mongo:6
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - taxi_provider
+
   zookeeper:
     image: zookeeper:3.7.0
     container_name: zookeeper
@@ -240,15 +250,18 @@ services:
     ports:
       - "8085:8085"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal/ratings_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=0000
+      - SPRING_DATA_MONGODB_URL=mongodb://root:example@mongo_db:27017/
+      - SPRING_DATA_MONGODB_HOST=mongo_db
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
     depends_on:
-      - db
+      - mongo_db
       - eureka-server
 
 networks:
   taxi_provider:
     driver: bridge
+
+volumes:
+  mongodata:
+    driver: local
