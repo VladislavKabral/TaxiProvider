@@ -129,6 +129,10 @@
         </dependency>
         <dependency>
             <groupId>io.mongock</groupId>
+            <artifactId>mongock-springboot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.mongock</groupId>
             <artifactId>mongock-springboot-v3</artifactId>
             <version>${mongok.version}</version>
         </dependency>
@@ -139,7 +143,17 @@
             <version>${mongok.version}</version>
         </dependency>
     </dependencies>
-
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.mongock</groupId>
+                <artifactId>mongock-bom</artifactId>
+                <version>${mongok.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <build>
         <plugins>
             <plugin>

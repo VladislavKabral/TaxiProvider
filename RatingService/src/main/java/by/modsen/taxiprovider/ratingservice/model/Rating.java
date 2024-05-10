@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class Rating implements Comparable<Rating> {
 
     @Id
-    private long id;
+    private String id;
 
     private long taxiUserId;
 

@@ -36,13 +36,12 @@ public class InitRatingsCollectionChangelog {
     public void beforeExecution(MongoTemplate mongoTemplate) {
         mongoTemplate.createCollection("ratings_collection", CollectionOptions.empty()
                 .validator(Validator.schema(MongoJsonSchema.builder()
-                        .required("pickUpAddress", "destinationAddress", "creatingTime", "status")
                         .properties(
                                 JsonSchemaProperty.objectId("id"),
-                                JsonSchemaProperty.string("taxiUserId"),
+                                JsonSchemaProperty.int64("taxiUserId"),
                                 JsonSchemaProperty.string("role"),
-                                JsonSchemaProperty.float64("value"),
-                                JsonSchemaProperty.int64("createdAt"))
+                                JsonSchemaProperty.int32("value"),
+                                JsonSchemaProperty.date("createdAt"))
                         .build())));
     }
 
@@ -53,12 +52,9 @@ public class InitRatingsCollectionChangelog {
 
     @Execution
     public void changeSet() {
-        int id = 1;
-
         for (int i = 1; i <= USERS_COUNT; i++) {
             for (int j = 0; j < GRADES_COUNT; j++) {
                 Rating rating = Rating.builder()
-                        .id(id++)
                         .taxiUserId(i)
                         .role(PASSENGER_ROLE_NAME)
                         .value(DEFAULT_GRADE_VALUE)
@@ -68,7 +64,6 @@ public class InitRatingsCollectionChangelog {
                 mongoTemplate.save(rating, "ratings_collection");
 
                 rating = Rating.builder()
-                        .id(id++)
                         .taxiUserId(i)
                         .role(DRIVER_ROLE_NAME)
                         .value(DEFAULT_GRADE_VALUE)
