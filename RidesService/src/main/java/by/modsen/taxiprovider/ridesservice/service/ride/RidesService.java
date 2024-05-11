@@ -1,7 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.service.ride;
 
-import by.modsen.taxiprovider.ridesservice.client.DriverHttpClient;
-import by.modsen.taxiprovider.ridesservice.client.PaymentHttpClient;
+import by.modsen.taxiprovider.ridesservice.client.DriverFeignClient;
+import by.modsen.taxiprovider.ridesservice.client.PaymentFeignClient;
 import by.modsen.taxiprovider.ridesservice.dto.driver.DriverDto;
 import by.modsen.taxiprovider.ridesservice.dto.promocode.PromoCodeDto;
 import by.modsen.taxiprovider.ridesservice.dto.request.CustomerChargeRequestDto;
@@ -63,9 +63,9 @@ public class RidesService {
 
     private final RideValidator rideValidator;
 
-    private final DriverHttpClient driverHttpClient;
+    private final DriverFeignClient driverFeignClient;
 
-    private final PaymentHttpClient paymentHttpClient;
+    private final PaymentFeignClient paymentFeignClient;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
@@ -198,12 +198,15 @@ public class RidesService {
         ride.setStatus(RIDE_STATUS_WAITING);
         ride.setCost(rideCost);
 
-        DriverDto driver = driverHttpClient.getFreeDrivers().getContent().get(0);
+        DriverDto driver = driverFeignClient.getFreeDrivers()
+                .getBody()
+                .getContent()
+                .get(0);
         driver.setStatus(DRIVER_STATUS_TAKEN);
 
         log.info(String.format(RIDE_DRIVER, driver.getId()));
 
-        driverHttpClient.updateDriver(driver);
+        driverFeignClient.editDriver(driver.getId(), driver);
         ride.setDriverId(driver.getId());
 
         rideValidator.validate(ride);
@@ -269,9 +272,9 @@ public class RidesService {
         ride.setStatus(RIDE_STATUS_CANCELLED);
         ridesRepository.save(ride);
 
-        DriverDto driver = driverHttpClient.getDriverById(ride.getDriverId());
+        DriverDto driver = driverFeignClient.getDriverById(ride.getDriverId()).getBody();
         driver.setStatus(DRIVER_STATUS_FREE);
-        driverHttpClient.updateDriver(driver);
+        driverFeignClient.editDriver(driver.getId(), driver);
 
         String message = String.format(RIDE_WAS_CANCELLED,
                 ride.getPassengerId(),
@@ -307,17 +310,17 @@ public class RidesService {
         }
 
         if (ride.getPaymentType().equals(PAYMENT_TYPE_CARD)) {
-            paymentHttpClient.payRide(CustomerChargeRequestDto.builder()
+            paymentFeignClient.chargeByCustomer(CustomerChargeRequestDto.builder()
                     .taxiUserId(ride.getPassengerId())
                     .amount(ride.getCost())
                     .currency(RIDE_CURRENCY)
                     .role(PASSENGER_ROLE_NAME)
                     .build());
         }
-        DriverDto driver = driverHttpClient.getDriverById(rideDTO.getDriverId());
+        DriverDto driver = driverFeignClient.getDriverById(ride.getDriverId()).getBody();
         driver.setStatus(DRIVER_STATUS_FREE);
         driver.setBalance(driver.getBalance().add(ride.getCost()));
-        driverHttpClient.updateDriver(driver);
+        driverFeignClient.editDriver(driver.getId(), driver);
         ride.setStatus(rideDTO.getStatus());
 
         String message = String.format(RIDE_WAS_ENDED,
@@ -334,10 +337,10 @@ public class RidesService {
         Ride ride = findDriverCurrentDrive(rideDTO.getDriverId(), RIDE_STATUS_IN_PROGRESS);
         ride.setEndedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
 
-        DriverDto driver = driverHttpClient.getDriverById(rideDTO.getDriverId());
+        DriverDto driver = driverFeignClient.getDriverById(ride.getDriverId()).getBody();
         driver.setStatus(DRIVER_STATUS_FREE);
         driver.setBalance(driver.getBalance().add(ride.getCost()));
-        driverHttpClient.updateDriver(driver);
+        driverFeignClient.editDriver(driver.getId(), driver);
         ride.setStatus(RIDE_STATUS_COMPLETED);
 
         String message = String.format(RIDE_WAS_ENDED,

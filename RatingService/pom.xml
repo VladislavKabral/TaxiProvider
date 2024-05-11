@@ -21,6 +21,7 @@
         <eureka.client.version>4.1.1</eureka.client.version>
         <logstash-logback-encoder.version>7.2</logstash-logback-encoder.version>
         <mongok.version>5.3.6</mongok.version>
+        <feign-micrometer.version>13.2</feign-micrometer.version>
     </properties>
     <dependencies>
         <dependency>
@@ -141,6 +142,15 @@
             <artifactId>mongodb-springdata-v4-driver</artifactId>
             <scope>runtime</scope>
             <version>${mongok.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-micrometer</artifactId>
+            <version>${feign-micrometer.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
         </dependency>
     </dependencies>
     <dependencyManagement>

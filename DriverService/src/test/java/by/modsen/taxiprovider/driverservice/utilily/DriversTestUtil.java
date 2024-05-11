@@ -5,6 +5,7 @@ import by.modsen.taxiprovider.driverservice.dto.driver.DriverListDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
 import by.modsen.taxiprovider.driverservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.driverservice.dto.rating.TaxiUserRatingDto;
 import by.modsen.taxiprovider.driverservice.model.Driver;
 import lombok.experimental.UtilityClass;
 
@@ -158,6 +159,14 @@ public class DriversTestUtil {
 
     public RatingDto getDefaultDriverRating() {
         return RatingDto.builder()
+                .taxiUserId(DEFAULT_DRIVER_ID)
+                .value(DEFAULT_DRIVER_RATING)
+                .role(DRIVER_ROLE_NAME)
+                .build();
+    }
+
+    public TaxiUserRatingDto getDefaultDriverTaxiUserRating() {
+        return TaxiUserRatingDto.builder()
                 .taxiUserId(DEFAULT_DRIVER_ID)
                 .value(DEFAULT_DRIVER_RATING)
                 .role(DRIVER_ROLE_NAME)

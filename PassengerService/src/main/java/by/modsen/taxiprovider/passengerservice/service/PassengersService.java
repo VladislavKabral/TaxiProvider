@@ -1,11 +1,12 @@
 package by.modsen.taxiprovider.passengerservice.service;
 
-import by.modsen.taxiprovider.passengerservice.client.RatingHttpClient;
+import by.modsen.taxiprovider.passengerservice.client.RatingFeignClient;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerListDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengersPageDto;
+import by.modsen.taxiprovider.passengerservice.dto.request.TaxiUserRequestDto;
 import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDto;
 import by.modsen.taxiprovider.passengerservice.mapper.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.model.Passenger;
@@ -26,6 +27,7 @@ import static by.modsen.taxiprovider.passengerservice.util.Message.*;
 import static by.modsen.taxiprovider.passengerservice.util.Status.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +38,7 @@ public class PassengersService {
 
     private final PassengerMapper passengerMapper;
 
-    private final RatingHttpClient ratingHttpClient;
+    private final RatingFeignClient ratingFeignClient;
 
     private final PassengersValidator passengersValidator;
 
@@ -104,7 +106,10 @@ public class PassengersService {
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException(String.format(PASSENGER_NOT_CREATED, passenger.getEmail())));
 
-        ratingHttpClient.initPassengerRating(createdPassenger.getId());
+        ratingFeignClient.initTaxiUser(TaxiUserRequestDto.builder()
+                        .taxiUserId(createdPassenger.getId())
+                        .role(PASSENGER_ROLE_NAME)
+                .build());
 
         log.info(String.format(PASSENGER_WAS_SAVED, createdPassenger.getLastname(), passenger.getFirstname()));
         return new PassengerResponseDto(createdPassenger.getId());
@@ -164,7 +169,9 @@ public class PassengersService {
 
         return PassengerProfileDto.builder()
                 .passenger(passenger)
-                .rating(ratingHttpClient.getPassengerRating(id).getValue())
+                .rating(Objects.requireNonNull(ratingFeignClient.getTaxiUserRating(id, PASSENGER_ROLE_NAME)
+                        .getBody())
+                        .getValue())
                 .build();
     }
 

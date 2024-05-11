@@ -1,11 +1,12 @@
 package by.modsen.taxiprovider.driverservice.service;
 
-import by.modsen.taxiprovider.driverservice.client.RatingHttpClient;
+import by.modsen.taxiprovider.driverservice.client.RatingFeignClient;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverListDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriversPageDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
+import by.modsen.taxiprovider.driverservice.dto.request.TaxiUserRequestDto;
 import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDto;
 import by.modsen.taxiprovider.driverservice.mapper.DriverMapper;
 import by.modsen.taxiprovider.driverservice.model.Driver;
@@ -28,6 +29,7 @@ import static by.modsen.taxiprovider.driverservice.util.Message.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @EnableKafka
@@ -39,7 +41,7 @@ public class DriversService {
 
     private final DriverMapper driverMapper;
 
-    private final RatingHttpClient ratingHttpClient;
+    private final RatingFeignClient ratingFeignClient;
 
     private final DriversValidator driversValidator;
 
@@ -115,7 +117,10 @@ public class DriversService {
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException(String.format(DRIVERS_NOT_CREATED, driver.getEmail())));
 
-        ratingHttpClient.initDriverRating(createdDriver.getId());
+        ratingFeignClient.initTaxiUser(TaxiUserRequestDto.builder()
+                        .taxiUserId(createdDriver.getId())
+                        .role(DRIVER_ROLE_NAME)
+                .build());
 
         log.info(String.format(DRIVER_WAS_SAVED, createdDriver.getLastname(), createdDriver.getFirstname()));
         return new DriverResponseDto(createdDriver.getId());
@@ -184,7 +189,9 @@ public class DriversService {
 
         return DriverProfileDto.builder()
                 .driver(driver)
-                .rating(ratingHttpClient.getDriverRating(id).getValue())
+                .rating(Objects.requireNonNull(ratingFeignClient.getTaxiUserRating(id, DRIVER_ROLE_NAME)
+                        .getBody())
+                        .getValue())
                 .build();
     }
 

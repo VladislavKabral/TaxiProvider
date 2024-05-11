@@ -61,9 +61,9 @@ public class RidesControllerIntegrationTests {
 
     @BeforeAll
     public static void init() throws IOException {
-        driversMockServer = new WireMockServer(wireMockConfig().port(8081));
-        paymentsMockServer = new WireMockServer(wireMockConfig().port(8083));
-        distanceMockServer = new WireMockServer(wireMockConfig().port(8082));
+        driversMockServer = new WireMockServer(wireMockConfig().port(8082));
+        paymentsMockServer = new WireMockServer(wireMockConfig().port(8084));
+        distanceMockServer = new WireMockServer(wireMockConfig().port(8083));
 
         driversMockServer.stubFor(WireMock.get(WireMock.urlMatching(GET_FREE_DRIVERS_PATH))
                 .willReturn(WireMock.aResponse()

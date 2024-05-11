@@ -1,7 +1,7 @@
 package by.modsen.taxiprovider.paymentservice.service.payment;
 
-import by.modsen.taxiprovider.paymentservice.client.DriverHttpClient;
-import by.modsen.taxiprovider.paymentservice.client.RideHttpClient;
+import by.modsen.taxiprovider.paymentservice.client.DriverFeignClient;
+import by.modsen.taxiprovider.paymentservice.client.RideFeignClient;
 import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDto;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDto;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDto;
@@ -63,9 +63,9 @@ public class PaymentService {
 
     private final CustomerValidator customerValidator;
 
-    private final DriverHttpClient driverHttpClient;
+    private final DriverFeignClient driverFeignClient;
 
-    private final RideHttpClient rideHttpClient;
+    private final RideFeignClient rideFeignClient;
 
     private static final int CONVERT_COEFFICIENT = 100;
 
@@ -127,7 +127,7 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
-        rideHttpClient.sendRequestForClosingRide(RideDto.builder()
+        rideFeignClient.updateRide(RideDto.builder()
                 .driverId(chargeRequestDTO.getDriverId())
                 .passengerId(chargeRequestDTO.getPassengerId())
                 .status(RIDE_STATUS_PAID)
@@ -331,7 +331,7 @@ public class PaymentService {
     public CustomerResponseDto updateDriverBalance(long driverId) throws PaymentException, EntityNotFoundException {
         log.info(String.format(UPDATING_DRIVER_BALANCE, driverId));
 
-        DriverDto driverDTO = driverHttpClient.getDriver(driverId);
+        DriverDto driverDTO = driverFeignClient.getDriverById(driverId).getBody();
 
         User user = usersService.findByTaxiUserIdAndRole(driverId, DRIVER_ROLE_NAME);
         BigDecimal amount = BigDecimal.valueOf(driverDTO.getBalance().floatValue() * DRIVER_COMMISSION);
@@ -358,7 +358,7 @@ public class PaymentService {
         }
 
         driverDTO.setBalance(BigDecimal.ZERO);
-        driverHttpClient.updateDriver(driverDTO);
+        driverFeignClient.editDriver(driverId, driverDTO);
 
         log.info(String.format(UPDATING_DRIVER_BALANCE_IS_SUCCESSFUL, driverId));
         return new CustomerResponseDto(customer.getId());

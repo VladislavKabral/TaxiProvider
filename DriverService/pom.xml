@@ -21,6 +21,8 @@
         <spring.cloud.contract.version>4.1.2</spring.cloud.contract.version>
         <eureka.client.version>4.1.1</eureka.client.version>
         <logstash-logback-encoder.version>7.2</logstash-logback-encoder.version>
+        <feign-micrometer.version>13.2</feign-micrometer.version>
+        <openfeign.version>4.1.0</openfeign.version>
     </properties>
     <dependencies>
         <dependency>
@@ -144,6 +146,20 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-oauth2-jose</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-micrometer</artifactId>
+            <version>${feign-micrometer.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <version>${openfeign.version}</version>
         </dependency>
     </dependencies>
 
