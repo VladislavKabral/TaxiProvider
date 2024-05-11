@@ -376,11 +376,11 @@ public class PaymentService {
 
         Long balance = customer.getBalance();
         if (balance < amount) {
-            log.info(String.format(CUSTOMER_HAS_ENOUGH_MONEY, customerId));
+            log.info(String.format(CUSTOMER_HAS_NOT_ENOUGH_MONEY, customerId));
             throw new NotEnoughMoneyException(NOT_ENOUGH_MONEY_ON_BALANCE);
         }
 
-        log.info(String.format(CUSTOMER_HAS_NOT_ENOUGH_MONEY, customerId));
+        log.info(String.format(CUSTOMER_HAS_ENOUGH_MONEY, customerId));
     }
 
     private void createUser(CustomerCreateParams params, long id, String role) throws PaymentException {
