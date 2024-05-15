@@ -1,11 +1,11 @@
 package by.modsen.taxiprovider.passengerservice.component;
 
-import by.modsen.taxiprovider.passengerservice.client.RatingHttpClient;
+import by.modsen.taxiprovider.passengerservice.client.RatingFeignClient;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.NewPassengerDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerListDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDto;
-import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.passengerservice.dto.rating.TaxiUserRatingDto;
 import by.modsen.taxiprovider.passengerservice.dto.response.PassengerResponseDto;
 import by.modsen.taxiprovider.passengerservice.mapper.PassengerMapper;
 import by.modsen.taxiprovider.passengerservice.model.Passenger;
@@ -46,7 +46,7 @@ public class PassengerServiceStepDefinition {
     private PassengersValidator passengersValidator;
 
     @Mock
-    private RatingHttpClient ratingHttpClient;
+    private RatingFeignClient ratingFeignClient;
 
     @InjectMocks
     private PassengersService passengersService;
@@ -243,14 +243,14 @@ public class PassengerServiceStepDefinition {
 
     @Given("The passenger with passenger's rating")
     public void thePassengerWithPassengerSRating() {
-        RatingDto rating = getDefaultDriverRating();
+        TaxiUserRatingDto rating = getDefaultTaxiUserRating();
         Passenger passenger = getDefaultPassenger();
 
         when(passengerMapper.toDto(passenger)).thenReturn(getPassenger());
 
         when(passengersRepository.findById(anyLong())).thenReturn(Optional.ofNullable(passenger));
 
-        when(ratingHttpClient.getPassengerRating(anyLong())).thenReturn(rating);
+        when(ratingFeignClient.getTaxiUserRating(anyLong(), anyString()).getBody()).thenReturn(rating);
     }
 
     @When("Get profile of the passenger with id {long}")

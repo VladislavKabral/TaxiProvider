@@ -14,4 +14,10 @@ public class Message {
     public final String REQUEST_PARAM_IS_INVALID = "Failed to convert value in request parameter.";
     public final String METHOD_NOT_ALLOWED = "%s for this endpoint.";
     public final String ROLE_IS_INVALID = "%s is wrong role name.";
+    public final String GETTING_RATING = "Getting rating of the taxi user with id '%d' and role '%s'.";
+    public final String RATING_WAS_FOUND = "The rating is '%f'";
+    public final String INITIALIZATION_TAXI_USER_RATING = "Initializing rating of the taxi user with id '%d' and role '%s'.";
+    public final String RATING_WAS_INITIALIZED = "The rating was initialized";
+    public final String RATING_TAXI_USER = "Rating the taxi user with id '%d' and role '%s' and value '%d'.";
+    public final String TAXI_USER_WAS_RATED = "The taxi user was rated.";
 }

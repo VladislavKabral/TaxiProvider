@@ -12,6 +12,7 @@ import by.modsen.taxiprovider.ratingservice.util.exception.EntityValidateExcepti
 import by.modsen.taxiprovider.ratingservice.util.validation.RatingValidator;
 import by.modsen.taxiprovider.ratingservice.util.validation.TaxiUserRequestValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ import static by.modsen.taxiprovider.ratingservice.util.Message.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RatingsService {
 
     private final RatingsRepository ratingsRepository;
@@ -42,6 +44,7 @@ public class RatingsService {
 
     public TaxiUserRatingDto getTaxiUserRating(TaxiUserRequestDto request)
             throws EntityNotFoundException {
+        log.info(String.format(GETTING_RATING, request.getTaxiUserId(), request.getRole()));
         List<Rating> ratings = ratingsRepository.findByTaxiUserIdAndRole(request.getTaxiUserId(), request.getRole())
                 .stream()
                 .sorted(Collections.reverseOrder())
@@ -49,25 +52,31 @@ public class RatingsService {
                 .toList();
 
         if (ratings.isEmpty()) {
-            throw new EntityNotFoundException(String.format(TAXI_USER_NOT_FOUND,
+            String message = String.format(TAXI_USER_NOT_FOUND,
                     request.getTaxiUserId(),
-                    request.getRole()));
+                    request.getRole());
+            log.info(message);
+            throw new EntityNotFoundException(message);
         }
 
+        double ratingValue = new BigDecimal(Double.toString((double) ratings.stream()
+                .mapToInt(Rating::getValue)
+                .sum()
+                / ratings.size()))
+                .setScale(1, RoundingMode.HALF_UP)
+                .doubleValue();
+
+        log.info(String.format(RATING_WAS_FOUND, ratingValue));
         return TaxiUserRatingDto.builder()
                 .taxiUserId(request.getTaxiUserId())
                 .role(request.getRole())
-                .value(new BigDecimal(Double.toString((double) ratings.stream()
-                        .mapToInt(Rating::getValue)
-                        .sum()
-                        / ratings.size()))
-                        .setScale(1, RoundingMode.HALF_UP)
-                        .doubleValue())
+                .value(ratingValue)
                 .build();
     }
 
     @Transactional
     public RatingResponseDto initTaxiUserRatings(TaxiUserRequestDto request) throws EntityValidateException {
+        log.info(String.format(INITIALIZATION_TAXI_USER_RATING, request.getTaxiUserId(), request.getRole()));
         taxiUserRequestValidator.validate(request);
 
         for (int i = 0; i < GRADES_COUNT; i++) {
@@ -80,6 +89,7 @@ public class RatingsService {
             ratingsRepository.save(rating);
         }
 
+        log.info(RATING_WAS_INITIALIZED);
         return RatingResponseDto.builder()
                 .taxiUserId(request.getTaxiUserId())
                 .role(request.getRole())
@@ -89,12 +99,17 @@ public class RatingsService {
 
     @Transactional
     public RatingResponseDto save(RatingDto ratingDTO) throws EntityValidateException {
+        log.info(String.format(RATING_TAXI_USER,
+                ratingDTO.getTaxiUserId(),
+                ratingDTO.getRole(),
+                ratingDTO.getValue()));
         ratingValidator.validate(ratingDTO);
 
         Rating rating = ratingMapper.toEntity(ratingDTO);
         rating.setCreatedAt(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         ratingsRepository.save(rating);
 
+        log.info(TAXI_USER_WAS_RATED);
         return RatingResponseDto.builder()
                 .taxiUserId(rating.getTaxiUserId())
                 .role(rating.getRole())

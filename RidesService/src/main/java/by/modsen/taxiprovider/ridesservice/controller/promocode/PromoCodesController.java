@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,23 +29,27 @@ public class PromoCodesController {
     private final PromoCodesService promoCodesService;
 
     @GetMapping
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public ResponseEntity<PromoCodesListDto> getPromoCodes() {
         return new ResponseEntity<>(promoCodesService.findAll(), HttpStatus.OK);
     }
 
     @GetMapping(params = "value")
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public ResponseEntity<PromoCodeDto> getPromoCodeByValue(@RequestParam("value") String value)
             throws EntityNotFoundException {
         return new ResponseEntity<>(promoCodesService.findByValue(value), HttpStatus.OK);
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PromoCodeResponseDto> savePromoCode(@RequestBody @Valid PromoCodeDto promoCodeDTO)
             throws EntityValidateException, EntityNotFoundException {
         return new ResponseEntity<>(promoCodesService.save(promoCodeDTO), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public ResponseEntity<PromoCodeResponseDto> editPromoCode(@PathVariable("id") long id,
                                                               @RequestBody @Valid PromoCodeDto promoCodeDTO)
             throws EntityValidateException {
@@ -52,6 +57,7 @@ public class PromoCodesController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public ResponseEntity<PromoCodeResponseDto> deletePromoCode(@PathVariable("id") long id)
             throws EntityNotFoundException {
         return new ResponseEntity<>(promoCodesService.delete(id), HttpStatus.OK);

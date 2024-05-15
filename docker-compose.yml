@@ -1,0 +1,267 @@
+version: "3.7"
+
+services:
+  db:
+    image: 'postgres:15.1'
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=0000
+    networks:
+      - taxi_provider
+
+  mongo_db:
+    image: mongo:6
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - taxi_provider
+
+  zookeeper:
+    image: zookeeper:3.7.0
+    container_name: zookeeper
+    restart: always
+    ports:
+      - "2181:2181"
+    networks:
+      - taxi_provider
+
+  kafka:
+    image: obsidiandynamics/kafka
+    container_name: kafka
+    restart: "no"
+    ports:
+      - "9092:9092"
+    networks:
+      - taxi_provider
+    environment:
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: DOCKER_INTERNAL:PLAINTEXT,DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: DOCKER_INTERNAL://:29092,DOCKER_EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: DOCKER_INTERNAL://kafka:29092,DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    container_name: prometheus
+    networks:
+      - taxi_provider
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:10.3.3
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=password
+    volumes:
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+
+  elasticsearch:
+    image: elasticsearch:7.17.17
+    container_name: elasticsearch
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.type=single-node"
+      - xpack.security.enabled=false
+    ports:
+      - '9200:9200'
+    volumes:
+      - ./elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - taxi_provider
+
+  kibana:
+    image: kibana:7.17.17
+    container_name: kibana
+    ports:
+      - '5601:5601'
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    depends_on:
+      - elasticsearch
+    networks:
+      - taxi_provider
+
+  logstash:
+    image: logstash:7.17.17
+    container_name: logstash
+    volumes:
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./monitoring/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+    ports:
+      - '5000:5000'
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - taxi_provider
+    depends_on:
+      - elasticsearch
+
+  zipkin:
+    image: openzipkin/zipkin:3.0.0
+    container_name: zipkin
+    networks:
+      - taxi_provider
+    ports:
+      - '9411:9411'
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    container_name: keycloak
+    hostname: localhost
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=password
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    entrypoint: '/opt/keycloak/bin/kc.sh start-dev --import-realm'
+    ports:
+      - "8080:8080"
+    networks:
+      - taxi_provider
+
+  eureka-server:
+    image: eureka-server:0.0.1
+    container_name: eureka-server
+    networks:
+      - taxi_provider
+    ports:
+      - '8761:8761'
+
+  api-gateway:
+    image: api-gateway:0.0.1
+    container_name: api-gateway
+    networks:
+      - taxi_provider
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TAXI_PROVIDER_CLIENT_SECRET=hBAgr6FirJ3KQ1wzt8wfWcheE52K1kMQ
+      - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/taxi-provider
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
+    depends_on:
+      - eureka-server
+    ports:
+      - '8765:8765'
+
+  passenger-service:
+    image: passenger-service:0.0.1
+    container_name: passenger-service
+    networks:
+      - taxi_provider
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal/passengers_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=0000
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
+    depends_on:
+      - db
+      - eureka-server
+      - kafka
+
+  driver-service:
+    image: driver-service:0.0.1
+    container_name: driver-service
+    networks:
+      - taxi_provider
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal/drivers_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=0000
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
+    depends_on:
+      - db
+      - eureka-server
+      - kafka
+
+  ride-service:
+    image: ride-service:0.0.1
+    container_name: ride-service
+    networks:
+      - taxi_provider
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal/rides_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=0000
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
+    depends_on:
+      - db
+      - eureka-server
+      - kafka
+
+  payment-service:
+    image: payment-service:0.0.1
+    container_name: payment-service
+    networks:
+      - taxi_provider
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal/payment_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=0000
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
+    depends_on:
+      - db
+      - eureka-server
+
+  rating-service:
+    image: rating-service:0.0.1
+    container_name: rating-service
+    networks:
+      - taxi_provider
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_DATA_MONGODB_URL=mongodb://root:example@mongo_db:27017/
+      - SPRING_DATA_MONGODB_HOST=mongo_db
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/taxi-provider/protocol/openid-connect/certs
+    depends_on:
+      - mongo_db
+      - eureka-server
+
+networks:
+  taxi_provider:
+    driver: bridge
+
+volumes:
+  mongodata:
+    driver: local

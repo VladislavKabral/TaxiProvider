@@ -5,6 +5,7 @@ import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerListDto;
 import by.modsen.taxiprovider.passengerservice.dto.passenger.PassengerProfileDto;
 import by.modsen.taxiprovider.passengerservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.passengerservice.dto.rating.TaxiUserRatingDto;
 import by.modsen.taxiprovider.passengerservice.model.Passenger;
 import lombok.experimental.UtilityClass;
 
@@ -258,6 +259,14 @@ public class PassengersTestUtil {
 
     public RatingDto getDefaultDriverRating() {
         return RatingDto.builder()
+                .taxiUserId(DEFAULT_PASSENGER_ID)
+                .value(DEFAULT_PASSENGER_RATING)
+                .role(PASSENGER_ROLE_NAME)
+                .build();
+    }
+
+    public TaxiUserRatingDto getDefaultTaxiUserRating() {
+        return TaxiUserRatingDto.builder()
                 .taxiUserId(DEFAULT_PASSENGER_ID)
                 .value(DEFAULT_PASSENGER_RATING)
                 .role(PASSENGER_ROLE_NAME)

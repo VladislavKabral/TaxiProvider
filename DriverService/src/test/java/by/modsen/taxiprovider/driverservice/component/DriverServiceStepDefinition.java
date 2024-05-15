@@ -1,11 +1,11 @@
 package by.modsen.taxiprovider.driverservice.component;
 
-import by.modsen.taxiprovider.driverservice.client.RatingHttpClient;
+import by.modsen.taxiprovider.driverservice.client.RatingFeignClient;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverListDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
-import by.modsen.taxiprovider.driverservice.dto.rating.RatingDto;
+import by.modsen.taxiprovider.driverservice.dto.rating.TaxiUserRatingDto;
 import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDto;
 import by.modsen.taxiprovider.driverservice.mapper.DriverMapper;
 import by.modsen.taxiprovider.driverservice.model.Driver;
@@ -46,7 +46,7 @@ public class DriverServiceStepDefinition {
     private DriversValidator driversValidator;
 
     @Mock
-    private RatingHttpClient ratingHttpClient;
+    private RatingFeignClient ratingFeignClient;
 
     @InjectMocks
     private DriversService driverService;
@@ -238,14 +238,14 @@ public class DriverServiceStepDefinition {
 
     @Given("The driver with driver's rating")
     public void theDriverWithDriverRating() {
-        RatingDto rating = getDefaultDriverRating();
+        TaxiUserRatingDto rating = getDefaultDriverTaxiUserRating();
         Driver driver = getDefaultDriver();
 
         when(driverMapper.toDto(driver)).thenReturn(getDriver());
 
         when(driverRepository.findById(anyLong())).thenReturn(Optional.ofNullable(driver));
 
-        when(ratingHttpClient.getDriverRating(anyLong())).thenReturn(rating);
+        when(ratingFeignClient.getTaxiUserRating(anyLong(), anyString()).getBody()).thenReturn(rating);
     }
 
     @When("Get profile of the driver with id {long}")

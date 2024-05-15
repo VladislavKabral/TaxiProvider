@@ -22,8 +22,6 @@ import static by.modsen.taxiprovider.ridesservice.util.Message.*;
 @Builder
 public class RideDto {
 
-    private static final String DATE_FORMAT = "yyyy-MM-dd, HH-mm-ss";
-
     private long id;
 
     @Min(value = 1, message = PASSENGER_ID_IS_INVALID)
@@ -32,10 +30,10 @@ public class RideDto {
     @Min(value = 1, message = DRIVER_ID_IS_INVALID)
     private long driverId;
 
-    @JsonFormat(pattern = DATE_FORMAT)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private LocalDateTime startedAt;
 
-    @JsonFormat(pattern = DATE_FORMAT)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private LocalDateTime endedAt;
 
     @Valid

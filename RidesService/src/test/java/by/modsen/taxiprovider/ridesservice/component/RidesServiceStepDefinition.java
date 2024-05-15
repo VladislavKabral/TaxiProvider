@@ -1,7 +1,7 @@
 package by.modsen.taxiprovider.ridesservice.component;
 
-import by.modsen.taxiprovider.ridesservice.client.DriverHttpClient;
-import by.modsen.taxiprovider.ridesservice.client.PaymentHttpClient;
+import by.modsen.taxiprovider.ridesservice.client.DriverFeignClient;
+import by.modsen.taxiprovider.ridesservice.client.PaymentFeignClient;
 import by.modsen.taxiprovider.ridesservice.dto.response.RideResponseDto;
 import by.modsen.taxiprovider.ridesservice.dto.ride.NewRideDto;
 import by.modsen.taxiprovider.ridesservice.dto.ride.RideDto;
@@ -57,7 +57,7 @@ public class RidesServiceStepDefinition {
     private DistanceCalculator distanceCalculator;
 
     @Mock
-    private DriverHttpClient driverHttpClient;
+    private DriverFeignClient driverFeignClient;
 
     @Mock
     private KafkaTemplate<String, String> kafkaTemplate;
@@ -66,7 +66,7 @@ public class RidesServiceStepDefinition {
     private PromoCodesService promoCodesService;
 
     @Mock
-    private PaymentHttpClient paymentHttpClient;
+    private PaymentFeignClient paymentFeignClient;
 
     @InjectMocks
     private RidesService ridesService;
@@ -231,7 +231,7 @@ public class RidesServiceStepDefinition {
 
         when(rideMapper.toEntity(saveRequest)).thenReturn(getRide());
 
-        when(driverHttpClient.getFreeDrivers()).thenReturn(getFreeDrivers());
+        when(driverFeignClient.getFreeDrivers().getBody()).thenReturn(getFreeDrivers());
 
         when(ridesRepository.findByDriverIdAndStatus(anyLong(), anyString())).thenReturn(getDriversRides());
     }
@@ -260,7 +260,7 @@ public class RidesServiceStepDefinition {
 
         when(rideMapper.toEntity(saveRequest)).thenReturn(ride);
 
-        when(driverHttpClient.getFreeDrivers()).thenReturn(getFreeDrivers());
+        when(driverFeignClient.getFreeDrivers().getBody()).thenReturn(getFreeDrivers());
 
         when(ridesRepository.findByDriverIdAndStatus(anyLong(), anyString())).thenReturn(getDriversRides());
 
@@ -277,7 +277,7 @@ public class RidesServiceStepDefinition {
 
         when(ridesRepository.findByDriverIdAndStatus(anyLong(), anyString())).thenReturn(getInProgressRides());
 
-        when(driverHttpClient.getDriverById(anyLong())).thenReturn(getDriver());
+        when(driverFeignClient.getDriverById(anyLong()).getBody()).thenReturn(getDriver());
     }
 
     @When("Update ride")
@@ -300,7 +300,7 @@ public class RidesServiceStepDefinition {
 
         when(ridesRepository.findByDriverIdAndStatus(anyLong(), anyString())).thenReturn(getInProgressRides());
 
-        when(driverHttpClient.getDriverById(anyLong())).thenReturn(getDriver());
+        when(driverFeignClient.getDriverById(anyLong()).getBody()).thenReturn(getDriver());
 
         doThrow(new EntityValidateException(PAYMENT_TYPE_IS_INVALID))
                 .when(rideValidator)
@@ -312,7 +312,7 @@ public class RidesServiceStepDefinition {
         when(ridesRepository.findByPassengerIdAndStatus(DEFAULT_PASSENGER_ID, RIDE_STATUS_WAITING))
                 .thenReturn(getRidesList());
 
-        when(driverHttpClient.getDriverById(anyLong())).thenReturn(getDriver());
+        when(driverFeignClient.getDriverById(anyLong()).getBody()).thenReturn(getDriver());
     }
 
     @When("Cancel ride")

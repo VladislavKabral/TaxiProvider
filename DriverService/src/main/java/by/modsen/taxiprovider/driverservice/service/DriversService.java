@@ -1,11 +1,12 @@
 package by.modsen.taxiprovider.driverservice.service;
 
-import by.modsen.taxiprovider.driverservice.client.RatingHttpClient;
+import by.modsen.taxiprovider.driverservice.client.RatingFeignClient;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverListDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriverProfileDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.DriversPageDto;
 import by.modsen.taxiprovider.driverservice.dto.driver.NewDriverDto;
+import by.modsen.taxiprovider.driverservice.dto.request.TaxiUserRequestDto;
 import by.modsen.taxiprovider.driverservice.dto.response.DriverResponseDto;
 import by.modsen.taxiprovider.driverservice.mapper.DriverMapper;
 import by.modsen.taxiprovider.driverservice.model.Driver;
@@ -15,6 +16,7 @@ import by.modsen.taxiprovider.driverservice.util.exception.EntityValidateExcepti
 import by.modsen.taxiprovider.driverservice.util.exception.InvalidRequestDataException;
 import by.modsen.taxiprovider.driverservice.util.validation.DriversValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -27,17 +29,19 @@ import static by.modsen.taxiprovider.driverservice.util.Message.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @EnableKafka
 @RequiredArgsConstructor
+@Slf4j
 public class DriversService {
 
     private final DriversRepository driversRepository;
 
     private final DriverMapper driverMapper;
 
-    private final RatingHttpClient ratingHttpClient;
+    private final RatingFeignClient ratingFeignClient;
 
     private final DriversValidator driversValidator;
 
@@ -46,6 +50,7 @@ public class DriversService {
     private static final String KAFKA_TOPIC_NAME = "RIDE";
 
     public DriverListDto findAll() {
+        log.info(FIND_ALL_DRIVERS);
         List<Driver> drivers = driversRepository.findByAccountStatus(DRIVER_ACCOUNT_STATUS_ACTIVE);
 
         return DriverListDto.builder()
@@ -56,9 +61,11 @@ public class DriversService {
     public DriversPageDto findPageDrivers(int index, int count, String sortField)
             throws InvalidRequestDataException {
         if ((index <= 0) || (count <= 0)) {
+            log.info(RECEIVED_PAGE_PARAMETERS_ARE_INVALID);
             throw new InvalidRequestDataException(INVALID_PAGE_REQUEST);
         }
 
+        log.info(FIND_DRIVERS);
         List<Driver> drivers = driversRepository
                 .findAll(PageRequest.of(index - 1, count, Sort.by(sortField))).getContent()
                 .stream()
@@ -73,6 +80,7 @@ public class DriversService {
     }
 
     public DriverDto findById(long id) throws EntityNotFoundException {
+        log.info(String.format(FIND_DRIVER_BY_ID, id));
         return driverMapper.toDto(findDriver(id));
     }
 
@@ -83,6 +91,7 @@ public class DriversService {
     }
 
     public DriverListDto findFreeDrivers() {
+        log.info(FIND_FREE_DRIVERS);
         List<Driver> drivers = driversRepository.findByStatus(DRIVER_STATUS_FREE);
 
         return DriverListDto.builder()
@@ -92,6 +101,7 @@ public class DriversService {
 
     @Transactional
     public DriverResponseDto save(NewDriverDto driverDTO) throws EntityNotFoundException, EntityValidateException {
+        log.info(SAVE_NEW_DRIVER);
         Driver driver = driverMapper.toEntity(driverDTO);
 
         driversValidator.validate(driver);
@@ -107,14 +117,19 @@ public class DriversService {
                 .orElseThrow(EntityNotFoundException
                         .entityNotFoundException(String.format(DRIVERS_NOT_CREATED, driver.getEmail())));
 
-        ratingHttpClient.initDriverRating(createdDriver.getId());
+        ratingFeignClient.initTaxiUser(TaxiUserRequestDto.builder()
+                        .taxiUserId(createdDriver.getId())
+                        .role(DRIVER_ROLE_NAME)
+                .build());
 
+        log.info(String.format(DRIVER_WAS_SAVED, createdDriver.getLastname(), createdDriver.getFirstname()));
         return new DriverResponseDto(createdDriver.getId());
     }
 
     @Transactional
     public DriverResponseDto update(long id, DriverDto driverDTO) throws EntityNotFoundException,
             EntityValidateException {
+        log.info(UPDATE_DRIVER);
         Driver driver = findDriver(id);
 
         String firstname = driverDTO.getFirstname();
@@ -152,31 +167,36 @@ public class DriversService {
         driver.setId(id);
         driversRepository.save(driver);
 
+        log.info(String.format(DRIVER_WAS_UPDATED, driver.getId()));
         return new DriverResponseDto(id);
     }
 
     @Transactional
     public DriverResponseDto deactivate(long id) throws EntityNotFoundException {
+        log.info(DEACTIVATE_DRIVER);
         Driver driver = findDriver(id);
 
         driver.setAccountStatus(DRIVER_ACCOUNT_STATUS_INACTIVE);
         driversRepository.save(driver);
 
+        log.info(String.format(DRIVER_WAS_DEACTIVATED, driver.getId()));
         return new DriverResponseDto(id);
     }
 
     public DriverProfileDto getDriverProfile(long id) throws EntityNotFoundException {
+        log.info(String.format(FIND_DRIVER_PROFILE, id));
         DriverDto driver = findById(id);
 
         return DriverProfileDto.builder()
                 .driver(driver)
-                .rating(ratingHttpClient.getDriverRating(id).getValue())
+                .rating(Objects.requireNonNull(ratingFeignClient.getTaxiUserRating(id, DRIVER_ROLE_NAME)
+                        .getBody())
+                        .getValue())
                 .build();
     }
 
     @KafkaListener(topics = KAFKA_TOPIC_NAME)
     private void messageListener(String message) {
-        //TODO: change to log
-        System.out.println(message);
+        log.info(message);
     }
 }

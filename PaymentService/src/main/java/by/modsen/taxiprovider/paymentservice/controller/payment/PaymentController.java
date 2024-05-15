@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,30 +28,35 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/charge")
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public ResponseEntity<ChargeResponseDto> charge(@RequestBody @Valid ChargeRequestDto chargeRequestDTO)
             throws PaymentException {
         return new ResponseEntity<>(paymentService.charge(chargeRequestDTO), HttpStatus.OK);
     }
 
     @PostMapping("/token")
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public ResponseEntity<TokenResponseDto> getToken(@RequestBody @Valid CardRequestDto cardRequestDTO)
             throws PaymentException, EntityValidateException {
         return new ResponseEntity<>(paymentService.createStripeToken(cardRequestDTO), HttpStatus.OK);
     }
 
     @PostMapping("/customers")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponseDto> saveCustomer(@RequestBody @Valid CustomerDto customerDTO)
             throws PaymentException, EntityValidateException, EntityNotFoundException {
         return new ResponseEntity<>(paymentService.createCustomer(customerDTO), HttpStatus.CREATED);
     }
 
     @GetMapping("/customers/{id}/balance")
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public ResponseEntity<BalanceResponseDto> getCustomerBalance(@PathVariable("id") String customerId)
             throws PaymentException {
         return new ResponseEntity<>(paymentService.getCustomerBalance(customerId), HttpStatus.OK);
     }
 
     @PatchMapping("/customers/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponseDto> editCustomer(@PathVariable("id") long id,
                                                             @RequestBody @Valid CustomerDto customerDTO)
             throws PaymentException, EntityNotFoundException {
@@ -58,6 +64,7 @@ public class PaymentController {
     }
 
     @PatchMapping("/customers/drivers/{id}")
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public ResponseEntity<CustomerResponseDto> updateDriverBalance(@PathVariable("id") long id)
             throws PaymentException, EntityNotFoundException {
         return new ResponseEntity<>(paymentService.updateDriverBalance(id),
@@ -65,6 +72,7 @@ public class PaymentController {
     }
 
     @DeleteMapping(value = "/customers/{id}", params = "role")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponseDto> deleteCustomer(@PathVariable("id") long id,
                                                               @RequestParam("role") String role) throws PaymentException,
             EntityNotFoundException {
@@ -72,6 +80,7 @@ public class PaymentController {
     }
 
     @PostMapping("/customerCharge")
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public ResponseEntity<ChargeResponseDto> chargeByCustomer(@RequestBody @Valid CustomerChargeRequestDto customerChargeRequestDTO)
             throws NotEnoughMoneyException, PaymentException, EntityNotFoundException {
         return new ResponseEntity<>(paymentService.chargeFromCustomer(customerChargeRequestDTO), HttpStatus.OK);

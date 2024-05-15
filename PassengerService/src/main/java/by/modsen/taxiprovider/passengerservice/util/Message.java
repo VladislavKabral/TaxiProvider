@@ -29,4 +29,16 @@ public class Message {
     public final String CANNOT_GET_RESPONSE_FROM_EXTERNAL_SERVICE = "External service '%s' failed to process after max retries.";
     public final String PASSENGER_WITH_GIVEN_EMAIL_ALREADY_EXISTS = "A passenger with email '%s' already exists.";
     public final String PASSENGER_WITH_GIVEN_PHONE_NUMBER_ALREADY_EXISTS = "A passenger with phone number '%s' already exists.";
+    public final String FIND_ALL_PASSENGERS = "Finding all passengers.";
+    public final String RECEIVED_PAGE_PARAMETERS_ARE_INVALID = "Invalid page parameters were received";
+    public final String FIND_PASSENGERS = "Finding passengers from the given page";
+    public final String FIND_PASSENGER_BY_ID = "Finding the passenger with id '%d'";
+    public final String SAVE_NEW_PASSENGER = "Saving a new passenger";
+    public final String PASSENGER_WAS_SAVED = "The passenger '%s' '%s' was saved.";
+    public final String UPDATE_PASSENGER = "Updating the passenger with id '%d'";
+    public final String PASSENGER_WAS_UPDATED = "The passenger with id '%d' was updated.";
+    public final String DEACTIVATE_PASSENGER = "Deactivating the passenger with id '%d'";
+    public final String PASSENGER_WAS_DEACTIVATED = "The passenger with id '%d' was deactivated.";
+    public final String FIND_PASSENGER_PROFILE = "Finding a profile of the passenger with id '%d'";
+    public final String CREATING_PASSENGER_ALREADY_EXISTS = "Creating passenger already exists (existing parameter is '%s')";
 }

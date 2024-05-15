@@ -1,7 +1,7 @@
 package by.modsen.taxiprovider.paymentservice.service.payment;
 
-import by.modsen.taxiprovider.paymentservice.client.DriverHttpClient;
-import by.modsen.taxiprovider.paymentservice.client.RideHttpClient;
+import by.modsen.taxiprovider.paymentservice.client.DriverFeignClient;
+import by.modsen.taxiprovider.paymentservice.client.RideFeignClient;
 import by.modsen.taxiprovider.paymentservice.dto.request.CardRequestDto;
 import by.modsen.taxiprovider.paymentservice.dto.request.ChargeRequestDto;
 import by.modsen.taxiprovider.paymentservice.dto.CustomerDto;
@@ -36,6 +36,7 @@ import com.stripe.param.PaymentIntentConfirmParams;
 import com.stripe.param.PaymentIntentCreateParams;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +48,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentService {
 
     @Value("${stripe-api-private-key}")
@@ -61,9 +63,9 @@ public class PaymentService {
 
     private final CustomerValidator customerValidator;
 
-    private final DriverHttpClient driverHttpClient;
+    private final DriverFeignClient driverFeignClient;
 
-    private final RideHttpClient rideHttpClient;
+    private final RideFeignClient rideFeignClient;
 
     private static final int CONVERT_COEFFICIENT = 100;
 
@@ -108,6 +110,7 @@ public class PaymentService {
 
     public ChargeResponseDto charge(ChargeRequestDto chargeRequestDTO)
             throws PaymentException {
+        log.info(PAYING_BY_CARD);
 
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
@@ -124,12 +127,13 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
-        rideHttpClient.sendRequestForClosingRide(RideDto.builder()
+        rideFeignClient.updateRide(RideDto.builder()
                 .driverId(chargeRequestDTO.getDriverId())
                 .passengerId(chargeRequestDTO.getPassengerId())
                 .status(RIDE_STATUS_PAID)
                 .build());
 
+        log.info(PAYMENT_IS_SUCCESSFUL);
         return ChargeResponseDto.builder()
                 .currency(charge.getCurrency())
                 .amount(BigDecimal.valueOf(charge.getAmount()))
@@ -139,6 +143,7 @@ public class PaymentService {
 
     public TokenResponseDto createStripeToken(CardRequestDto cardRequestDTO)
             throws PaymentException, EntityValidateException {
+        log.info(CREATING_A_CARD_TOKEN);
 
         cardRequestValidator.validate(cardRequestDTO);
 
@@ -160,6 +165,7 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
+        log.info(CARD_TOKEN_CREATION_IS_SUCCESSFUL);
         return TokenResponseDto.builder()
                 .token(token.getId())
                 .build();
@@ -167,6 +173,7 @@ public class PaymentService {
 
     public CustomerResponseDto createCustomer(CustomerDto customerDTO) throws PaymentException, EntityValidateException,
             EntityNotFoundException {
+        log.info(CREATING_NEW_CUSTOMER);
 
         customerValidator.validate(customerDTO);
 
@@ -187,11 +194,14 @@ public class PaymentService {
         if (customer == null) {
             throw new EntityNotFoundException(String.format(CUSTOMER_NOT_FOUND, customerDTO.getEmail()));
         }
+
+        log.info(String.format(NEW_CUSTOMER_WAS_CREATED, customer.getId()));
         return new CustomerResponseDto(customer.getId());
     }
 
     public CustomerResponseDto updateCustomer(long id, CustomerDto customerDTO) throws PaymentException,
             EntityNotFoundException {
+        log.info(String.format(UPDATING_CUSTOMER, id));
 
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
@@ -213,10 +223,13 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
+        log.info(String.format(CUSTOMER_WAS_UPDATED, id));
         return new CustomerResponseDto(resource.getId());
     }
 
     public CustomerResponseDto deleteCustomer(long id, String role) throws EntityNotFoundException, PaymentException {
+        log.info(String.format(DELETING_CUSTOMER, id, role));
+
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
@@ -232,11 +245,15 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
+        log.info(String.format(CUSTOMER_WAS_DELETED, id, role));
         return new CustomerResponseDto(customer.getId());
     }
 
     public ChargeResponseDto chargeFromCustomer(CustomerChargeRequestDto customerChargeRequestDTO)
             throws EntityNotFoundException, NotEnoughMoneyException, PaymentException {
+        log.info(String.format(CHARGING_BY_CUSTOMER,
+                customerChargeRequestDTO.getTaxiUserId(),
+                customerChargeRequestDTO.getRole()));
 
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
         User user = usersService.findByTaxiUserIdAndRole(customerChargeRequestDTO.getTaxiUserId(),
@@ -266,6 +283,9 @@ public class PaymentService {
             throw new PaymentException(stripeException.getMessage());
         }
 
+        log.info(String.format(CHARGE_BY_CUSTOMER_IS_SUCCESSFUL,
+                customerChargeRequestDTO.getTaxiUserId(),
+                customerChargeRequestDTO.getRole()));
         return ChargeResponseDto.builder()
                 .currency(intent.getCurrency())
                 .amount(BigDecimal.valueOf(intent.getAmount()))
@@ -282,6 +302,8 @@ public class PaymentService {
     }
 
     private void updateBalance(String customerId, long amount) throws PaymentException {
+        log.info(String.format(UPDATING_CUSTOMER_BALANCE, customerId));
+
         Customer customer;
         try {
             customer = Customer.retrieve(customerId);
@@ -302,11 +324,14 @@ public class PaymentService {
         } catch (StripeException stripeException) {
             throw new PaymentException(stripeException.getMessage());
         }
+
+        log.info(String.format(UPDATING_CUSTOMER_BALANCE_IS_SUCCESSFUL, customerId));
     }
 
     public CustomerResponseDto updateDriverBalance(long driverId) throws PaymentException, EntityNotFoundException {
+        log.info(String.format(UPDATING_DRIVER_BALANCE, driverId));
 
-        DriverDto driverDTO = driverHttpClient.getDriver(driverId);
+        DriverDto driverDTO = driverFeignClient.getDriverById(driverId).getBody();
 
         User user = usersService.findByTaxiUserIdAndRole(driverId, DRIVER_ROLE_NAME);
         BigDecimal amount = BigDecimal.valueOf(driverDTO.getBalance().floatValue() * DRIVER_COMMISSION);
@@ -333,12 +358,15 @@ public class PaymentService {
         }
 
         driverDTO.setBalance(BigDecimal.ZERO);
-        driverHttpClient.updateDriver(driverDTO);
+        driverFeignClient.editDriver(driverId, driverDTO);
 
+        log.info(String.format(UPDATING_DRIVER_BALANCE_IS_SUCCESSFUL, driverId));
         return new CustomerResponseDto(customer.getId());
     }
 
     private void checkBalance(String customerId, long amount) throws NotEnoughMoneyException, PaymentException {
+        log.info(String.format(CHECKING_CUSTOMER_BALANCE, customerId));
+
         Customer customer;
         try {
             customer = Customer.retrieve(customerId);
@@ -348,8 +376,11 @@ public class PaymentService {
 
         Long balance = customer.getBalance();
         if (balance < amount) {
+            log.info(String.format(CUSTOMER_HAS_NOT_ENOUGH_MONEY, customerId));
             throw new NotEnoughMoneyException(NOT_ENOUGH_MONEY_ON_BALANCE);
         }
+
+        log.info(String.format(CUSTOMER_HAS_ENOUGH_MONEY, customerId));
     }
 
     private void createUser(CustomerCreateParams params, long id, String role) throws PaymentException {
@@ -375,6 +406,8 @@ public class PaymentService {
     }
 
     private void createPaymentMethod(String customerId) throws PaymentException {
+        log.info(String.format(CREATING_NEW_PAYMENT_METHOD, customerId));
+
         RequestOptions requestOptions = RequestOptions.builder()
                 .setApiKey(STRIPE_API_PRIVATE_KEY)
                 .build();
@@ -389,12 +422,17 @@ public class PaymentService {
             attachParams.put(CUSTOMER_FIELD_NAME, customerId);
             paymentMethod.attach(attachParams, requestOptions);
         } catch (StripeException stripeException) {
+            log.info(NEW_PAYMENT_METHOD_WAS_NOT_CREATED);
             throw new PaymentException(stripeException.getMessage());
         }
+
+        log.info(NEW_PAYMENT_METHOD_WAS_CREATED);
     }
 
     public BalanceResponseDto getCustomerBalance(String customerId)
             throws PaymentException{
+        log.info(String.format(GETTING_CUSTOMER_BALANCE, customerId));
+
         Stripe.apiKey = STRIPE_API_PRIVATE_KEY;
 
         Customer resource;

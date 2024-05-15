@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -27,6 +28,7 @@ import static by.modsen.taxiprovider.ridesservice.util.Message.*;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DistanceCalculator {
 
     @Value("${api_uri}")
@@ -42,6 +44,7 @@ public class DistanceCalculator {
 
     public int calculate(Address source, Address target) throws IOException, InterruptedException, ParseException,
             DistanceCalculationException {
+        log.info(CALCULATION_DISTANCE_BETWEEN_TWO_ADDRESSES);
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URI))
                 .POST(HttpRequest.BodyPublishers.ofString(getRequestBody(source, target)))
@@ -59,7 +62,9 @@ public class DistanceCalculator {
             throw new DistanceCalculationException(DISTANCE_CALCULATION_IS_FAILED);
         }
 
-        return Integer.parseInt(route.get(DISTANCE_PARAM_NAME).toString());
+        int distance = Integer.parseInt(route.get(DISTANCE_PARAM_NAME).toString());
+        log.info(String.format(DISTANCE_WAS_CALCULATED, distance));
+        return distance;
     }
 
     private String getRequestBody(Address source, Address target) throws JsonProcessingException {
