@@ -1,0 +1,1 @@
+drop table ride_to_address;

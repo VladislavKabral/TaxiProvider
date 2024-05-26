@@ -1,0 +1,1 @@
+drop table promo_codes;
