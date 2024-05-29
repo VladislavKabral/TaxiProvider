@@ -1,7 +1,10 @@
 FROM openjdk:17
 
-WORKDIR /application
+ARG EXTRACTED=/target/extracted
 
-COPY target/PaymentService-0.0.1-SNAPSHOT.jar payment-service.jar
+COPY ${EXTRACTED}/dependencies/ ./
+COPY ${EXTRACTED}/spring-boot-loader/ ./
+COPY ${EXTRACTED}/snapshot-dependencies/ ./
+COPY ${EXTRACTED}/application/ ./
 
-ENTRYPOINT ["java", "-jar", "payment-service.jar"]
+ENTRYPOINT ["java","org.springframework.boot.loader.launch.JarLauncher"]
