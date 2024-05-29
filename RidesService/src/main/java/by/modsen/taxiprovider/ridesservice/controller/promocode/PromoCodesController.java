@@ -29,13 +29,13 @@ public class PromoCodesController {
     private final PromoCodesService promoCodesService;
 
     @GetMapping
-    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PromoCodesListDto> getPromoCodes() {
         return new ResponseEntity<>(promoCodesService.findAll(), HttpStatus.OK);
     }
 
     @GetMapping(params = "value")
-    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PromoCodeDto> getPromoCodeByValue(@RequestParam("value") String value)
             throws EntityNotFoundException {
         return new ResponseEntity<>(promoCodesService.findByValue(value), HttpStatus.OK);
@@ -49,7 +49,7 @@ public class PromoCodesController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PromoCodeResponseDto> editPromoCode(@PathVariable("id") long id,
                                                               @RequestBody @Valid PromoCodeDto promoCodeDTO)
             throws EntityValidateException {
@@ -57,7 +57,7 @@ public class PromoCodesController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PromoCodeResponseDto> deletePromoCode(@PathVariable("id") long id)
             throws EntityNotFoundException {
         return new ResponseEntity<>(promoCodesService.delete(id), HttpStatus.OK);
